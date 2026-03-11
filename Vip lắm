@@ -1,44 +1,44 @@
--- Brainrots Hub v10.3 - FULL + TP VỀ BASE SAU KHI CƯỚP HẾT + TẢI CỐ ĐỊNH
+-- Brainrots Hub v10.3 - FULL + TP VỀ BASE SAU KHI CƯỚP HẾT + FIXED LOAD
 
--- Tải Rayfield với phương án dự phòng (hoạt động năm 2026)
+-- Load Rayfield with fallback (working 2026)
 
-Rayfield địa phương
+local Rayfield
 
-thành công cục bộ, err = pcall(function()
+local success, err = pcall(function()
 
     Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-kết thúc)
+end)
 
-nếu không thành công hoặc không phải Rayfield thì
+if not success or not Rayfield then
 
-    cảnh báo("Sirius Rayfield thất bại: " .. tostring(err hoặc "Không xác định"))
+    warn("Sirius Rayfield fail: " .. tostring(err or "Unknown"))
 
-    thành công, lỗi = pcall(function()
+    success, err = pcall(function()
 
         Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Interface/CustomFIeld/main/RayField.lua'))()
 
-    kết thúc)
+    end)
 
-kết thúc
+end
 
-nếu không thành công hoặc không phải Rayfield thì
+if not success or not Rayfield then
 
-    cảnh báo("Tất cả các lần tải Rayfield đều thất bại: " .. tostring(err hoặc "Không xác định"))
+    warn("All Rayfield load failed: " .. tostring(err or "Unknown"))
 
     game:GetService("StarterGui"):SetCore("SendNotification", {
 
         Title = "Lỗi Load Rayfield",
 
-        Text = "Không tải được UI. Thử cập nhật trình thực thi, khởi động lại Roblox, hoặc chờ 5-10p. Console (F9) lỗi gửi mình nhé!",
+        Text = "Không load được UI. Thử executor update, restart Roblox, hoặc chờ 5-10p. Console (F9) lỗi gì gửi mình nhé!",
 
-        Thời lượng = 15
+        Duration = 15
 
     })
 
-    trở lại
+    return
 
-kết thúc
+end
 
 local Window = Rayfield:CreateWindow({
 
@@ -46,7 +46,7 @@ local Window = Rayfield:CreateWindow({
 
    LoadingTitle = 'Đang tải...',
 
-   LoadingSubtitle = 'bởi x Nhật',
+   LoadingSubtitle = 'by x Nhật',
 
    ConfigurationSaving = {Enabled = true, FolderName = 'BrainrotHub', FileName = 'Config'},
 
@@ -54,13 +54,13 @@ local Window = Rayfield:CreateWindow({
 
 })
 
-người chơi cục bộ = trò chơi.Người chơi.Người chơi cục bộ
+local player = game.Players.LocalPlayer
 
 local BaseCFrame = nil
 
 local targetBrainrotType = "Celestial"
 
-RS cục bộ = trò chơi:GetService("RunService")
+local RS = game:GetService("RunService")
 
 local UIS = game:GetService("UserInputService")
 
@@ -74,77 +74,77 @@ local lastLavaRemove = 0
 
 local lastSteal = 0
 
-cục bộ lastCollect = 0
+local lastCollect = 0
 
 local lastRebirth = 0
 
 local promptConn = nil
 
-local steckAttempts = 0 -- Đếm lần không lấy trộm được để phát hiện "hết"
+local stealAttempts = 0  -- Đếm lần không steal được để detect "hết"
 
 -- Save Base (vị trí ban đầu để TP về)
 
-hàm cục bộ saveBase(char)
+local function saveBase(char)
 
-   nếu char và char:FindFirstChild("HumanoidRootPart") và không phải BaseCFrame thì
+   if char and char:FindFirstChild("HumanoidRootPart") and not BaseCFrame then
 
       task.wait(1)
 
       BaseCFrame = char.HumanoidRootPart.CFrame
 
-      Rayfield:Notify({Title = 'Base Saved! (Sẽ TP về đây sau khi bị cướp hết)', Duration = 4})
+      Rayfield:Notify({Title = 'Base Saved! (Sẽ TP về đây sau khi cướp hết)', Duration = 4})
 
-   kết thúc
+   end
 
-kết thúc
+end
 
 if player.Character then saveBase(player.Character) end
 
 player.CharacterAdded:Connect(saveBase)
 
--- Chế độ Thần thánh
+-- God Mode
 
-hàm cục bộ applyGod(char)
+local function applyGod(char)
 
    local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-   nếu tiếng vo ve thì
+   if hum then
 
       hum.MaxHealth = math.huge
 
-      ừm.Sức khỏe = toán học.khổng lồ
+      hum.Health = math.huge
 
       hum:GetPropertyChangedSignal("Health"):Connect(function()
 
          if hum.Health < hum.MaxHealth then hum.Health = hum.MaxHealth end
 
-      kết thúc)
+      end)
 
-   kết thúc
+   end
 
-kết thúc
+end
 
-hàm cục bộ restoreHum(char)
+local function restoreHum(char)
 
    local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-   nếu hum thì hum.MaxHealth = 100 hum.Health = 100 end
+   if hum then hum.MaxHealth = 100 hum.Health = 100 end
 
-kết thúc
+end
 
--- Brainrots Helpers (không thông báo spam)
+-- Brainrots Helpers (không notify spam)
 
-hàm cục bộ getFolder(tp)
+local function getFolder(tp)
 
    local gf = workspace:FindFirstChild("GameFolder") or workspace
 
    local brNames = {"Brainrots", "BrainRots", "Brainrot", "BrainRotsFolder"}
 
-   ngân hàng địa phương
+   local br
 
    for _, n in brNames do br = gf:FindFirstChild(n) if br then break end end
 
-   nếu không phải br thì trả về nil end
+   if not br then return nil end
 
    local fNames = {}
 
@@ -154,29 +154,29 @@ hàm cục bộ getFolder(tp)
 
    elseif tp == "God" then fNames = {"Godly", "God", "Divine", "Gods"}
 
-   kết thúc
+   end
 
    for _, fn in fNames do local f = br:FindFirstChild(fn) if f then return f end end
 
-   trả về nil
+   return nil
 
-kết thúc
+end
 
-hàm cục bộ findRichest(folder)
+local function findRichest(folder)
 
-   nếu không phải thư mục thì trả về nil.
+   if not folder then return nil end
 
-   cục bộ giàu nhất, maxV, dự phòng = nil, -1, nil
+   local richest, maxV, fallback = nil, -1, nil
 
    for _, obj in folder:GetChildren() do
 
-      nếu obj:IsA("Model") hoặc obj:IsA("Folder") thì
+      if obj:IsA("Model") or obj:IsA("Folder") then
 
-         phương án dự phòng = phương án dự phòng hoặc obj
+         fallback = fallback or obj
 
          local ls = obj:FindFirstChild("leaderstats") or obj:FindFirstChild("Leaderstats")
 
-         nếu ls thì
+         if ls then
 
             local v = ls:FindFirstChild("Farm") or ls:FindFirstChild("Cash") or ls:FindFirstChild("Money") or ls:FindFirstChild("Value") or ls:FindFirstChild("Brainrots")
 
@@ -184,17 +184,17 @@ hàm cục bộ findRichest(folder)
 
             if val > maxV then maxV = val richest = obj end
 
-         kết thúc
+         end
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
-   trả về giá trị cao nhất hoặc giá trị dự phòng, maxV
+   return richest or fallback, maxV
 
-kết thúc
+end
 
-hàm cục bộ tpTo(obj)
+local function tpTo(obj)
 
    local char = player.Character
 
@@ -202,113 +202,113 @@ hàm cục bộ tpTo(obj)
 
    local root = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart") or obj.PrimaryPart
 
-   nếu là root thì
+   if root then
 
       char.HumanoidRootPart.CFrame = root.CFrame * CFrame.new(0,5,-5)
 
-      trả về giá trị đúng
+      return true
 
-   kết thúc
+   end
 
-   trả về false
+   return false
 
-kết thúc
+end
 
--- Trợ giúp nhắc nhở tức thì khi ở gần
+-- Instant Proximity Prompt Helper
 
-hàm cục bộ setupPrompt(prompt, instant)
+local function setupPrompt(prompt, instant)
 
    if not prompt:IsA("ProximityPrompt") then return end
 
-   prompt.HoldDuration = tức thì và 0 hoặc 2
+   prompt.HoldDuration = instant and 0 or 2
 
-   lời nhắc.Yêu cầu tầm nhìn trực tiếp = không tức thì
+   prompt.RequiresLineOfSight = not instant
 
-   prompt.MaxActivationDistance = tức thì và 200 hoặc 10
+   prompt.MaxActivationDistance = instant and 200 or 10
 
-kết thúc
+end
 
--- Tab Dịch Chuyển
+-- Teleports Tab
 
 local tpTab = Window:CreateTab("Teleports")
 
-tpTab:CreateSection("TP Chức năng")
+tpTab:CreateSection("TP Chức Năng")
 
-tpTab:CreateButton({Name = "Địa chỉ cơ sở", Callback = function()
+tpTab:CreateButton({Name = "về Base", Callback = function()
 
    local char = player.Character
 
-   if not char or not char:FindFirstChild("HumanoidRootPart") then return Rayfield:Notify({Title="Lỗi", Content="Chưa tải char!", Duration=3}) end
+   if not char or not char:FindFirstChild("HumanoidRootPart") then return Rayfield:Notify({Title="Lỗi", Content="Chưa load char!", Duration=3}) end
 
    if BaseCFrame then char.HumanoidRootPart.CFrame = BaseCFrame + Vector3.new(0,5,0) Rayfield:Notify({Title="TP Base OK!", Duration=3})
 
    else Rayfield:Notify({Title="Chưa lưu Base!", Duration=4}) end
 
-kết thúc})
+end})
 
-tpTab:CreateButton({Name = "Hướng dẫn sử dụng cơ bản", Callback = function()
+tpTab:CreateButton({Name = "Base Manual", Callback = function()
 
    local char = player.Character
 
    if char and char:FindFirstChild("HumanoidRootPart") then BaseCFrame = char.HumanoidRootPart.CFrame Rayfield:Notify({Title="Base Set OK!", Duration=3}) end
 
-kết thúc})
+end})
 
 tpTab:CreateButton({Name = "Celestial ", Callback = function()
 
    local f = getFolder("Celestial")
 
-   if not f then return Rayfield:Notify({Title=" Không tìm Thiên giới!", Duration=4}) end
+   if not f then return Rayfield:Notify({Title="Không tìm Celestial!", Duration=4}) end
 
-   cục bộ r, v = tìm người giàu nhất (f)
+   local r, v = findRichest(f)
 
-   nếu r và tpTo(r) thì Rayfield:Notify({Title="TP Celestial OK! ("..(v hoặc "?")..")", Duration=3})
+   if r and tpTo(r) then Rayfield:Notify({Title="TP Celestial OK! ("..(v or "?")..")", Duration=3})
 
-   else Rayfield:Notify({Title="Không tìm thấy Celestial giàu nhất!", Duration=4}) end
+   else Rayfield:Notify({Title="Không tìm richest Celestial!", Duration=4}) end
 
-kết thúc})
+end})
 
 tpTab:CreateButton({Name = " Secret ", Callback = function()
 
    local f = getFolder("Secret")
 
-   if not f then return Rayfield:Notify({Title=" Không tìm bí mật!", Duration=4}) end
+   if not f then return Rayfield:Notify({Title="Không tìm Secret!", Duration=4}) end
 
-   cục bộ r, v = tìm người giàu nhất (f)
+   local r, v = findRichest(f)
 
    if r and tpTo(r) then Rayfield:Notify({Title="TP Secret OK! ("..(v or "?")..")", Duration=3})
 
-   else Rayfield:Notify({Title="Không tìm thấy Bí mật giàu nhất!", Duration=4}) end
+   else Rayfield:Notify({Title="Không tìm richest Secret!", Duration=4}) end
 
-kết thúc})
+end})
 
 tpTab:CreateButton({Name = "TP God Richest", Callback = function()
 
    local f = getFolder("God")
 
-   if not f then return Rayfield:Notify({Title=" Không tìm thấy Chúa!", Duration=4}) end
+   if not f then return Rayfield:Notify({Title="Không tìm God!", Duration=4}) end
 
-   cục bộ r, v = tìm người giàu nhất (f)
+   local r, v = findRichest(f)
 
    if r and tpTo(r) then Rayfield:Notify({Title="TP God OK! ("..(v or "?")..")", Duration=3})
 
-   else Rayfield:Notify({Title="Không tìm thấy Chúa giàu nhất!", Duration=4}) end
+   else Rayfield:Notify({Title="Không tìm richest God!", Duration=4}) end
 
-kết thúc})
+end})
 
--- Tab Nông trại Tự động
+-- Auto Farm Tab
 
 local farmTab = Window:CreateTab("Auto Farm")
 
-farmTab:CreateSection("Farm Low Lag - TP về Base sau Cướp hết")
+farmTab:CreateSection("Farm Low Lag - TP về Base sau cướp hết")
 
 farmTab:CreateDropdown({
 
-   Name = "Chọn Loại Brainrot Để Trộm",
+   Name = "Chọn Loại Brainrot để Steal",
 
-   Tùy chọn = {"Thiên giới", "Bí mật", "Thượng đế"},
+   Options = {"Celestial", "Secret", "God"},
 
-   Tùy chọn hiện tại = {"Celestial"},
+   CurrentOption = {"Celestial"},
 
    Callback = function(opt) targetBrainrotType = opt[1] Rayfield:Notify({Title="Target: "..targetBrainrotType, Duration=2}) end
 
@@ -320,9 +320,9 @@ farmTab:CreateToggle({
 
    Callback = function(val)
 
-      nếu val thì
+      if val then
 
-         số lượng cục bộ = 0
+         local cnt = 0
 
          stealAttempts = 0
 
@@ -338,27 +338,27 @@ farmTab:CreateToggle({
 
             local f = getFolder(targetBrainrotType)
 
-            nếu không phải f thì trả về end
+            if not f then return end
 
-            cục bộ r = tìm người giàu nhất (f)
+            local r = findRichest(f)
 
-            nếu không phải r thì trả về end
+            if not r then return end
 
-            cục bộ tpSuccess = tpTo(r)
+            local tpSuccess = tpTo(r)
 
-            nếu không thành công thì trả về kết thúc
+            if not tpSuccess then return end
 
             local hrp = char.HumanoidRootPart
 
-            cục bộ đã được kích hoạt = false
+            local fired = false
 
-            -- Lời nhắc ưu tiên trong mẫu giàu nhất
+            -- Ưu tiên prompt trong richest model
 
             for _, p in ipairs(workspace:GetDescendants()) do
 
-               nếu bị sa thải thì dừng lại
+               if fired then break end
 
-               nếu p:IsA("ProximityPrompt") và p.Enabled và p:IsDescendantOf(r) thì
+               if p:IsA("ProximityPrompt") and p.Enabled and p:IsDescendantOf(r) then
 
                   pcall(function()
 
@@ -366,31 +366,31 @@ farmTab:CreateToggle({
 
                      cnt = cnt + 1
 
-                     đã bị sa thải = đúng
+                     fired = true
 
-                     StealAttempts = 0 -- Đặt lại khi đánh cắp thành công
+                     stealAttempts = 0  -- Reset khi steal thành công
 
                      if cnt % 10 == 0 then Rayfield:Notify({Title="Stolen: "..cnt, Duration=2}) end
 
-                  kết thúc)
+                  end)
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-            -- Lời nhắc dự phòng gần đó
+            -- Fallback prompt gần
 
-            nếu không bị sa thải thì
+            if not fired then
 
                for _, p in ipairs(workspace:GetDescendants()) do
 
-                  nếu bị sa thải thì dừng lại
+                  if fired then break end
 
-                  nếu p:IsA("ProximityPrompt") và p.Enabled thì
+                  if p:IsA("ProximityPrompt") and p.Enabled then
 
                      local pp = p.Parent:IsA("BasePart") and p.Parent or p:FindFirstAncestorWhichIsA("BasePart")
 
-                     nếu pp và (pp.Vị trí - hrp.Vị trí).Độ lớn < 150 thì
+                     if pp and (pp.Position - hrp.Position).Magnitude < 150 then
 
                         pcall(function()
 
@@ -398,69 +398,69 @@ farmTab:CreateToggle({
 
                            cnt = cnt + 1
 
-                           đã bị sa thải = đúng
+                           fired = true
 
                            stealAttempts = 0
 
                            if cnt % 10 == 0 then Rayfield:Notify({Title="Stolen: "..cnt, Duration=2}) end
 
-                        kết thúc)
+                        end)
 
-                     kết thúc
+                     end
 
-                  kết thúc
+                  end
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-            -- If not fire → count "hết"
+            -- Nếu không fire được → tăng đếm "hết"
 
-            nếu không bị sa thải thì
+            if not fired then
 
-               Số lần đánh cắp = Số lần đánh cắp + 1
+               stealAttempts = stealAttempts + 1
 
-               if ăn trộmAttempts >= 1 thì -- 1 lần không ăn trộm được → coi như hết → TP về Base
+               if stealAttempts >= 1 then  -- 1 lần không steal được → coi như hết → TP về Base
 
-                  nếu BaseCFrame thì
+                  if BaseCFrame then
 
                      char.HumanoidRootPart.CFrame = BaseCFrame + Vector3.new(0,5,0)
 
                      Rayfield:Notify({Title="về nhà đi Con", Duration=4})
 
-                  kết thúc
+                  end
 
                   stealAttempts = 0
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-         kết thúc)
+         end)
 
-         Rayfield:Notify({Title="Tự động đánh cắp BẬT! (TP về Căn cứ khi hết)", Duration=5})
+         Rayfield:Notify({Title="Auto Steal ON! (TP về Base khi hết)", Duration=5})
 
-      khác
+      else
 
-         nếu ăn trộmLoop thì ăn cắpLoop:Disconnect() ăn trộmLoop = nil end
+         if stealLoop then stealLoop:Disconnect() stealLoop = nil end
 
          stealAttempts = 0
 
-         Rayfield:Notify({Title="Tự động tắt chế độ trộm", Duration=3})
+         Rayfield:Notify({Title="Auto Steal OFF", Duration=3})
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
 })
 
 farmTab:CreateToggle({
 
-   Tên = "Thu tiền mặt",
+   Name = "Collect Cash",
 
    Callback = function(val)
 
-      nếu val thì
+      if val then
 
          collectLoop = RS.Heartbeat:Connect(function()
 
@@ -468,45 +468,45 @@ farmTab:CreateToggle({
 
             lastCollect = tick()
 
-            cục bộ đã được kích hoạt = 0
+            local fired = 0
 
             for _, p in ipairs(workspace:GetDescendants()) do
 
-               nếu số lần kích hoạt >= 3 thì dừng lại.
+               if fired >= 3 then break end
 
                if p:IsA("ProximityPrompt") and p.Enabled and (p.Name:lower():find("collect") or p.Name:lower():find("claim") or p.Name:lower():find("cash") or p.Name:lower():find("money") or p.ActionText:lower():find("collect")) then
 
                   pcall(function() fireproximityprompt(p) end)
 
-                  bị sa thải = bị sa thải + 1
+                  fired = fired + 1
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-         kết thúc)
+         end)
 
-         Rayfield:Notify({Title="Tự động thu tiền BẬT!", Duration=3})
+         Rayfield:Notify({Title="Auto Collect ON!", Duration=3})
 
-      khác
+      else
 
          if collectLoop then collectLoop:Disconnect() collectLoop = nil end
 
-         Rayfield:Notify({Title="Tự động thu tiền TẮT", Duration=3})
+         Rayfield:Notify({Title="Auto Collect OFF", Duration=3})
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
 })
 
 farmTab:CreateToggle({
 
-   Tên = "Tự tái sinh",
+   Name = "Auto Rebirth",
 
    Callback = function(val)
 
-      nếu val thì
+      if val then
 
          rebirthLoop = RS.Heartbeat:Connect(function()
 
@@ -514,73 +514,73 @@ farmTab:CreateToggle({
 
             lastRebirth = tick()
 
-            cục bộ đã được kích hoạt = false
+            local fired = false
 
             for _, p in ipairs(workspace:GetDescendants()) do
 
-               nếu bị sa thải thì dừng lại
+               if fired then break end
 
                if p:IsA("ProximityPrompt") and p.Enabled and (p.ObjectText:lower():find("rebirth") or p.ActionText:lower():find("rebirth") or p.Name:lower():find("rebirth")) then
 
                   pcall(function() fireproximityprompt(p) end)
 
-                  đã bị sa thải = đúng
+                  fired = true
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-            nếu không bị sa thải thì
+            if not fired then
 
                for _, g in ipairs(player.PlayerGui:GetDescendants()) do
 
-                  nếu bị sa thải thì dừng lại
+                  if fired then break end
 
-                  nếu (g:IsA("TextButton") hoặc g:IsA("ImageButton")) và g.Visible và (g.Text:lower():find("rebirth") hoặc g.Name:lower():find("rebirth")) thì
+                  if (g:IsA("TextButton") or g:IsA("ImageButton")) and g.Visible and (g.Text:lower():find("rebirth") or g.Name:lower():find("rebirth")) then
 
                      pcall(function()
 
                         firesignal(g.Activated or g.MouseButton1Click or g.InputBegan)
 
-                     kết thúc)
+                     end)
 
-                     đã bị sa thải = đúng
+                     fired = true
 
-                  kết thúc
+                  end
 
-               kết thúc
+               end
 
-            kết thúc
+            end
 
-         kết thúc)
+         end)
 
-         Rayfield:Notify({Title="Tự động tái sinh BẬT!", Duration=3})
+         Rayfield:Notify({Title="Auto Rebirth ON!", Duration=3})
 
-      khác
+      else
 
          if rebirthLoop then rebirthLoop:Disconnect() rebirthLoop = nil end
 
-         Rayfield:Notify({Title="Tự động tái sinh TẮT", Duration=3})
+         Rayfield:Notify({Title="Auto Rebirth OFF", Duration=3})
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
 })
 
--- Tab Tính năng của Chúa
+-- God Features Tab
 
 local godTab = Window:CreateTab("God Features")
 
-godTab:CreateSection("Bất Tử & Nhảy")
+godTab:CreateSection("Bất Tử & Jump")
 
 godTab:CreateToggle({
 
-   Tên = "Chế độ Thần thánh (Máu vô hạn)",
+   Name = "God Mode (Infinite HP)",
 
    Callback = function(val)
 
-      nếu val thì
+      if val then
 
          applyGod(player.Character)
 
@@ -588,69 +588,69 @@ godTab:CreateToggle({
 
          player.CharacterAdded:Connect(function(c) task.wait(0.5) applyGod(c) end)
 
-         Rayfield:Notify({Title="Chế độ Thần thánh BẬT!", Duration=4})
+         Rayfield:Notify({Title="God Mode ON!", Duration=4})
 
-      khác
+      else
 
          if godConn then godConn:Disconnect() end
 
          if player.Character then restoreHum(player.Character) end
 
-         Rayfield:Notify({Title="Chế độ Thần thánh TẮT", Duration=3})
+         Rayfield:Notify({Title="God Mode OFF", Duration=3})
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
 })
 
 godTab:CreateToggle({
 
-   Tên = "Nhảy Vô Cực",
+   Name = "Infinite Jump",
 
    Callback = function(val)
 
-      nếu val thì
+      if val then
 
          infJumpConn = UIS.JumpRequest:Connect(function()
 
             local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 
-            nếu hum thì hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
 
-         kết thúc)
+         end)
 
          Rayfield:Notify({Title="Inf Jump ON!", Duration=3})
 
-      khác
+      else
 
          if infJumpConn then infJumpConn:Disconnect() end
 
          Rayfield:Notify({Title="Inf Jump OFF", Duration=3})
 
-      kết thúc
+      end
 
-   kết thúc
+   end
 
 })
 
--- Tab bổ sung
+-- Extra Tab
 
 local extraTab = Window:CreateTab("Extra")
 
-extraTab:CreateSection("Tiện Ích Không Lag")
+extraTab:CreateSection("Tiện Ích No Lag")
 
 extraTab:CreateToggle({
 
-   Tên = 'Xóa dung nham🦃',
+   Name = 'Remove Lava🦃',
 
-   Giá trị hiện tại = false,
+   CurrentValue = false,
 
    Callback = function(Value)
 
-      nếu Giá trị thì
+      if Value then
 
-         hàm cục bộ safeDestroy(v)
+         local function safeDestroy(v)
 
             if tick() - lastLavaRemove < 0.1 then return end
 
@@ -658,117 +658,117 @@ extraTab:CreateToggle({
 
             pcall(function() v:Destroy() end)
 
-         kết thúc
+         end
 
          
 
          local possibleLavaFolders = {
 
-            workspace:FindFirstChild("GameFolder") và workspace.GameFolder:FindFirstChild("Lavas"),
+            workspace:FindFirstChild("GameFolder") and workspace.GameFolder:FindFirstChild("Lavas"),
 
-            không gian làm việc:TìmConĐầuTiên("Lavas"),
+            workspace:FindFirstChild("Lavas"),
 
-            không gian làm việc:TìmConĐầuTiên("Lava"),
+            workspace:FindFirstChild("Lava"),
 
-            không gian làm việc:TìmConĐầuTiên("RisingLava"),
+            workspace:FindFirstChild("RisingLava"),
 
          }
 
          for _, folder in pairs(possibleLavaFolders) do
 
-            if folder then safeDestroy(folder) Rayfield:Notify({Title = 'Đã phá hủy thư mục Lava!', Duration = 3}) end
+            if folder then safeDestroy(folder) Rayfield:Notify({Title = 'Destroyed Lava Folder!', Duration = 3}) end
 
-         kết thúc
+         end
 
          
 
          for _, v in pairs(workspace:GetDescendants()) do
 
-            if (v:IsA('BasePart') hoặc v:IsA('MeshPart')) và
+            if (v:IsA('BasePart') or v:IsA('MeshPart')) and 
 
                (v.Name:lower():find('lava') or v.Material == Enum.Material.Lava or v.BrickColor == BrickColor.new("Bright red")) then
 
                safeDestroy(v)
 
-            kết thúc
+            end
 
-         kết thúc
+         end
 
          
 
          lavaConn1 = workspace.ChildAdded:Connect(function(child)
 
-            nếu (child:IsA('BasePart') hoặc child:IsA('MeshPart')) và
+            if (child:IsA('BasePart') or child:IsA('MeshPart')) and 
 
                (child.Name:lower():find('lava') or child.Material == Enum.Material.Lava) then
 
                safeDestroy(child)
 
-            kết thúc
+            end
 
-         kết thúc)
+         end)
 
          
 
          lavaConn2 = workspace.DescendantAdded:Connect(function(desc)
 
-            nếu (desc:IsA('BasePart') hoặc desc:IsA('MeshPart')) và
+            if (desc:IsA('BasePart') or desc:IsA('MeshPart')) and 
 
                (desc.Name:lower():find('lava') or desc.Material == Enum.Material.Lava) then
 
                safeDestroy(desc)
 
-            kết thúc
+            end
 
-         kết thúc)
+         end)
 
          
 
-         Rayfield:Notify({Title = 'Xóa Lava BẬT (Chế độ Mạnh)!', Duration = 6})
+         Rayfield:Notify({Title = 'Remove Lava ON (Strong Mode)!', Duration = 6})
 
-      khác
+      else
 
-         nếu lavaConn1 thì lavaConn1:Disconnect() kết thúc
+         if lavaConn1 then lavaConn1:Disconnect() end
 
          if lavaConn2 then lavaConn2:Disconnect() end
 
-         Rayfield:Notify({Title = 'Xóa Lava OFF', Duration = 3})
+         Rayfield:Notify({Title = 'Remove Lava OFF', Duration = 3})
 
-      kết thúc
+      end
 
-   kết thúc,
+   end,
 
 })
 
 extraTab:CreateToggle({
 
-   Tên = 'Lời nhắc tức thì🎢',
+   Name = 'Instant Prompt🎢',
 
-   Giá trị hiện tại = false,
+   CurrentValue = false,
 
    Callback = function(Value)
 
-      nếu Giá trị thì
+      if Value then
 
          for _, obj in workspace:GetDescendants() do
 
             pcall(function() setupPrompt(obj, true) end)
 
-         kết thúc
+         end
 
-         nếu không phải promptConn thì
+         if not promptConn then
 
             promptConn = workspace.DescendantAdded:Connect(function(p)
 
                task.spawn(function() setupPrompt(p, true) end)
 
-            kết thúc)
+            end)
 
-         kết thúc
+         end
 
-         Rayfield:Notify({Title = 'Thông báo tức thì BẬT! 🔥', Content = 'Tự động trộm/thu thập siêu nhanh!', Duration = 7})
+         Rayfield:Notify({Title = 'Instant Prompts ON! 🔥', Content = 'Auto Steal/Collect siêu nhanh!', Duration = 7})
 
-      khác
+      else
 
          if promptConn then promptConn:Disconnect() promptConn = nil end
 
@@ -776,22 +776,22 @@ extraTab:CreateToggle({
 
             pcall(function() setupPrompt(obj, false) end)
 
-         kết thúc
+         end
 
-         Rayfield:Notify({Title = 'Tắt thông báo tức thì', Duration = 4})
+         Rayfield:Notify({Title = 'Instant Prompts OFF', Duration = 4})
 
-      kết thúc
+      end
 
-   kết thúc,
+   end,
 
 })
 
 Rayfield:Notify({
 
-   Tiêu đề = 'Nhật HUB🗿👹👑🫦 v10.3',
+   Title = 'Nhật HUB🗿👹👑🫦 v10.3',
 
-   Content = 'Kịch bản Vip nhất rồi',
+   Content = 'Vip nhất script rồi',
 
-   Thời lượng = 10
+   Duration = 10
 
 })
