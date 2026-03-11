@@ -1,0 +1,409 @@
+--================ LOADING HACKER =================
+
+local LoadingGui = Instance.new("ScreenGui", game.CoreGui)
+
+LoadingGui.IgnoreGuiInset = true
+
+local BG = Instance.new("Frame", LoadingGui)
+
+BG.Size = UDim2.fromScale(1,1)
+
+BG.BackgroundColor3 = Color3.fromRGB(0,0,0)
+
+local BarBG = Instance.new("Frame", BG)
+
+BarBG.Size = UDim2.new(0.6,0,0.04,0)
+
+BarBG.Position = UDim2.new(0.2,0,0.55,0)
+
+BarBG.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+BarBG.BorderSizePixel = 0
+
+local Bar = Instance.new("Frame", BarBG)
+
+Bar.Size = UDim2.new(0,0,1,0)
+
+Bar.BorderSizePixel = 0
+
+local Percent = Instance.new("TextLabel", BG)
+
+Percent.Size = UDim2.new(1,0,0.05,0)
+
+Percent.Position = UDim2.new(0,0,0.60,0)
+
+Percent.Text = "0%"
+
+Percent.TextScaled = true
+
+Percent.TextColor3 = Color3.fromRGB(255,255,255)
+
+Percent.BackgroundTransparency = 1
+
+Percent.Font = Enum.Font.Gotham
+
+local HackerText = Instance.new("TextLabel", BG)
+
+HackerText.Size = UDim2.new(1,0,0.05,0)
+
+HackerText.Position = UDim2.new(0,0,0.50,0)
+
+HackerText.Text = "Script tổng hợp"
+
+HackerText.TextSize = 18
+
+HackerText.BackgroundTransparency = 1
+
+HackerText.Font = Enum.Font.Code
+
+HackerText.TextStrokeTransparency = 0
+
+task.spawn(function()
+
+    local hue = 0
+
+    while LoadingGui.Parent do
+
+        hue = (hue + 0.01) % 1
+
+        HackerText.TextColor3 = Color3.fromHSV(hue,1,1)
+
+        Bar.BackgroundColor3 = Color3.fromHSV(hue,1,1)
+
+        task.wait(0.03)
+
+    end
+
+end)
+
+for i = 1,100 do
+
+    Bar.Size = UDim2.new(i/100,0,1,0)
+
+    Percent.Text = i.."%"
+
+    task.wait(0.03)
+
+end
+
+task.wait(0.3)
+
+LoadingGui:Destroy()
+
+--=================================================
+
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+-- GUI ICON
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local ImageButton = Instance.new("ImageButton", ScreenGui)
+
+ImageButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+
+ImageButton.BorderSizePixel = 0
+
+ImageButton.Position = UDim2.new(0.1,0,0.16,0)
+
+ImageButton.Size = UDim2.new(0,40,0,40)
+
+ImageButton.Draggable = true
+
+ImageButton.Image = "rbxassetid://113693204450990"
+
+Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(1,10)
+
+-- LOAD FLUENT
+
+local Fluent = loadstring(game:HttpGet(
+
+"https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
+
+))()
+
+local Window = Fluent:CreateWindow({
+
+    Title = "NHẬTVIP",
+
+    SubTitle = "Wave of brainrots",
+
+    TabWidth = 157,
+
+    Size = UDim2.fromOffset(450,300),
+
+    Acrylic = true,
+
+    Theme = "Light",
+
+    MinimizeKey = Enum.KeyCode.End
+
+})
+
+-- FIX MENU GIỮA MÀN
+
+local Root = Window.Root
+
+local FIX_SIZE = UDim2.fromOffset(450,300)
+
+local FIX_POS  = UDim2.new(0.5,-225,0.5,-150)
+
+local function LockWindow()
+
+    Root.Size = FIX_SIZE
+
+    Root.Position = FIX_POS
+
+end
+
+LockWindow()
+
+Root:GetPropertyChangedSignal("Size"):Connect(LockWindow)
+
+Root:GetPropertyChangedSignal("Position"):Connect(LockWindow)
+
+local IsOpen = true
+
+ImageButton.MouseButton1Click:Connect(function()
+
+    if IsOpen then
+
+        Window:Minimize()
+
+    else
+
+        Window:Maximize()
+
+        task.wait()
+
+        LockWindow()
+
+    end
+
+    IsOpen = not IsOpen
+
+end)
+
+-- TABS
+
+local Tabs = {
+
+    Main0 = Window:AddTab({ Title="Thông Tin" }),
+
+    Main1 = Window:AddTab({ Title="Wave of brainrots" }),
+
+    Main2 = Window:AddTab({ Title="Slime Time Studios" }),
+
+    Main3 = Window:AddTab({ Title="Đổi Màu Menu" }),
+
+    Main4 = Window:AddTab({ Title="Đổi Server" }),
+
+    Main5 = Window:AddTab({ Title="Blox Fruit" }),
+
+Main6 = Window:AddTab({ Title = "Escape Brainrots Lava" }),
+
+}
+
+-- INFO
+
+Tabs.Main0:AddButton({
+
+    Title="Tik Tok",
+
+    Description="812000ch",
+
+    Callback=function()
+
+        setclipboard("tiktok.com/@812000ch")
+
+    end
+
+})
+
+-- GAME SCRIPTS
+
+Tabs.Main1:AddButton({
+
+    Title="NHẬT HuB",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://pastefy.app/4ljanCeo/raw"))()
+
+    end
+
+})
+
+Tabs.Main1:AddButton({
+
+    Title="Rat Hub X",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ratkinator/RatX/refs/heads/main/Loader.lua", true))()
+
+    end
+
+  })
+
+    
+
+Tabs.Main2:AddButton({
+
+    Title="Run Script",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://pastefy.app/gkFT8j1w/raw"))()
+
+    end
+
+})
+
+-- RECOLOR
+
+local function Recolor(bg, stroke, text)
+
+    for _,v in pairs(Window.Root:GetDescendants()) do
+
+        if v:IsA("Frame") then
+
+            v.BackgroundColor3 = bg
+
+        elseif v:IsA("TextLabel") or v:IsA("TextButton") then
+
+            v.TextColor3 = text
+
+        elseif v:IsA("UIStroke") then
+
+            v.Color = stroke
+
+        end
+
+    end
+
+end
+
+Tabs.Main3:AddButton({
+
+    Title="Dark",
+
+    Callback=function()
+
+        Recolor(
+
+            Color3.fromRGB(20,20,20),
+
+            Color3.fromRGB(80,80,80),
+
+            Color3.fromRGB(255,255,255)
+
+        )
+
+    end
+
+})
+
+-- SERVER
+
+local TeleportService = game:GetService("TeleportService")
+
+local HttpService = game:GetService("HttpService")
+
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+
+local function GetServers()
+
+    local url = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+
+    local servers = HttpService:JSONDecode(game:HttpGet(url))
+
+    local list = {}
+
+    for _,v in pairs(servers.data) do
+
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+
+            table.insert(list, v)
+
+        end
+
+    end
+
+    return list
+
+end
+
+Tabs.Main4:AddButton({
+
+    Title="Đổi server ít người nhất",
+
+    Callback=function()
+
+        local list = GetServers()
+
+        table.sort(list,function(a,b) return a.playing<b.playing end)
+
+        if #list>0 then
+
+            TeleportService:TeleportToPlaceInstance(game.PlaceId,list[1].id,LocalPlayer)
+
+        end
+
+    end
+
+})
+
+Tabs.Main4:AddButton({
+
+    Title="Tăng FPS",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://pastefy.app/WdCFCW7b/raw"))()
+
+    end
+
+})
+
+-- MAIN5 (ĐÃ FIX CHUẨN)
+
+Tabs.Main5:AddButton({
+
+    Title="BLOCK Fruit",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/traurobloxdeptrai/traukhoaito/refs/heads/main/traurobloxv8.lua"))()
+
+    end
+
+})
+
+Tabs.Main5:AddButton({
+
+    Title="FIX LAG",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TurboLite/Script/main/FixLag.lua"))()
+
+    end
+
+})
+
+Tabs.Main6:AddButton({
+
+    Title="Escape Brainrots Lava",
+
+    Callback=function()
+
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Vip%20l%E1%BA%AFm"))()
+
+    end
+
+})
