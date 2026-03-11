@@ -402,8 +402,7 @@ Tabs.Main6:AddButton({
 
     Callback=function()
 
-        loadstring(game:"https://pastefy.app/8xp9kLTz/raw"))()
-
+        loadstring(game:HttpGet("https://pastefy.app/8xp9kLTz/raw"))()
     end
 
 })
