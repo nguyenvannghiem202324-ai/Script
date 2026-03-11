@@ -402,7 +402,7 @@ Tabs.Main6:AddButton({
 
     Callback=function()
 
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Vip%20l%E1%BA%AFm"))()
+        loadstring(game:https://pastefy.app/8xp9kLTz/raw"))()
 
     end
 
