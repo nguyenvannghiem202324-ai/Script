@@ -418,7 +418,7 @@ farmTab:CreateToggle({
 
             if not fired then
 
-               stealAttempts = stealAttempts + 1
+               stealAttempts = stealAttempts +1
 
                if stealAttempts >= 1 then  -- 4 lần không steal được → coi như hết → TP về Base
 
@@ -439,6 +439,362 @@ farmTab:CreateToggle({
          end)
 
          Rayfield:Notify({Title="Auto Steal ON! (TP về Base khi hết)", Duration=5})
+
+      else
+
+         if stealLoop then stealLoop:Disconnect() stealLoop = nil end
+
+         stealAttempts = 0
+
+         Rayfield:Notify({Title="Auto Steal OFF", Duration=3})
+
+      end
+
+   end
+
+})
+
+farmTab:CreateToggle({
+
+   Name = "Collect Cash",
+
+   Callback = function(val)
+
+      if val then
+
+         collectLoop = RS.Heartbeat:Connect(function()
+
+            if tick() - lastCollect < 0.5 then return end
+
+            lastCollect = tick()
+
+            local fired = 0
+
+            for _, p in ipairs(workspace:GetDescendants()) do
+
+               if fired >= 3 then break end
+
+               if p:IsA("ProximityPrompt") and p.Enabled and (p.Name:lower():find("collect") or p.Name:lower():find("claim") or p.Name:lower():find("cash") or p.Name:lower():find("money") or p.ActionText:lower():find("collect")) then
+
+                  pcall(function() fireproximityprompt(p) end)
+
+                  fired = fired + 1
+
+               end
+
+            end
+
+         end)
+
+         Rayfield:Notify({Title="Auto Collect ON!", Duration=3})
+
+      else
+
+         if collectLoop then collectLoop:Disconnect() collectLoop = nil end
+
+         Rayfield:Notify({Title="Auto Collect OFF", Duration=3})
+
+      end
+
+   end
+
+})
+
+farmTab:CreateToggle({
+
+   Name = "Auto Rebirth",
+
+   Callback = function(val)
+
+      if val then
+
+         rebirthLoop = RS.Heartbeat:Connect(function()
+
+            if tick() - lastRebirth < 2 then return end
+
+            lastRebirth = tick()
+
+            local fired = false
+
+            for _, p in ipairs(workspace:GetDescendants()) do
+
+               if fired then break end
+
+               if p:IsA("ProximityPrompt") and p.Enabled and (p.ObjectText:lower():find("rebirth") or p.ActionText:lower():find("rebirth") or p.Name:lower():find("rebirth")) then
+
+                  pcall(function() fireproximityprompt(p) end)
+
+                  fired = true
+
+               end
+
+            end
+
+            if not fired then
+
+               for _, g in ipairs(player.PlayerGui:GetDescendants()) do
+
+                  if fired then break end
+
+                  if (g:IsA("TextButton") or g:IsA("ImageButton")) and g.Visible and (g.Text:lower():find("rebirth") or g.Name:lower():find("rebirth")) then
+
+                     pcall(function()
+
+                        firesignal(g.Activated or g.MouseButton1Click or g.InputBegan)
+
+                     end)
+
+                     fired = true
+
+                  end
+
+               end
+
+            end
+
+         end)
+
+         Rayfield:Notify({Title="Auto Rebirth ON!", Duration=3})
+
+      else
+
+         if rebirthLoop then rebirthLoop:Disconnect() rebirthLoop = nil end
+
+         Rayfield:Notify({Title="Auto Rebirth OFF", Duration=3})
+
+      end
+
+   end
+
+})
+
+-- God Features Tab
+
+local godTab = Window:CreateTab("God Features")
+
+godTab:CreateSection("Bất Tử & Jump")
+
+godTab:CreateToggle({
+
+   Name = "God Mode (Infinite HP)",
+
+   Callback = function(val)
+
+      if val then
+
+         applyGod(player.Character)
+
+         godConn = RS.Heartbeat:Connect(function() pcall(applyGod, player.Character) end)
+
+         player.CharacterAdded:Connect(function(c) task.wait(0.5) applyGod(c) end)
+
+         Rayfield:Notify({Title="God Mode ON!", Duration=4})
+
+      else
+
+         if godConn then godConn:Disconnect() end
+
+         if player.Character then restoreHum(player.Character) end
+
+         Rayfield:Notify({Title="God Mode OFF", Duration=3})
+
+      end
+
+   end
+
+})
+
+godTab:CreateToggle({
+
+   Name = "Infinite Jump",
+
+   Callback = function(val)
+
+      if val then
+
+         infJumpConn = UIS.JumpRequest:Connect(function()
+
+            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+
+         end)
+
+         Rayfield:Notify({Title="Inf Jump ON!", Duration=3})
+
+      else
+
+         if infJumpConn then infJumpConn:Disconnect() end
+
+         Rayfield:Notify({Title="Inf Jump OFF", Duration=3})
+
+      end
+
+   end
+
+})
+
+-- Extra Tab
+
+local extraTab = Window:CreateTab("Extra")
+
+extraTab:CreateSection("Tiện Ích No Lag")
+
+extraTab:CreateToggle({
+
+   Name = 'Remove Lava🦃',
+
+   CurrentValue = false,
+
+   Callback = function(Value)
+
+      if Value then
+
+         local function safeDestroy(v)
+
+            if tick() - lastLavaRemove < 0.1 then return end
+
+            lastLavaRemove = tick()
+
+            pcall(function() v:Destroy() end)
+
+         end
+
+         
+
+         local possibleLavaFolders = {
+
+            workspace:FindFirstChild("GameFolder") and workspace.GameFolder:FindFirstChild("Lavas"),
+
+            workspace:FindFirstChild("Lavas"),
+
+            workspace:FindFirstChild("Lava"),
+
+            workspace:FindFirstChild("RisingLava"),
+
+         }
+
+         for _, folder in pairs(possibleLavaFolders) do
+
+            if folder then safeDestroy(folder) Rayfield:Notify({Title = 'Destroyed Lava Folder!', Duration = 3}) end
+
+         end
+
+         
+
+         for _, v in pairs(workspace:GetDescendants()) do
+
+            if (v:IsA('BasePart') or v:IsA('MeshPart')) and 
+
+               (v.Name:lower():find('lava') or v.Material == Enum.Material.Lava or v.BrickColor == BrickColor.new("Bright red")) then
+
+               safeDestroy(v)
+
+            end
+
+         end
+
+         
+
+         lavaConn1 = workspace.ChildAdded:Connect(function(child)
+
+            if (child:IsA('BasePart') or child:IsA('MeshPart')) and 
+
+               (child.Name:lower():find('lava') or child.Material == Enum.Material.Lava) then
+
+               safeDestroy(child)
+
+            end
+
+         end)
+
+         
+
+         lavaConn2 = workspace.DescendantAdded:Connect(function(desc)
+
+            if (desc:IsA('BasePart') or desc:IsA('MeshPart')) and 
+
+               (desc.Name:lower():find('lava') or desc.Material == Enum.Material.Lava) then
+
+               safeDestroy(desc)
+
+            end
+
+         end)
+
+         
+
+         Rayfield:Notify({Title = 'Remove Lava ON (Strong Mode)!', Duration = 6})
+
+      else
+
+         if lavaConn1 then lavaConn1:Disconnect() end
+
+         if lavaConn2 then lavaConn2:Disconnect() end
+
+         Rayfield:Notify({Title = 'Remove Lava OFF', Duration = 3})
+
+      end
+
+   end,
+
+})
+
+extraTab:CreateToggle({
+
+   Name = 'Instant Prompt🎢',
+
+   CurrentValue = false,
+
+   Callback = function(Value)
+
+      if Value then
+
+         for _, obj in workspace:GetDescendants() do
+
+            pcall(function() setupPrompt(obj, true) end)
+
+         end
+
+         if not promptConn then
+
+            promptConn = workspace.DescendantAdded:Connect(function(p)
+
+               task.spawn(function() setupPrompt(p, true) end)
+
+            end)
+
+         end
+
+         Rayfield:Notify({Title = 'Instant Prompts ON! 🔥', Content = 'Auto Steal/Collect siêu nhanh!', Duration = 7})
+
+      else
+
+         if promptConn then promptConn:Disconnect() promptConn = nil end
+
+         for _, obj in workspace:GetDescendants() do
+
+            pcall(function() setupPrompt(obj, false) end)
+
+         end
+
+         Rayfield:Notify({Title = 'Instant Prompts OFF', Duration = 4})
+
+      end
+
+   end,
+
+})
+
+Rayfield:Notify({
+
+   Title = 'Nhật HUB🗿👹👑🫦 v10.3',
+
+   Content = 'Vip nhất script rồi',
+
+   Duration = 10
+
+})ayfield:Notify({Title="Auto Steal ON! (TP về Base khi hết)", Duration=5})
 
       else
 
