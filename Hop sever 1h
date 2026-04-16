@@ -1,0 +1,104 @@
+--[[
+    SCRIPT: AUTO SERVER HOP + DRAGGABLE GUI
+    Tính năng: Tự động đổi server sau khoảng thời gian nhất định
+--]]
+
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- CẤU HÌNH THỜI GIAN (Giây)
+local minTime = 3600 -- 1 giờ
+local maxTime = 7200 -- 2 giờ
+local waitTime = math.random(minTime, maxTime)
+local timeLeft = waitTime
+
+-- TẠO GUI HIỂN THỊ
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local TextLabel = Instance.new("TextLabel")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Name = "ServerHopGui"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.5, -75, 0.1, 0)
+MainFrame.Size = UDim2.new(0, 150, 0, 40)
+MainFrame.Active = true
+MainFrame.Draggable = true -- Hỗ trợ kéo thả cơ bản
+
+UICorner.Parent = MainFrame
+
+TextLabel.Parent = MainFrame
+TextLabel.BackgroundTransparency = 1
+TextLabel.Size = UDim2.new(1, 0, 1, 0)
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
+TextLabel.TextSize = 14
+TextLabel.Text = "Đang tải..."
+
+-- HÀM ĐỔI SERVER (SERVER HOP)
+local function ServerHop()
+    local x = {}
+    for _, v in ipairs(HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data) do
+        if type(v) == "table" and v.maxPlayers > v.playing and v.id ~= game.JobId then
+            x[#x + 1] = v.id
+        end
+    end
+    if #x > 0 then
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, x[math.random(1, #x)])
+    else
+        warn("Không tìm thấy server phù hợp!")
+    end
+end
+
+-- LOGIC KÉO THẢ NÂNG CAO (Cho Mobile mượt hơn)
+local dragging, dragInput, dragStart, startPos
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if dragging and dragInput then
+        local delta = dragInput.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- CẬP NHẬT THỜI GIAN
+task.spawn(function()
+    while timeLeft > 0 do
+        local hours = math.floor(timeLeft / 3600)
+        local minutes = math.floor((timeLeft % 3600) / 60)
+        local seconds = math.floor(timeLeft % 60)
+        
+        TextLabel.Text = string.format("Đổi Server: %02d:%02d:%02d", hours, minutes, seconds)
+        task.wait(1)
+        timeLeft = timeLeft - 1
+    end
+    
+    TextLabel.Text = "Đang chuyển server..."
+    ServerHop()
+end)
