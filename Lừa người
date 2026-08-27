@@ -1,0 +1,229 @@
+--// TROLL LOADER
+--// 0-100% trong 2 phút -> 500% -> màn hình đen 5s -> chạy script
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local old = playerGui:FindFirstChild("TrollLoader")
+if old then
+    old:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TrollLoader"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+--// Khung chính
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(360, 240)
+frame.Position = UDim2.fromScale(0.5, 0.5)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 18)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(80, 80, 80)
+stroke.Thickness = 2
+stroke.Parent = frame
+
+--// Tam giác 6 cánh
+local star = Instance.new("TextLabel")
+star.Size = UDim2.fromOffset(110, 80)
+star.Position = UDim2.new(0.5, 0, 0, 8)
+star.AnchorPoint = Vector2.new(0.5, 0)
+star.BackgroundTransparency = 1
+star.Text = "✡"
+star.TextColor3 = Color3.fromRGB(255, 255, 255)
+star.TextSize = 72
+star.Font = Enum.Font.GothamBold
+star.Parent = frame
+
+--// Tiêu đề
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -30, 0, 30)
+title.Position = UDim2.new(0, 15, 0, 82)
+title.BackgroundTransparency = 1
+title.Text = "ĐANG KHỞI ĐỘNG..."
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+--// Thanh nền
+local barBack = Instance.new("Frame")
+barBack.Size = UDim2.new(1, -50, 0, 18)
+barBack.Position = UDim2.new(0, 25, 0, 125)
+barBack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+barBack.BorderSizePixel = 0
+barBack.ClipsDescendants = true
+barBack.Parent = frame
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(1, 0)
+barCorner.Parent = barBack
+
+--// Thanh tiến trình
+local bar = Instance.new("Frame")
+bar.Size = UDim2.new(0, 0, 1, 0)
+bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+bar.BorderSizePixel = 0
+bar.Parent = barBack
+
+local barCorner2 = Instance.new("UICorner")
+barCorner2.CornerRadius = UDim.new(1, 0)
+barCorner2.Parent = bar
+
+--// Phần trăm
+local percent = Instance.new("TextLabel")
+percent.Size = UDim2.new(1, 0, 0, 30)
+percent.Position = UDim2.new(0, 0, 0, 153)
+percent.BackgroundTransparency = 1
+percent.Text = "0%"
+percent.TextColor3 = Color3.fromRGB(255, 255, 255)
+percent.TextSize = 16
+percent.Font = Enum.Font.GothamBold
+percent.Parent = frame
+
+--// Trạng thái
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -30, 0, 25)
+status.Position = UDim2.new(0, 15, 1, -35)
+status.BackgroundTransparency = 1
+status.Text = "Vui lòng chờ..."
+status.TextColor3 = Color3.fromRGB(150, 150, 150)
+status.TextSize = 13
+status.Font = Enum.Font.Gotham
+status.Parent = frame
+
+--// Kéo bảng
+local dragging = false
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+
+        local delta = input.Position - dragStart
+
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+--// =========================================
+--// 0 -> 100% TRONG 120 GIÂY
+--// =========================================
+
+local totalTime = 120
+local startTime = tick()
+
+while true do
+    local elapsed = tick() - startTime
+    local progress = math.clamp(elapsed / totalTime, 0, 1)
+
+    bar.Size = UDim2.new(progress, 0, 1, 0)
+
+    local value = math.floor(progress * 100)
+    percent.Text = value .. "%"
+
+    if value < 25 then
+        status.Text = "Đang tải dữ liệu..."
+    elseif value < 50 then
+        status.Text = "Đang kiểm tra..."
+    elseif value < 75 then
+        status.Text = "Đang khởi tạo..."
+    elseif value < 100 then
+        status.Text = "Sắp hoàn tất..."
+    else
+        status.Text = "Hoàn tất!"
+    end
+
+    if progress >= 1 then
+        break
+    end
+
+    task.wait(0.05)
+end
+
+--// =========================================
+--// TROLL 500%
+//// =========================================
+
+percent.Text = "500%"
+title.Text = "ĐANG HOÀN TẤT..."
+status.Text = "Tải vượt giới hạn!"
+
+task.wait(1)
+
+--// =========================================
+--// MÀN HÌNH ĐEN 5 GIÂY
+--// =========================================
+
+frame:Destroy()
+
+local black = Instance.new("Frame")
+black.Size = UDim2.fromScale(1, 1)
+black.Position = UDim2.fromScale(0, 0)
+black.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+black.BorderSizePixel = 0
+black.ZIndex = 999
+black.Parent = gui
+
+local trollText = Instance.new("TextLabel")
+trollText.Size = UDim2.new(1, -30, 0, 100)
+trollText.Position = UDim2.fromScale(0.5, 0.5)
+trollText.AnchorPoint = Vector2.new(0.5, 0.5)
+trollText.BackgroundTransparency = 1
+trollText.Text = "không có script đâu hahahah"
+trollText.TextColor3 = Color3.fromRGB(255, 255, 255)
+trollText.TextSize = 30
+trollText.Font = Enum.Font.GothamBold
+trollText.TextWrapped = true
+trollText.ZIndex = 1000
+trollText.Parent = black
+
+task.wait(5)
+
+--// Xóa màn hình troll
+gui:Destroy()
+
+--// =========================================
+--// SCRIPT THẬT CHẠY SAU CÙNG
+--// =========================================
+
+loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/Omgshit/Scripts/main/MainLoader.lua"
+))()
