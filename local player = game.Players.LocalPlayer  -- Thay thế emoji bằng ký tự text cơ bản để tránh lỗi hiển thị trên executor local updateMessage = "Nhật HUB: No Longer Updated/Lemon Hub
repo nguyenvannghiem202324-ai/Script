@@ -1,0 +1,9 @@
+local player = game.Players.LocalPlayer
+
+-- Thay thế emoji bằng ký tự text cơ bản để tránh lỗi hiển thị trên executor
+local updateMessage = "Hahahah mày đã bị band vì sử dụng script linh tinh.\n\n" ..
+                      "> Please get the new script.\n\n" ..
+                      "[*] Phiên bản đã cũ, muốn nhận script mới thì ID Anh Nhật đẹp zai nhé."
+
+-- Sử dụng tostring() để đảm bảo định dạng văn bản được truyền đi chính xác 100%
+player:Kick(tostring(updateMessage))
