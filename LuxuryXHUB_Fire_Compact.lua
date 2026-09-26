@@ -1,279 +1,1028 @@
---[[
-    LuxuryXHUB — Pull An Egg
-    pull_an_egg.lua — Single-file Automation Suite
+--========================================================--
+--              LUXURYXHUB - COMPACT UI                  --
+--========================================================--
 
-    Changes vs previous version:
-    · BodyVelocity replaced with LinearVelocity (non-deprecated)
-    · Duplicate colour-table (C / BG0…) merged into one canonical table
-    · hookAutoRevive() replaced by Heartbeat loop that exits on Unload
-    · Runtime.Running is set to false on Unload so all loops exit cleanly
-    · dragging=true dragging=true typo fixed
-    · ESP dead-part pruning added to the RenderStepped loop
-    · AutoRevive, AutoBuyGear toggles added to UI
-    · BuyGearId, BuyGearInterval, AutoRevive added to Config
-    · Remotes folder cached with a validity check (re-fetches if destroyed)
-    · Toggle hover closure reads live `state` (no stale-colour flash)
-    · Universal.setLowGraphics no longer calls deprecated Set3dRenderingEnabled
-    · Ctrl shortcut connection tracked and disconnected on Unload
-    · Unload is complete: stops all flags, floats, noclip, ESP, GUI, connections
-]]
+local UI = {}
 
--- ── 0. Cleanup previous instance ─────────────────────────────────────
-if getgenv().LuxuryXHUB_PullAnEgg
-and typeof(getgenv().LuxuryXHUB_PullAnEgg.Unload) == "function" then
-    pcall(function() getgenv().LuxuryXHUB_PullAnEgg.Unload() end)
-end
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
--- ── Services ─────────────────────────────────────────────────────────
-local Players           = game:GetService("Players")
-local RunService        = game:GetService("RunService")
-local TweenService      = game:GetService("TweenService")
-local UserInputService  = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CoreGui           = game:GetService("CoreGui")
-local LocalPlayer       = Players.LocalPlayer
+local LP = Players.LocalPlayer
 
--- ── Runtime tracker ──────────────────────────────────────────────────
-local Runtime = {
-    Running     = true,
-    Connections = {},
-    Instances   = {},
-}
-function Runtime.trackConn(conn)
-    table.insert(Runtime.Connections, conn)
-    return conn
-end
+--========================================================--
+-- COLORS
+--========================================================--
 
--- ── 1. Configuration ─────────────────────────────────────────────────
-local Config = {
-    -- Automation
-    AutoTrain        = false,
-    TrainInterval    = 0.1,
+local COLORS = {
+    Background = Color3.fromRGB(16, 17, 24),
+    Panel      = Color3.fromRGB(23, 24, 33),
+    Card       = Color3.fromRGB(30, 31, 43),
+    CardHover  = Color3.fromRGB(37, 38, 52),
 
-    AutoSell         = false,
-    SellInterval     = 2,
+    Text       = Color3.fromRGB(245, 245, 250),
+    SubText    = Color3.fromRGB(155, 158, 175),
 
-    AutoRebirth      = false,
-    RebirthInterval  = 1,
+    Accent     = Color3.fromRGB(170, 90, 255),
+    Accent2    = Color3.fromRGB(225, 85, 255),
 
-    AutoBuyDumbell   = false,
-    AutoUpgradeCarry = false,
+    Green      = Color3.fromRGB(70, 210, 130),
+    Red        = Color3.fromRGB(220, 75, 85),
 
-    AutoRevive       = true,  -- Instantly click Yes on the revive prompt
-
-    AutoBuyGear      = false,
-    BuyGearId        = "6",
-    BuyGearInterval  = 1,
-
-    AutoPullEgg      = false,
-    TargetEggTier    = "Celestial",
-    FlyHeight        = 16,
-    SafeHover        = true,
-
-    EggESP           = true,
-
-    -- Universal
-    AntiAFK          = true,
-    LowGraphics      = false,
-    SpeedBoost       = false,
-    WalkSpeed        = 100,
-    JumpPower        = 80,
-
-    TIERS = {
-        "Celestial", "Transcendent", "Divine", "OG", "Brainrot God",
-        "Secret", "Mythic", "Legendary", "Epic", "Rare", "Common",
-    },
-    TIER_COLORS = {
-        ["Celestial"]    = Color3.fromRGB(  0, 240, 255),
-        ["Transcendent"] = Color3.fromRGB(255,   0, 128),
-        ["Divine"]       = Color3.fromRGB(255, 215,   0),
-        ["OG"]           = Color3.fromRGB(138,  43, 226),
-        ["Brainrot God"] = Color3.fromRGB(255,  69,   0),
-        ["Secret"]       = Color3.fromRGB( 75,   0, 130),
-        ["Mythic"]       = Color3.fromRGB(255,  50,  50),
-        ["Legendary"]    = Color3.fromRGB(255, 165,   0),
-        ["Epic"]         = Color3.fromRGB(186,  85, 211),
-        ["Rare"]         = Color3.fromRGB( 30, 144, 255),
-        ["Common"]       = Color3.fromRGB(180, 180, 180),
-    },
+    Stroke     = Color3.fromRGB(55, 57, 72),
 }
 
--- ── 2. Remotes ───────────────────────────────────────────────────────
-local Remotes = {}
-local _remotesFolder = nil
+--========================================================--
+-- CLEAN OLD UI
+--========================================================--
 
-local function getRemotesFolder()
-    if _remotesFolder and _remotesFolder.Parent then return _remotesFolder end
-    local shared  = ReplicatedStorage:FindFirstChild("SharedModules")
-    local network = shared and shared:FindFirstChild("Network")
-    _remotesFolder = network and network:FindFirstChild("Remotes")
-    return _remotesFolder
-end
-
-function Remotes.fire(name, ...)
-    local folder = getRemotesFolder()
-    if not folder then return false end
-    local r = folder:FindFirstChild(name)
-    if r and r:IsA("RemoteEvent") then r:FireServer(...) return true end
-    return false
-end
-
-function Remotes.invoke(name, ...)
-    local folder = getRemotesFolder()
-    if not folder then return nil end
-    local r = folder:FindFirstChild(name)
-    if r and r:IsA("RemoteFunction") then return r:InvokeServer(...) end
-    return nil
-end
-
-function Remotes.buyDumbell(nameOrIndex)
-    local id = typeof(nameOrIndex) == "number"
-        and ("Dumbell_" .. nameOrIndex)
-        or  tostring(nameOrIndex)
-    return Remotes.fire("Buy Dumbell", id)
-end
-
--- ── 3. Farm & Movement ───────────────────────────────────────────────
-local Farm = { Threads = {}, _conns = {} }
-
--- Float via LinearVelocity (BodyVelocity is deprecated)
-local _lvAttach, _lvInst = nil, nil
-function Farm.setFloat(enabled)
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    if enabled then
-        if _lvAttach and _lvAttach.Parent == root then return end
-        _lvAttach        = Instance.new("Attachment")
-        _lvAttach.Name   = "LuxuryXHUB_FloatAttach"
-        _lvAttach.Parent = root
-        _lvInst                     = Instance.new("LinearVelocity")
-        _lvInst.Name                = "LuxuryXHUB_Float"
-        _lvInst.Attachment0         = _lvAttach
-        _lvInst.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
-        _lvInst.MaxForce            = 1e6
-        _lvInst.VectorVelocity      = Vector3.new(0, 0, 0)
-        _lvInst.Parent              = root
-    else
-        if _lvInst   then pcall(function() _lvInst:Destroy()   end) _lvInst   = nil end
-        if _lvAttach then pcall(function() _lvAttach:Destroy() end) _lvAttach = nil end
-        -- Clean up any leftovers
-        if root then
-            for _, n in ipairs({"LuxuryXHUB_Float","LuxuryXHUB_FloatAttach"}) do
-                local old = root:FindFirstChild(n)
-                if old then old:Destroy() end
-            end
-        end
+pcall(function()
+    local old = CoreGui:FindFirstChild("LuxuryXHUB_CompactUI")
+    if old then
+        old:Destroy()
     end
-end
+end)
 
-local _noclipConn = nil
-function Farm.setNoclip(enabled)
-    if _noclipConn then _noclipConn:Disconnect() _noclipConn = nil end
-    if enabled then
-        _noclipConn = RunService.Stepped:Connect(function()
-            local char = LocalPlayer.Character
-            if not char then return end
-            for _, p in ipairs(char:GetDescendants()) do
-                if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
-            end
-        end)
-        Runtime.trackConn(_noclipConn)
-    else
-        local char = LocalPlayer.Character
-        if char then
-            for _, p in ipairs(char:GetDescendants()) do
-                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.CanCollide = true end
-            end
-        end
+--========================================================--
+-- HELPERS
+--========================================================--
+
+local function Create(className, properties, parent)
+    local object = Instance.new(className)
+
+    for property, value in pairs(properties or {}) do
+        object[property] = value
     end
+
+    object.Parent = parent
+
+    return object
 end
 
-function Farm.teleportTo(cf, h)
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not (root and cf) then return end
-    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    root.CFrame = cf + Vector3.new(0, h or 3, 0)
+local function Corner(object, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 8)
+    c.Parent = object
+    return c
 end
 
-function Farm.getPartForTier(tierName)
-    local map  = workspace:FindFirstChild("Map")
-    local sp   = map and map:FindFirstChild("SpawnParts")
-    if not sp then return nil end
-    local folder = sp:FindFirstChild(tierName)
-    if folder then
-        for _, p in ipairs(folder:GetChildren()) do
-            if p:IsA("BasePart") then return p end
-        end
+local function Stroke(object, color, thickness)
+    local s = Instance.new("UIStroke")
+    s.Color = color or COLORS.Stroke
+    s.Thickness = thickness or 1
+    s.Transparency = 0.15
+    s.Parent = object
+    return s
+end
+
+local function Tween(object, properties, duration)
+    return TweenService:Create(
+        object,
+        TweenInfo.new(
+            duration or 0.2,
+            Enum.EasingStyle.Quart,
+            Enum.EasingDirection.Out
+        ),
+        properties
+    )
+end
+
+--========================================================--
+-- GUI
+--========================================================--
+
+local ScreenGui = Create("ScreenGui", {
+    Name = "LuxuryXHUB_CompactUI",
+    ResetOnSpawn = false,
+    IgnoreGuiInset = true,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+}, CoreGui)
+
+UI.Gui = ScreenGui
+
+--========================================================--
+-- OPEN BUTTON
+--========================================================--
+
+local OpenButton = Create("TextButton", {
+    Name = "OpenButton",
+
+    Size = UDim2.fromOffset(48, 48),
+
+    Position = UDim2.new(
+        0,
+        15,
+        0.5,
+        -24
+    ),
+
+    BackgroundColor3 = COLORS.Panel,
+
+    BorderSizePixel = 0,
+
+    Text = "⚡",
+
+    TextColor3 = COLORS.Text,
+
+    TextSize = 20,
+
+    Font = Enum.Font.GothamBold,
+
+    AutoButtonColor = false,
+}, ScreenGui)
+
+Corner(OpenButton, 14)
+Stroke(OpenButton, COLORS.Accent, 1)
+
+--========================================================--
+-- MAIN PANEL
+--========================================================--
+
+local Main = Create("Frame", {
+    Name = "Main",
+
+    Size = UDim2.fromOffset(360, 390),
+
+    Position = UDim2.new(
+        0.5,
+        -180,
+        0.5,
+        -195
+    ),
+
+    BackgroundColor3 = COLORS.Background,
+
+    BorderSizePixel = 0,
+}, ScreenGui)
+
+Corner(Main, 13)
+Stroke(Main, COLORS.Stroke, 1)
+
+UI.Main = Main
+
+--========================================================--
+-- HEADER
+--========================================================--
+
+local Header = Create("Frame", {
+    Size = UDim2.new(1, 0, 0, 58),
+
+    BackgroundColor3 = COLORS.Panel,
+
+    BorderSizePixel = 0,
+}, Main)
+
+Corner(Header, 13)
+
+local Title = Create("TextLabel", {
+    BackgroundTransparency = 1,
+
+    Position = UDim2.fromOffset(16, 7),
+
+    Size = UDim2.new(1, -80, 0, 23),
+
+    Text = "⚡ LuxuryXHUB",
+
+    TextColor3 = COLORS.Text,
+
+    TextSize = 16,
+
+    Font = Enum.Font.GothamBold,
+
+    TextXAlignment = Enum.TextXAlignment.Left,
+}, Header)
+
+local Status = Create("TextLabel", {
+    BackgroundTransparency = 1,
+
+    Position = UDim2.fromOffset(17, 30),
+
+    Size = UDim2.new(1, -80, 0, 17),
+
+    Text = "● ONLINE",
+
+    TextColor3 = COLORS.Green,
+
+    TextSize = 10,
+
+    Font = Enum.Font.GothamMedium,
+
+    TextXAlignment = Enum.TextXAlignment.Left,
+}, Header)
+
+local CloseButton = Create("TextButton", {
+    Size = UDim2.fromOffset(32, 32),
+
+    Position = UDim2.new(1, -43, 0, 13),
+
+    BackgroundColor3 = COLORS.Card,
+
+    BorderSizePixel = 0,
+
+    Text = "×",
+
+    TextColor3 = COLORS.Text,
+
+    TextSize = 20,
+
+    Font = Enum.Font.GothamBold,
+
+    AutoButtonColor = false,
+}, Header)
+
+Corner(CloseButton, 9)
+
+--========================================================--
+-- TAB BAR
+--========================================================--
+
+local TabBar = Create("Frame", {
+    Size = UDim2.new(1, -20, 0, 40),
+
+    Position = UDim2.fromOffset(10, 67),
+
+    BackgroundTransparency = 1,
+}, Main)
+
+local TabLayout = Create("UIListLayout", {
+    FillDirection = Enum.FillDirection.Horizontal,
+
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
+
+    Padding = UDim.new(0, 5),
+}, TabBar)
+
+local Content = Create("Frame", {
+    Size = UDim2.new(1, -20, 1, -118),
+
+    Position = UDim2.fromOffset(10, 110),
+
+    BackgroundTransparency = 1,
+}, Main)
+
+UI.Content = Content
+
+--========================================================--
+-- PAGE SYSTEM
+--========================================================--
+
+local Pages = {}
+local Tabs = {}
+local CurrentPage
+
+local function CreatePage(name)
+    local page = Create("ScrollingFrame", {
+        Name = name,
+
+        Size = UDim2.fromScale(1, 1),
+
+        BackgroundTransparency = 1,
+
+        BorderSizePixel = 0,
+
+        ScrollBarThickness = 3,
+
+        ScrollBarImageColor3 = COLORS.Accent,
+
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+
+        Visible = false,
+    }, Content)
+
+    Create("UIListLayout", {
+        Padding = UDim.new(0, 7),
+
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    }, page)
+
+    Create("UIPadding", {
+        PaddingTop = UDim.new(0, 2),
+        PaddingBottom = UDim.new(0, 8),
+    }, page)
+
+    Pages[name] = page
+
+    return page
+end
+
+local function ShowPage(name)
+    for pageName, page in pairs(Pages) do
+        page.Visible = pageName == name
     end
-    return nil
-end
 
-function Farm.teleportToTier(tierName)
-    local part = Farm.getPartForTier(tierName)
-    if not part then return false end
-    Farm.teleportTo(part.CFrame, Config.FlyHeight or 16)
-    if Config.SafeHover then Farm.setFloat(true) end
-    return true
-end
+    for tabName, tab in pairs(Tabs) do
+        local active = tabName == name
 
-function Farm.teleportToSpawn()
-    local map   = workspace:FindFirstChild("Map")
-    local spawn = map and map:FindFirstChild("SpawnLocation")
-    if spawn and spawn:IsA("BasePart") then Farm.teleportTo(spawn.CFrame) end
-end
-
-function Farm.teleportToShop(shopName)
-    local map   = workspace:FindFirstChild("Map")
-    local shops = map and map:FindFirstChild("ShopStands")
-    if shops then
-        local t = shops:FindFirstChild(shopName)
-        if t then
-            local r = t:FindFirstChildWhichIsA("BasePart", true)
-            if r then Farm.teleportTo(r.CFrame) end
-        end
+        Tween(
+            tab,
+            {
+                BackgroundColor3 =
+                    active
+                    and COLORS.Accent
+                    or COLORS.Card
+            },
+            0.18
+        ):Play()
     end
+
+    CurrentPage = name
 end
 
--- Auto-revive loop (exits when Runtime.Running is false)
-do
-    Runtime.trackConn(RunService.Heartbeat:Connect(function()
-        if not Runtime.Running then return end
-        if not Config.AutoRevive then return end
-        local pgui   = LocalPlayer:FindFirstChild("PlayerGui")
-        local revGui = pgui and pgui:FindFirstChild("Revive")
-        if not (revGui and revGui.Enabled) then return end
-        local main = revGui:FindFirstChild("Main")
-        local yes  = main and main:FindFirstChild("Yes")
-        if not yes then return end
-        if firesignal then
-            firesignal(yes.MouseButton1Click)
-        else
-            pcall(function()
-                local vim = game:GetService("VirtualInputManager")
-                local pos = yes.AbsolutePosition + yes.AbsoluteSize * 0.5
-                vim:SendMouseButtonEvent(pos.X, pos.Y, 0, true,  game, 0)
-                vim:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
-            end)
-        end
-    end))
-end
+local function CreateTab(name, text)
+    local tab = Create("TextButton", {
+        Size = UDim2.fromOffset(76, 34),
 
--- Generic loop helper
-local function loop(key, condFn, bodyFn, cleanupFn)
-    if Farm.Threads[key] then return end
-    Farm.Threads[key] = task.spawn(function()
-        while Runtime.Running and condFn() do bodyFn() end
-        if cleanupFn then cleanupFn() end
-        Farm.Threads[key] = nil
+        BackgroundColor3 = COLORS.Card,
+
+        BorderSizePixel = 0,
+
+        Text = text,
+
+        TextColor3 = COLORS.Text,
+
+        TextSize = 10,
+
+        Font = Enum.Font.GothamBold,
+
+        AutoButtonColor = false,
+    }, TabBar)
+
+    Corner(tab, 8)
+    Stroke(tab)
+
+    Tabs[name] = tab
+
+    tab.MouseButton1Click:Connect(function()
+        ShowPage(name)
     end)
+
+    return tab
 end
 
-function Farm.startAutoTrain()
-    loop("AutoTrain", function() return Config.AutoTrain end, function()
-        Remotes.fire("Activate Dumbell")
-        task.wait(Config.TrainInterval or 0.1)
+--========================================================--
+-- TOGGLE CREATOR
+--========================================================--
+
+local function AddToggle(parent, icon, title, description, getter, setter)
+
+    local Card = Create("Frame", {
+        Size = UDim2.new(1, -4, 0, 58),
+
+        BackgroundColor3 = COLORS.Card,
+
+        BorderSizePixel = 0,
+    }, parent)
+
+    Corner(Card, 9)
+    Stroke(Card)
+
+    local Icon = Create("TextLabel", {
+        Size = UDim2.fromOffset(34, 34),
+
+        Position = UDim2.fromOffset(10, 12),
+
+        BackgroundColor3 = COLORS.Panel,
+
+        BorderSizePixel = 0,
+
+        Text = icon,
+
+        TextColor3 = COLORS.Text,
+
+        TextSize = 15,
+
+        Font = Enum.Font.GothamBold,
+    }, Card)
+
+    Corner(Icon, 8)
+
+    local Name = Create("TextLabel", {
+        BackgroundTransparency = 1,
+
+        Position = UDim2.fromOffset(52, 7),
+
+        Size = UDim2.new(1, -125, 0, 19),
+
+        Text = title,
+
+        TextColor3 = COLORS.Text,
+
+        TextSize = 12,
+
+        Font = Enum.Font.GothamBold,
+
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, Card)
+
+    local Description = Create("TextLabel", {
+        BackgroundTransparency = 1,
+
+        Position = UDim2.fromOffset(52, 27),
+
+        Size = UDim2.new(1, -125, 0, 17),
+
+        Text = description,
+
+        TextColor3 = COLORS.SubText,
+
+        TextSize = 9,
+
+        Font = Enum.Font.Gotham,
+
+        TextTruncate = Enum.TextTruncate.AtEnd,
+
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, Card)
+
+    local Toggle = Create("TextButton", {
+        Size = UDim2.fromOffset(48, 24),
+
+        Position = UDim2.new(1, -60, 0.5, -12),
+
+        BackgroundColor3 = COLORS.Red,
+
+        BorderSizePixel = 0,
+
+        Text = "",
+
+        AutoButtonColor = false,
+    }, Card)
+
+    Corner(Toggle, 12)
+
+    local Knob = Create("Frame", {
+        Size = UDim2.fromOffset(18, 18),
+
+        Position = UDim2.fromOffset(3, 3),
+
+        BackgroundColor3 = Color3.fromRGB(245,245,245),
+
+        BorderSizePixel = 0,
+    }, Toggle)
+
+    Corner(Knob, 9)
+
+    local function Refresh()
+
+        local enabled = false
+
+        pcall(function()
+            enabled = getter()
+        end)
+
+        if enabled then
+
+            Tween(
+                Toggle,
+                {
+                    BackgroundColor3 = COLORS.Green
+                },
+                0.15
+            ):Play()
+
+            Tween(
+                Knob,
+                {
+                    Position = UDim2.new(
+                        1,
+                        -21,
+                        0,
+                        3
+                    )
+                },
+                0.15
+            ):Play()
+
+        else
+
+            Tween(
+                Toggle,
+                {
+                    BackgroundColor3 = COLORS.Red
+                },
+                0.15
+            ):Play()
+
+            Tween(
+                Knob,
+                {
+                    Position = UDim2.fromOffset(3,3)
+                },
+                0.15
+            ):Play()
+
+        end
+    end
+
+    Toggle.MouseButton1Click:Connect(function()
+
+        local current = false
+
+        pcall(function()
+            current = getter()
+        end)
+
+        pcall(function()
+            setter(not current)
+        end)
+
+        task.defer(Refresh)
+
+    end)
+
+    Refresh()
+
+    return Card
+end
+
+--========================================================--
+-- ACTION BUTTON
+--========================================================--
+
+local function AddAction(parent, icon, title, description, callback)
+
+    local Button = Create("TextButton", {
+        Size = UDim2.new(1, -4, 0, 52),
+
+        BackgroundColor3 = COLORS.Card,
+
+        BorderSizePixel = 0,
+
+        Text = "",
+
+        AutoButtonColor = false,
+    }, parent)
+
+    Corner(Button, 9)
+    Stroke(Button)
+
+    local Icon = Create("TextLabel", {
+        BackgroundTransparency = 1,
+
+        Position = UDim2.fromOffset(12, 0),
+
+        Size = UDim2.fromOffset(30, 52),
+
+        Text = icon,
+
+        TextColor3 = COLORS.Text,
+
+        TextSize = 17,
+
+        Font = Enum.Font.GothamBold,
+    }, Button)
+
+    local Name = Create("TextLabel", {
+        BackgroundTransparency = 1,
+
+        Position = UDim2.fromOffset(50, 7),
+
+        Size = UDim2.new(1, -60, 0, 18),
+
+        Text = title,
+
+        TextColor3 = COLORS.Text,
+
+        TextSize = 12,
+
+        Font = Enum.Font.GothamBold,
+
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, Button)
+
+    local Desc = Create("TextLabel", {
+        BackgroundTransparency = 1,
+
+        Position = UDim2.fromOffset(50, 26),
+
+        Size = UDim2.new(1, -60, 0, 16),
+
+        Text = description,
+
+        TextColor3 = COLORS.SubText,
+
+        TextSize = 9,
+
+        Font = Enum.Font.Gotham,
+
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, Button)
+
+    Button.MouseEnter:Connect(function()
+        Tween(
+            Button,
+            {
+                BackgroundColor3 = COLORS.CardHover
+            },
+            0.12
+        ):Play()
+    end)
+
+    Button.MouseLeave:Connect(function()
+        Tween(
+            Button,
+            {
+                BackgroundColor3 = COLORS.Card
+            },
+            0.12
+        ):Play()
+    end)
+
+    Button.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+
+    return Button
+end
+
+--========================================================--
+-- CREATE TABS
+--========================================================--
+
+CreateTab("FARM", "🏋 FARM")
+CreateTab("EGG", "🥚 EGG")
+CreateTab("PLAYER", "👤 PLAYER")
+CreateTab("OTHER", "⚙ OTHER")
+
+--========================================================--
+-- FARM PAGE
+--========================================================--
+
+local FarmPage = CreatePage("FARM")
+
+AddToggle(
+    FarmPage,
+    "🏋",
+    "Auto Train",
+    "Tự động train",
+    function()
+        return Config.AutoTrain
+    end,
+    function(state)
+        Config.AutoTrain = state
+
+        if state then
+            Farm.startAutoTrain()
+        else
+            Farm.stopAutoTrain()
+        end
+    end
+)
+
+AddToggle(
+    FarmPage,
+    "💰",
+    "Auto Sell",
+    "Tự động bán",
+    function()
+        return Config.AutoSell
+    end,
+    function(state)
+        Config.AutoSell = state
+
+        if state then
+            Farm.startAutoSell()
+        else
+            Farm.stopAutoSell()
+        end
+    end
+)
+
+AddToggle(
+    FarmPage,
+    "🔄",
+    "Auto Rebirth",
+    "Tự động rebirth",
+    function()
+        return Config.AutoRebirth
+    end,
+    function(state)
+        Config.AutoRebirth = state
+
+        if state then
+            Farm.startAutoRebirth()
+        else
+            Farm.stopAutoRebirth()
+        end
+    end
+)
+
+AddToggle(
+    FarmPage,
+    "🏋",
+    "Auto Buy Dumbell",
+    "Tự động mua dumbell",
+    function()
+        return Config.AutoBuyDumbell
+    end,
+    function(state)
+        Config.AutoBuyDumbell = state
+
+        if state then
+            Farm.startAutoBuyDumbell()
+        else
+            Farm.stopAutoBuyDumbell()
+        end
+    end
+)
+
+AddToggle(
+    FarmPage,
+    "📦",
+    "Auto Upgrade Carry",
+    "Tự động nâng Carry",
+    function()
+        return Config.AutoUpgradeCarry
+    end,
+    function(state)
+        Config.AutoUpgradeCarry = state
+
+        if state then
+            Farm.startAutoUpgradeCarry()
+        else
+            Farm.stopAutoUpgradeCarry()
+        end
+    end
+)
+
+AddToggle(
+    FarmPage,
+    "⚔",
+    "Auto Buy Gear",
+    "Tự động mua Gear",
+    function()
+        return Config.AutoBuyGear
+    end,
+    function(state)
+        Config.AutoBuyGear = state
+
+        if state then
+            Farm.startAutoBuyGear()
+        else
+            Farm.stopAutoBuyGear()
+        end
+    end
+)
+
+--========================================================--
+-- EGG PAGE
+--========================================================--
+
+local EggPage = CreatePage("EGG")
+
+AddToggle(
+    EggPage,
+    "🥚",
+    "Auto Pull Egg",
+    "Tự động kéo Egg",
+    function()
+        return Config.AutoPullEgg
+    end,
+    function(state)
+        Config.AutoPullEgg = state
+
+        if state then
+            Farm.startAutoPullEgg()
+        else
+            Farm.stopAutoPullEgg()
+        end
+    end
+)
+
+AddToggle(
+    EggPage,
+    "👁",
+    "Egg ESP",
+    "Hiển thị Egg ESP",
+    function()
+        return Config.EggESP
+    end,
+    function(state)
+        Config.EggESP = state
+
+        if state then
+            ESP.start()
+            ESP.setEnabled(true)
+        else
+            ESP.setEnabled(false)
+        end
+    end
+)
+
+AddAction(
+    EggPage,
+    "🎯",
+    "Target Egg: " .. tostring(Config.TargetEggTier),
+    "Tier mục tiêu hiện tại",
+    function()
+        local current = table.find(
+            Config.TIERS,
+            Config.TargetEggTier
+        ) or 1
+
+        current = current + 1
+
+        if current > #Config.TIERS then
+            current = 1
+        end
+
+        Config.TargetEggTier = Config.TIERS[current]
+    end
+)
+
+--========================================================--
+-- PLAYER PAGE
+--========================================================--
+
+local PlayerPage = CreatePage("PLAYER")
+
+AddToggle(
+    PlayerPage,
+    "♻",
+    "Auto Revive",
+    "Tự động revive",
+    function()
+        return Config.AutoRevive
+    end,
+    function(state)
+        Config.AutoRevive = state
+    end
+)
+
+AddToggle(
+    PlayerPage,
+    "🚀",
+    "Speed Boost",
+    "Tăng WalkSpeed / JumpPower",
+    function()
+        return Config.SpeedBoost
+    end,
+    function(state)
+        Config.SpeedBoost = state
+        Universal.setSpeed(state)
+    end
+)
+
+AddToggle(
+    PlayerPage,
+    "🛡",
+    "Anti AFK",
+    "Không bị AFK kick",
+    function()
+        return Config.AntiAFK
+    end,
+    function(state)
+        Config.AntiAFK = state
+        Universal.setAntiAFK(state)
+    end
+)
+
+AddToggle(
+    PlayerPage,
+    "👻",
+    "Noclip",
+    "Đi xuyên vật thể",
+    function()
+        return false
+    end,
+    function(state)
+        Farm.setNoclip(state)
+    end
+)
+
+--========================================================--
+-- OTHER PAGE
+--========================================================--
+
+local OtherPage = CreatePage("OTHER")
+
+AddToggle(
+    OtherPage,
+    "📱",
+    "Low Graphics",
+    "Giảm chất lượng đồ họa",
+    function()
+        return Config.LowGraphics
+    end,
+    function(state)
+        Config.LowGraphics = state
+        Universal.setLowGraphics(state)
+    end
+)
+
+AddAction(
+    OtherPage,
+    "🏠",
+    "Teleport Spawn",
+    "Về khu vực Spawn",
+    function()
+        Farm.teleportToSpawn()
+    end
+)
+
+AddAction(
+    OtherPage,
+    "🔄",
+    "Refresh ESP",
+    "Làm mới ESP",
+    function()
+        ESP.destroy()
+
+        if Config.EggESP then
+            ESP.start()
+            ESP.setEnabled(true)
+        end
+    end
+)
+
+--========================================================--
+-- OPEN / CLOSE
+--========================================================--
+
+local function OpenMenu()
+
+    Main.Visible = true
+
+    Main.Size = UDim2.fromOffset(330, 360)
+
+    Tween(
+        Main,
+        {
+            Size = UDim2.fromOffset(360, 390)
+        },
+        0.2
+    ):Play()
+
+end
+
+local function CloseMenu()
+
+    local tween = Tween(
+        Main,
+        {
+            Size = UDim2.fromOffset(330, 360)
+        },
+        0.15
+    )
+
+    tween:Play()
+
+    tween.Completed:Once(function()
+        Main.Visible = false
+    end)
+
+end
+
+OpenButton.MouseButton1Click:Connect(function()
+
+    if Main.Visible then
+        CloseMenu()
+    else
+        OpenMenu()
+    end
+
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    CloseMenu()
+end)
+
+--========================================================--
+-- DRAG MAIN PANEL
+--========================================================--
+
+do
+
+    local dragging = false
+    local dragStart
+    local startPosition
+
+    Header.InputBegan:Connect(function(input)
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+            dragging = true
+
+            dragStart = input.Position
+            startPosition = Main.Position
+
+            input.Changed:Connect(function()
+
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+
+            end)
+
+        end
+
+    end)
+
+    UserInputService.InputChanged:Connect(fuwait(Config.TrainInterval or 0.1)
     end)
 end
 function Farm.stopAutoTrain()   Config.AutoTrain        = false end
