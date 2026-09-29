@@ -1,0 +1,115 @@
+--// LEMON LOADER
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "LemonLoader"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local holder = Instance.new("Frame")
+holder.Size = UDim2.fromOffset(350, 120)
+holder.Position = UDim2.new(0.5, -175, 0.5, -60)
+holder.BackgroundTransparency = 1
+holder.Parent = gui
+
+local layout = Instance.new("UIListLayout")
+layout.FillDirection = Enum.FillDirection.Horizontal
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Center
+layout.Padding = UDim.new(0, 12)
+layout.Parent = holder
+
+local function createPanel(name)
+    local panel = Instance.new("TextButton")
+    panel.Name = name
+    panel.Size = UDim2.fromOffset(165, 100)
+    panel.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+    panel.BorderSizePixel = 0
+    panel.Text = ""
+    panel.AutoButtonColor = true
+    panel.Parent = holder
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 14)
+    corner.Parent = panel
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 1.5
+    stroke.Color = Color3.fromRGB(90, 90, 100)
+    stroke.Parent = panel
+
+    return panel
+end
+
+--------------------------------------------------
+-- BẢNG 1
+--------------------------------------------------
+
+local panel1 = createPanel("LemonPanel")
+
+-- Logo trái
+local logoLeft = Instance.new("ImageLabel")
+logoLeft.Name = "LogoLeft"
+logoLeft.Size = UDim2.fromOffset(42, 42)
+logoLeft.Position = UDim2.new(0, 8, 0.5, -21)
+logoLeft.BackgroundTransparency = 1
+logoLeft.Image = "rbxassetid://73261925593164"
+logoLeft.ScaleType = Enum.ScaleType.Fit
+logoLeft.Parent = panel1
+
+-- LEMON
+local title = Instance.new("TextLabel")
+title.Size = UDim2.fromOffset(70, 40)
+title.Position = UDim2.new(0.5, -35, 0.5, -20)
+title.BackgroundTransparency = 1
+title.Text = "LEMON"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = panel1
+
+-- Logo phải
+local logoRight = Instance.new("ImageLabel")
+logoRight.Name = "LogoRight"
+logoRight.Size = UDim2.fromOffset(42, 42)
+logoRight.Position = UDim2.new(1, -50, 0.5, -21)
+logoRight.BackgroundTransparency = 1
+logoRight.Image = "rbxassetid://73261925593164"
+logoRight.ScaleType = Enum.ScaleType.Fit
+logoRight.Parent = panel1
+
+--------------------------------------------------
+-- BẢNG 2
+--------------------------------------------------
+
+local panel2 = createPanel("ExitPanel")
+
+local exit = Instance.new("TextLabel")
+exit.Size = UDim2.fromScale(1, 1)
+exit.BackgroundTransparency = 1
+exit.Text = "THOÁT"
+exit.TextColor3 = Color3.fromRGB(255, 255, 255)
+exit.TextScaled = true
+exit.Font = Enum.Font.GothamBold
+exit.Parent = panel2
+
+--------------------------------------------------
+-- BẤM BẢNG 1
+--------------------------------------------------
+
+panel1.MouseButton1Click:Connect(function()
+    gui:Destroy()
+
+    loadstring(game:HttpGet("script của bạn"))()
+end)
+
+--------------------------------------------------
+-- BẤM BẢNG 2
+--------------------------------------------------
+
+panel2.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
