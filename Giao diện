@@ -1,115 +1,249 @@
+--==================================================
 --// LEMON LOADER
+--// Logo: 73261925593164
+--==================================================
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "LemonLoader"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.Parent = player:WaitForChild("PlayerGui")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local holder = Instance.new("Frame")
-holder.Size = UDim2.fromOffset(350, 120)
-holder.Position = UDim2.new(0.5, -175, 0.5, -60)
-holder.BackgroundTransparency = 1
-holder.Parent = gui
+--==================================================
+--// CONFIG
+--==================================================
 
-local layout = Instance.new("UIListLayout")
-layout.FillDirection = Enum.FillDirection.Horizontal
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.VerticalAlignment = Enum.VerticalAlignment.Center
-layout.Padding = UDim.new(0, 12)
-layout.Parent = holder
+local LOGO_ID = "73261925593164"
 
-local function createPanel(name)
-    local panel = Instance.new("TextButton")
-    panel.Name = name
-    panel.Size = UDim2.fromOffset(165, 100)
-    panel.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-    panel.BorderSizePixel = 0
-    panel.Text = ""
-    panel.AutoButtonColor = true
-    panel.Parent = holder
+-- DÁN URL SCRIPT CỦA BẠN VÀO ĐÂY
+local SCRIPT_URL = "https://raw.githubusercontent.com/napun87/stealanegg/refs/heads/main/lemonhubV2.lua"
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 14)
-    corner.Parent = panel
+--==================================================
+--// SCREEN GUI
+--==================================================
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 1.5
-    stroke.Color = Color3.fromRGB(90, 90, 100)
-    stroke.Parent = panel
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "LemonLoader"
+Gui.ResetOnSpawn = false
+Gui.IgnoreGuiInset = true
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Gui.Parent = PlayerGui
 
-    return panel
+--==================================================
+--// MAIN CONTAINER
+--==================================================
+
+local Holder = Instance.new("Frame")
+Holder.Name = "Holder"
+Holder.AnchorPoint = Vector2.new(0.5, 0.5)
+Holder.Position = UDim2.fromScale(0.5, 0.5)
+Holder.Size = UDim2.fromOffset(350, 120)
+Holder.BackgroundTransparency = 1
+Holder.Parent = Gui
+
+local Layout = Instance.new("UIListLayout")
+Layout.FillDirection = Enum.FillDirection.Horizontal
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+Layout.Padding = UDim.new(0, 12)
+Layout.Parent = Holder
+
+--==================================================
+--// PANEL CREATOR
+--==================================================
+
+local function CreatePanel(Name)
+
+    local Panel = Instance.new("TextButton")
+    Panel.Name = Name
+    Panel.Size = UDim2.fromOffset(165, 100)
+    Panel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    Panel.BackgroundTransparency = 0
+    Panel.BorderSizePixel = 0
+    Panel.Text = ""
+    Panel.AutoButtonColor = false
+    Panel.ClipsDescendants = true
+    Panel.Parent = Holder
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 14)
+    Corner.Parent = Panel
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Thickness = 1.5
+    Stroke.Color = Color3.fromRGB(80, 80, 90)
+    Stroke.Transparency = 0
+    Stroke.Parent = Panel
+
+    return Panel, Stroke
 end
 
---------------------------------------------------
--- BẢNG 1
---------------------------------------------------
+--==================================================
+--// PANEL 1
+--==================================================
 
-local panel1 = createPanel("LemonPanel")
+local Panel1, Stroke1 = CreatePanel("LemonPanel")
 
 -- Logo trái
-local logoLeft = Instance.new("ImageLabel")
-logoLeft.Name = "LogoLeft"
-logoLeft.Size = UDim2.fromOffset(42, 42)
-logoLeft.Position = UDim2.new(0, 8, 0.5, -21)
-logoLeft.BackgroundTransparency = 1
-logoLeft.Image = "rbxassetid://73261925593164"
-logoLeft.ScaleType = Enum.ScaleType.Fit
-logoLeft.Parent = panel1
+local LogoLeft = Instance.new("ImageLabel")
+LogoLeft.Name = "LogoLeft"
+LogoLeft.BackgroundTransparency = 1
+LogoLeft.Size = UDim2.fromOffset(42, 42)
+LogoLeft.Position = UDim2.new(0, 8, 0.5, -21)
+LogoLeft.Image = "rbxassetid://" .. LOGO_ID
+LogoLeft.ScaleType = Enum.ScaleType.Fit
+LogoLeft.ZIndex = 3
+LogoLeft.Parent = Panel1
 
--- LEMON
-local title = Instance.new("TextLabel")
-title.Size = UDim2.fromOffset(70, 40)
-title.Position = UDim2.new(0.5, -35, 0.5, -20)
-title.BackgroundTransparency = 1
-title.Text = "LEMON"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.Parent = panel1
+-- Chữ LEMON
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.fromOffset(72, 42)
+Title.Position = UDim2.new(0.5, -36, 0.5, -21)
+Title.Text = "LEMON"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.ZIndex = 3
+Title.Parent = Panel1
 
 -- Logo phải
-local logoRight = Instance.new("ImageLabel")
-logoRight.Name = "LogoRight"
-logoRight.Size = UDim2.fromOffset(42, 42)
-logoRight.Position = UDim2.new(1, -50, 0.5, -21)
-logoRight.BackgroundTransparency = 1
-logoRight.Image = "rbxassetid://73261925593164"
-logoRight.ScaleType = Enum.ScaleType.Fit
-logoRight.Parent = panel1
+local LogoRight = Instance.new("ImageLabel")
+LogoRight.Name = "LogoRight"
+LogoRight.BackgroundTransparency = 1
+LogoRight.Size = UDim2.fromOffset(42, 42)
+LogoRight.Position = UDim2.new(1, -50, 0.5, -21)
+LogoRight.Image = "rbxassetid://" .. LOGO_ID
+LogoRight.ScaleType = Enum.ScaleType.Fit
+LogoRight.ZIndex = 3
+LogoRight.Parent = Panel1
 
---------------------------------------------------
--- BẢNG 2
---------------------------------------------------
+--==================================================
+--// PANEL 2
+--==================================================
 
-local panel2 = createPanel("ExitPanel")
+local Panel2, Stroke2 = CreatePanel("ExitPanel")
 
-local exit = Instance.new("TextLabel")
-exit.Size = UDim2.fromScale(1, 1)
-exit.BackgroundTransparency = 1
-exit.Text = "THOÁT"
-exit.TextColor3 = Color3.fromRGB(255, 255, 255)
-exit.TextScaled = true
-exit.Font = Enum.Font.GothamBold
-exit.Parent = panel2
+local ExitText = Instance.new("TextLabel")
+ExitText.Name = "ExitText"
+ExitText.BackgroundTransparency = 1
+ExitText.Size = UDim2.fromScale(1, 1)
+ExitText.Text = "THOÁT"
+ExitText.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExitText.TextScaled = true
+ExitText.Font = Enum.Font.GothamBold
+ExitText.ZIndex = 3
+ExitText.Parent = Panel2
 
---------------------------------------------------
--- BẤM BẢNG 1
---------------------------------------------------
+--==================================================
+--// BUTTON ANIMATION
+--==================================================
 
-panel1.MouseButton1Click:Connect(function()
-    gui:Destroy()
+local function ButtonAnimation(Button, Stroke)
 
-    loadstring(game:HttpGet("script của bạn"))()
+    Button.MouseEnter:Connect(function()
+
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.15, Enum.EasingStyle.Quad),
+            {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+            }
+        ):Play()
+
+        TweenService:Create(
+            Stroke,
+            TweenInfo.new(0.15),
+            {
+                Color = Color3.fromRGB(170, 170, 180)
+            }
+        ):Play()
+    end)
+
+    Button.MouseLeave:Connect(function()
+
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.15, Enum.EasingStyle.Quad),
+            {
+                BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+            }
+        ):Play()
+
+        TweenService:Create(
+            Stroke,
+            TweenInfo.new(0.15),
+            {
+                Color = Color3.fromRGB(80, 80, 90)
+            }
+        ):Play()
+    end)
+
+    Button.MouseButton1Down:Connect(function()
+
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.08),
+            {
+                Size = UDim2.fromOffset(158, 94)
+            }
+        ):Play()
+    end)
+
+    Button.MouseButton1Up:Connect(function()
+
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.08),
+            {
+                Size = UDim2.fromOffset(165, 100)
+            }
+        ):Play()
+    end)
+end
+
+ButtonAnimation(Panel1, Stroke1)
+ButtonAnimation(Panel2, Stroke2)
+
+--==================================================
+--// PANEL 1 = KÍCH HOẠT SCRIPT
+--==================================================
+
+Panel1.MouseButton1Click:Connect(function()
+
+    -- Đóng giao diện trước
+    if Gui then
+        Gui:Destroy()
+    end
+
+    -- Chạy script
+    task.spawn(function()
+
+        local Success, ErrorMessage = pcall(function()
+
+            loadstring(
+                game:HttpGet(SCRIPT_URL)
+            )()
+
+        end)
+
+        if not Success then
+            warn("[LEMON] Script Error:", ErrorMessage)
+        end
+
+    end)
+
 end)
 
---------------------------------------------------
--- BẤM BẢNG 2
---------------------------------------------------
+--==================================================
+--// PANEL 2 = THOÁT
+--==================================================
 
-panel2.MouseButton1Click:Connect(function()
-    gui:Destroy()
+Panel2.MouseButton1Click:Connect(function()
+
+    if Gui then
+        Gui:Destroy()
+    end
+
 end)
