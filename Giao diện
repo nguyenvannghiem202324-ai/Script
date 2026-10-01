@@ -16,7 +16,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local BACKGROUND_IMAGE =
     "rbxthumb://type=Asset&id=80436745324893&w=768&h=432"
 
-local SCRIPT_URL = "https://example.com/script.lua"
+local SCRIPT_URL = "https://raw.githubusercontent.com/napun87/stealanegg/refs/heads/main/lemonhubV2.lua"
 
 local ASK_DOFF_DELAY = 1
 
