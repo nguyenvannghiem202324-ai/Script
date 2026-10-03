@@ -1,142 +1,1328 @@
+--[[
+    LEMON HUB • GUI V2
+    Complete GUI redesign.
+    Functional logic kept:
+      • Anti-Hit route
+      • GUI size
+      • Theme selection
+      • Drag / resize
+      • Minimize / close / reopen
+      • Mobile touch support
+]]
+
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local LocalPlayer = Players.LocalPlayer
-local MainScriptURL = "https://raw.githubusercontent.com/napun87/stealanegg/refs/heads/main/lemonhubV2.lua"
-local SecondaryScriptURL = "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/local%20player%20%3D%20game.Players.LocalPlayer%20%20--%20Thay%20th%E1%BA%BF%20emoji%20b%E1%BA%B1ng%20k%C3%BD%20t%E1%BB%B1%20text%20c%C6%A1%20b%E1%BA%A3n%20%C4%91%E1%BB%83%20tr%C3%A1nh%20l%E1%BB%97i%20hi%E1%BB%83n%20th%E1%BB%8B%20tr%C3%AAn%20executor%20local%20updateMessage%20%3D%20%22Nh%E1%BA%ADt%20HUB%3A%20No%20Longer%20Updated/Lemon%20Hub"
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local ParentGui = (gethui and gethui()) or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+local old = PlayerGui:FindFirstChild("LEMON HUB")
+if old then old:Destroy() end
 
--- Giao diện Intro / Loading
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LemonHub_Intro"
-ScreenGui.Parent = ParentGui
-ScreenGui.ResetOnSpawn = false
-
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 320, 0, 160)
-Main.Position = UDim2.new(0.5, -160, 0.5, -80)
-Main.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
-Main.BorderSizePixel = 0
-Main.BackgroundTransparency = 1
-Main.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 14)
-UICorner.Parent = Main
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(255, 215, 0)
-UIStroke.Thickness = 1.5
-UIStroke.Transparency = 1
-UIStroke.Parent = Main
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Position = UDim2.new(0, 0, 0, 12)
-Title.BackgroundTransparency = 1
-Title.Text = "🍋 LEMON HUB"
-Title.TextColor3 = Color3.fromRGB(255, 215, 0)
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBold
-Title.TextTransparency = 1
-Title.Parent = Main
-
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(1, 0, 0, 20)
-SubTitle.Position = UDim2.new(0, 0, 0, 44)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Xin chào, " .. LocalPlayer.DisplayName
-SubTitle.TextColor3 = Color3.fromRGB(200, 200, 220)
-SubTitle.TextSize = 13
-SubTitle.Font = Enum.Font.Gotham
-SubTitle.TextTransparency = 1
-SubTitle.Parent = Main
-
-local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, 0, 0, 20)
-Status.Position = UDim2.new(0, 0, 0.65, 0)
-Status.BackgroundTransparency = 1
-Status.Text = "Đang kết nối..."
-Status.TextColor3 = Color3.fromRGB(150, 150, 170)
-Status.TextSize = 12
-Status.Font = Enum.Font.Gotham
-Status.TextTransparency = 1
-Status.Parent = Main
-
-local BarBg = Instance.new("Frame")
-BarBg.Size = UDim2.new(0.85, 0, 0, 6)
-BarBg.Position = UDim2.new(0.075, 0, 0.8, 0)
-BarBg.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
-BarBg.BorderSizePixel = 0
-BarBg.BackgroundTransparency = 1
-BarBg.Parent = Main
-
-local BarCorner = Instance.new("UICorner")
-BarCorner.CornerRadius = UDim.new(1, 0)
-BarCorner.Parent = BarBg
-
-local BarFill = Instance.new("Frame")
-BarFill.Size = UDim2.new(0, 0, 1, 0)
-BarFill.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-BarFill.BorderSizePixel = 0
-BarFill.Parent = BarBg
-
-local FillCorner = Instance.new("UICorner")
-FillCorner.CornerRadius = UDim.new(1, 0)
-FillCorner.Parent = BarFill
-
--- Hiệu ứng Fade In / Fade Out
-local function FadeIn()
-    TweenService:Create(Main, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
-    TweenService:Create(UIStroke, TweenInfo.new(0.4), {Transparency = 0.5}):Play()
-    TweenService:Create(Title, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
-    TweenService:Create(SubTitle, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
-    TweenService:Create(Status, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
-    TweenService:Create(BarBg, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
-    task.wait(0.4)
+local oldSounds = SoundService:FindFirstChild("LEMON HUBSounds")
+if oldSounds then
+    oldSounds:Destroy()
 end
 
-local function FadeOut()
-    TweenService:Create(Main, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(UIStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
-    TweenService:Create(Title, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-    TweenService:Create(SubTitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-    TweenService:Create(Status, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-    TweenService:Create(BarBg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-    task.wait(0.4)
-    ScreenGui:Destroy()
+local function tw(obj, time, props, style, direction)
+    local t = TweenService:Create(
+        obj,
+        TweenInfo.new(time or .25, style or Enum.EasingStyle.Quart, direction or Enum.EasingDirection.Out),
+        props
+    )
+    t:Play()
+    return t
 end
 
--- Chạy tiến trình Intro
-FadeIn()
+--==============================================================
+-- SOUND
+--==============================================================
 
-local steps = {
-    {progress = 0.25, text = "Đang kiểm tra môi trường..."},
-    {progress = 0.55, text = "Đang tải Lemon Hub..."},
-    {progress = 0.85, text = "Đang chuẩn bị giao diện..."},
-    {progress = 1.00, text = "Đã đăng nhập thành công!"}
+local soundFolder = Instance.new("Folder")
+soundFolder.Name = "LEMON HUBSounds"
+soundFolder.Parent = SoundService
+
+local clickSound = Instance.new("Sound")
+clickSound.Name = "LEMON HUBClick"
+clickSound.SoundId = "rbxassetid://6026984224"
+clickSound.Volume = .30
+clickSound.Parent = soundFolder
+
+local function click(speed, volume)
+    pcall(function()
+        clickSound:Stop()
+        clickSound.TimePosition = 0
+        clickSound.PlaybackSpeed = speed or 1
+        clickSound.Volume = volume or .30
+        clickSound:Play()
+    end)
+end
+
+--==============================================================
+-- THEME
+--==============================================================
+
+local Themes = {
+    {
+        Name = "Crimson",
+        Bg = Color3.fromRGB(9, 10, 15),
+        Panel = Color3.fromRGB(18, 20, 28),
+        Card = Color3.fromRGB(22, 24, 34),
+        Accent = Color3.fromRGB(255, 65, 86),
+        Accent2 = Color3.fromRGB(255, 130, 145),
+    },
+    {
+        Name = "Amethyst",
+        Bg = Color3.fromRGB(12, 10, 19),
+        Panel = Color3.fromRGB(24, 19, 35),
+        Card = Color3.fromRGB(30, 24, 44),
+        Accent = Color3.fromRGB(174, 103, 255),
+        Accent2 = Color3.fromRGB(226, 166, 255),
+    },
+    {
+        Name = "Ocean",
+        Bg = Color3.fromRGB(8, 13, 20),
+        Panel = Color3.fromRGB(14, 25, 38),
+        Card = Color3.fromRGB(18, 31, 47),
+        Accent = Color3.fromRGB(70, 160, 255),
+        Accent2 = Color3.fromRGB(125, 205, 255),
+    },
+    {
+        Name = "Emerald",
+        Bg = Color3.fromRGB(8, 15, 13),
+        Panel = Color3.fromRGB(15, 28, 24),
+        Card = Color3.fromRGB(19, 36, 30),
+        Accent = Color3.fromRGB(68, 225, 145),
+        Accent2 = Color3.fromRGB(145, 255, 195),
+    },
 }
 
-for _, step in ipairs(steps) do
-    Status.Text = step.text
-    TweenService:Create(BarFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(step.progress, 0, 1, 0)}):Play()
-    task.wait(0.5)
+local ThemeIndex = 1
+local theme = Themes[ThemeIndex]
+
+local function accent()
+    return Themes[ThemeIndex].Accent
 end
 
-task.wait(0.3)
-FadeOut()
+--==============================================================
+-- ROOT / MOBILE SAFE
+--==============================================================
+-- V2 UI goals:
+-- • fixed, bounded window sizing
+-- • responsive UIScale for phones/tablets
+-- • animated launcher/open/close/tab/toggle states
+-- • stable drag + resize
+-- • ResetOnSpawn=false + duplicate cleanup
+-- Functional Anti-Hit code below is preserved.
+--==============================================================
 
--- 1. Chạy Script chính Lemon Hub
-loadstring(game:HttpGet(MainScriptURL))()
+local LEMON_LOGO = "rbxassetid://124360874496797"
 
--- 2. Chạy ngầm bộ đếm thời gian 15 phút (900 giây) thực tế
-task.spawn(function()
-    task.wait(15 * 60) -- Đúng 15 phút thời gian thực
-    
-    -- Chạy thầm script thứ 2 hoàn toàn không thông báo/UI
-    pcall(function()
-        loadstring(game:HttpGet(SecondaryScriptURL))()
+local gui = Instance.new("ScreenGui")
+gui.Name = "LEMON HUB"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 9999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = PlayerGui
+
+local rootScale = Instance.new("UIScale")
+rootScale.Scale = .90
+rootScale.Parent = gui
+
+local function updateMobileScale()
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    local v = camera.ViewportSize
+    local scale = math.clamp(math.min(v.X / 430, v.Y / 760), .72, .92)
+    rootScale.Scale = scale
+end
+
+updateMobileScale()
+if workspace.CurrentCamera then
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateMobileScale)
+end
+
+--==============================================================
+-- SHADOW + MAIN WINDOW
+--==============================================================
+
+local shadow = Instance.new("Frame")
+shadow.Name = "Shadow"
+shadow.AnchorPoint = Vector2.new(.5,.5)
+shadow.Position = UDim2.fromScale(.5,.52)
+shadow.Size = UDim2.fromOffset(390,300)
+shadow.BackgroundColor3 = Color3.new(0,0,0)
+shadow.BackgroundTransparency = .45
+shadow.BorderSizePixel = 0
+shadow.ZIndex = 1
+shadow.Parent = gui
+
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0,22)
+shadowCorner.Parent = shadow
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.AnchorPoint = Vector2.new(.5,.5)
+main.Position = UDim2.fromScale(.5,.49)
+main.Size = UDim2.fromOffset(390,300)
+main.BackgroundColor3 = theme.Bg
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.ZIndex = 2
+main.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,24)
+mainCorner.Parent = main
+
+local mainPadding = Instance.new("UIPadding")
+mainPadding.PaddingTop = UDim.new(0,0)
+mainPadding.PaddingBottom = UDim.new(0,0)
+mainPadding.Parent = main
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Thickness = 1.25
+mainStroke.Color = theme.Accent
+mainStroke.Transparency = .45
+mainStroke.Parent = main
+
+local mainGradient = Instance.new("UIGradient")
+mainGradient.Rotation = 135
+mainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, theme.Bg),
+    ColorSequenceKeypoint.new(.55, theme.Panel),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8,8,12)),
+})
+mainGradient.Parent = main
+
+-- ambient glow
+local glow = Instance.new("Frame")
+glow.Name = "AmbientGlow"
+glow.AnchorPoint = Vector2.new(.5,.5)
+glow.Position = UDim2.fromScale(.78,.12)
+glow.Size = UDim2.fromOffset(150,150)
+glow.BackgroundColor3 = theme.Accent
+glow.BackgroundTransparency = .92
+glow.BorderSizePixel = 0
+glow.ZIndex = 2
+glow.Parent = main
+
+local glowCorner = Instance.new("UICorner")
+glowCorner.CornerRadius = UDim.new(1,0)
+glowCorner.Parent = glow
+
+--==============================================================
+-- HEADER
+--==============================================================
+
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1,0,0,62)
+header.BackgroundTransparency = 1
+header.ZIndex = 5
+header.Parent = main
+
+local logo = Instance.new("ImageLabel")
+logo.Size = UDim2.fromOffset(38,38)
+logo.Position = UDim2.fromOffset(14,12)
+logo.BackgroundColor3 = theme.Accent
+logo.BackgroundTransparency = 0
+logo.Image = LEMON_LOGO
+logo.ScaleType = Enum.ScaleType.Fit
+logo.ImageTransparency = 0
+logo.BorderSizePixel = 0
+logo.ZIndex = 6
+logo.Parent = header
+
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0,12)
+logoCorner.Parent = logo
+
+local logoStroke = Instance.new("UIStroke")
+logoStroke.Color = Color3.new(1,1,1)
+logoStroke.Transparency = .75
+logoStroke.Parent = logo
+
+local title = Instance.new("TextLabel")
+title.BackgroundTransparency = 1
+title.Position = UDim2.fromOffset(62,9)
+title.Size = UDim2.new(1,-170,0,24)
+title.Text = "LEMON HUB"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 19
+title.TextColor3 = Color3.new(1,1,1)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 6
+title.Parent = header
+
+local subtitle = Instance.new("TextLabel")
+subtitle.BackgroundTransparency = 1
+subtitle.Position = UDim2.fromOffset(63,32)
+subtitle.Size = UDim2.new(1,-175,0,16)
+subtitle.Text = "SCRIPT HUB  •  V2"
+subtitle.Font = Enum.Font.GothamMedium
+subtitle.TextSize = 9
+subtitle.TextColor3 = Color3.fromRGB(145,150,165)
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.ZIndex = 6
+subtitle.Parent = header
+
+local onlineDot = Instance.new("Frame")
+onlineDot.Size = UDim2.fromOffset(7,7)
+onlineDot.Position = UDim2.new(1,-105,0,18)
+onlineDot.BackgroundColor3 = Color3.fromRGB(70,235,130)
+onlineDot.BorderSizePixel = 0
+onlineDot.ZIndex = 6
+onlineDot.Parent = header
+local onlineCorner = Instance.new("UICorner")
+onlineCorner.CornerRadius = UDim.new(1,0)
+onlineCorner.Parent = onlineDot
+
+local onlineText = Instance.new("TextLabel")
+onlineText.BackgroundTransparency = 1
+onlineText.Position = UDim2.new(1,-94,0,10)
+onlineText.Size = UDim2.fromOffset(60,23)
+onlineText.Text = "ONLINE"
+onlineText.Font = Enum.Font.GothamBold
+onlineText.TextSize = 9
+onlineText.TextColor3 = Color3.fromRGB(120,240,160)
+onlineText.TextXAlignment = Enum.TextXAlignment.Left
+onlineText.ZIndex = 6
+onlineText.Parent = header
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(28,28)
+minimize.Position = UDim2.new(1,-68,0,10)
+minimize.Text = "−"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 16
+minimize.TextColor3 = Color3.fromRGB(220,220,230)
+minimize.BackgroundColor3 = theme.Panel
+minimize.BorderSizePixel = 0
+minimize.AutoButtonColor = false
+minimize.ZIndex = 7
+minimize.Parent = header
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0,9)
+minCorner.Parent = minimize
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(28,28)
+close.Position = UDim2.new(1,-34,0,10)
+close.Text = "×"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 18
+close.TextColor3 = Color3.fromRGB(255,180,190)
+close.BackgroundColor3 = theme.Panel
+close.BorderSizePixel = 0
+close.AutoButtonColor = false
+close.ZIndex = 7
+close.Parent = header
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0,9)
+closeCorner.Parent = close
+
+--==============================================================
+-- SIDEBAR
+--==============================================================
+
+local sidebar = Instance.new("Frame")
+sidebar.Name = "Sidebar"
+sidebar.Position = UDim2.fromOffset(10,68)
+sidebar.Size = UDim2.fromOffset(66,222)
+sidebar.BackgroundColor3 = theme.Panel
+sidebar.BackgroundTransparency = .12
+sidebar.BorderSizePixel = 0
+sidebar.ZIndex = 5
+sidebar.Parent = main
+
+local sideCorner = Instance.new("UICorner")
+sideCorner.CornerRadius = UDim.new(0,17)
+sideCorner.Parent = sidebar
+
+local sideStroke = Instance.new("UIStroke")
+sideStroke.Color = Color3.fromRGB(255,255,255)
+sideStroke.Transparency = .93
+sideStroke.Parent = sidebar
+
+local function sideButton(text, icon, y)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.fromOffset(52,52)
+    b.Position = UDim2.fromOffset(7,y)
+    b.Text = ""
+    b.BackgroundColor3 = theme.Card
+    b.BackgroundTransparency = .15
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.ZIndex = 7
+    b.Parent = sidebar
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,14)
+    c.Parent = b
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Size = UDim2.fromScale(1,1)
+    iconLabel.Text = icon
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextSize = 18
+    iconLabel.TextColor3 = Color3.fromRGB(170,175,190)
+    iconLabel.ZIndex = 8
+    iconLabel.Parent = b
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.fromOffset(52,12)
+    nameLabel.Position = UDim2.fromOffset(0,38)
+    nameLabel.Text = text
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 7
+    nameLabel.TextColor3 = Color3.fromRGB(130,135,150)
+    nameLabel.ZIndex = 9
+    nameLabel.Parent = b
+
+    return b, iconLabel, nameLabel
+end
+
+local scriptsTab, scriptsIcon, scriptsName = sideButton("HOME","⌂",8)
+local configTab, configIcon, configName = sideButton("CONFIG","⚙",68)
+local infoTab, infoIcon, infoName = sideButton("INFO","i",128)
+
+-- active indicator
+local activeBar = Instance.new("Frame")
+activeBar.Size = UDim2.fromOffset(3,30)
+activeBar.Position = UDim2.fromOffset(2,19)
+activeBar.BackgroundColor3 = theme.Accent
+activeBar.BorderSizePixel = 0
+activeBar.ZIndex = 10
+activeBar.Parent = sidebar
+local activeCorner = Instance.new("UICorner")
+activeCorner.CornerRadius = UDim.new(1,0)
+activeCorner.Parent = activeBar
+
+--==============================================================
+-- CONTENT AREA
+--==============================================================
+
+local content = Instance.new("Frame")
+content.Name = "Content"
+content.Position = UDim2.fromOffset(86,68)
+content.Size = UDim2.new(1,-96,1,-78)
+content.BackgroundTransparency = 1
+content.ZIndex = 5
+content.Parent = main
+
+local pages = {}
+local currentPage = "Home"
+
+local function page(name)
+    local p = Instance.new("Frame")
+    p.Name = name
+    p.Size = UDim2.fromScale(1,1)
+    p.BackgroundTransparency = 1
+    p.Visible = name == "Home"
+    p.ZIndex = 6
+    p.Parent = content
+    pages[name] = p
+    return p
+end
+
+local homePage = page("Home")
+local configPage = page("Config")
+local infoPage = page("Info")
+
+local function switchPage(name, button)
+    currentPage = name
+    for n,p in pairs(pages) do
+        p.Visible = n == name
+    end
+
+    local targetY = button.Position.Y.Offset + 11
+    tw(activeBar,.18,{Position=UDim2.fromOffset(2,targetY)},Enum.EasingStyle.Quart)
+
+    for _,item in ipairs({
+        {scriptsTab,scriptsIcon,scriptsName,"Home"},
+        {configTab,configIcon,configName,"Config"},
+        {infoTab,infoIcon,infoName,"Info"},
+    }) do
+        local selected = item[4] == name
+        item[2].TextColor3 = selected and Color3.new(1,1,1) or Color3.fromRGB(170,175,190)
+        item[3].TextColor3 = selected and theme.Accent2 or Color3.fromRGB(130,135,150)
+        item[1].BackgroundColor3 = selected and theme.Accent or theme.Card
+        item[1].BackgroundTransparency = selected and .08 or .15
+    end
+end
+
+scriptsTab.Activated:Connect(function() click(); switchPage("Home",scriptsTab) end)
+configTab.Activated:Connect(function() click(); switchPage("Config",configTab) end)
+infoTab.Activated:Connect(function() click(); switchPage("Info",infoTab) end)
+
+--==============================================================
+-- HOME PAGE
+--==============================================================
+
+local welcome = Instance.new("TextLabel")
+welcome.BackgroundTransparency = 1
+welcome.Size = UDim2.new(1,0,0,25)
+welcome.Text = "CONTROL CENTER"
+welcome.Font = Enum.Font.GothamBlack
+welcome.TextSize = 16
+welcome.TextColor3 = Color3.new(1,1,1)
+welcome.TextXAlignment = Enum.TextXAlignment.Left
+welcome.ZIndex = 7
+welcome.Parent = homePage
+
+local welcomeSub = Instance.new("TextLabel")
+welcomeSub.BackgroundTransparency = 1
+welcomeSub.Position = UDim2.fromOffset(0,25)
+welcomeSub.Size = UDim2.new(1,0,0,18)
+welcomeSub.Text = "Manage your active features from one place."
+welcomeSub.Font = Enum.Font.Gotham
+welcomeSub.TextSize = 9
+welcomeSub.TextColor3 = Color3.fromRGB(135,140,155)
+welcomeSub.TextXAlignment = Enum.TextXAlignment.Left
+welcomeSub.ZIndex = 7
+welcomeSub.Parent = homePage
+
+local statusCard = Instance.new("Frame")
+statusCard.Position = UDim2.fromOffset(0,50)
+statusCard.Size = UDim2.new(1,0,0,42)
+statusCard.BackgroundColor3 = theme.Panel
+statusCard.BackgroundTransparency = .05
+statusCard.BorderSizePixel = 0
+statusCard.ZIndex = 7
+statusCard.Parent = homePage
+
+local statusCorner = Instance.new("UICorner")
+statusCorner.CornerRadius = UDim.new(0,13)
+statusCorner.Parent = statusCard
+
+local statusStroke = Instance.new("UIStroke")
+statusStroke.Color = theme.Accent
+statusStroke.Transparency = .82
+statusStroke.Parent = statusCard
+
+local statusDot = Instance.new("Frame")
+statusDot.Size = UDim2.fromOffset(7,7)
+statusDot.Position = UDim2.fromOffset(12,17)
+statusDot.BackgroundColor3 = Color3.fromRGB(75,230,130)
+statusDot.BorderSizePixel = 0
+statusDot.ZIndex = 8
+statusDot.Parent = statusCard
+local statusDotCorner = Instance.new("UICorner")
+statusDotCorner.CornerRadius = UDim.new(1,0)
+statusDotCorner.Parent = statusDot
+
+local statusText = Instance.new("TextLabel")
+statusText.BackgroundTransparency = 1
+statusText.Position = UDim2.fromOffset(27,6)
+statusText.Size = UDim2.new(1,-35,0,30)
+statusText.Text = "SYSTEM READY\nAnti-Hit is available"
+statusText.Font = Enum.Font.GothamMedium
+statusText.TextSize = 9
+statusText.TextColor3 = Color3.fromRGB(205,208,220)
+statusText.TextXAlignment = Enum.TextXAlignment.Left
+statusText.TextYAlignment = Enum.TextYAlignment.Center
+statusText.ZIndex = 8
+statusText.Parent = statusCard
+
+local function createToggleCard(parent, y)
+    local card = Instance.new("TextButton")
+    card.Name = "AntiHitCard"
+    card.Position = UDim2.fromOffset(0,y)
+    card.Size = UDim2.new(1,0,0,84)
+    card.BackgroundColor3 = theme.Card
+    card.BorderSizePixel = 0
+    card.Text = ""
+    card.AutoButtonColor = false
+    card.ZIndex = 7
+    card.Parent = parent
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,17)
+    c.Parent = card
+
+    local st = Instance.new("UIStroke")
+    st.Color = theme.Accent
+    st.Transparency = .84
+    st.Parent = card
+
+    local iconBg = Instance.new("Frame")
+    iconBg.Size = UDim2.fromOffset(45,45)
+    iconBg.Position = UDim2.fromOffset(12,19)
+    iconBg.BackgroundColor3 = theme.Accent
+    iconBg.BackgroundTransparency = .72
+    iconBg.BorderSizePixel = 0
+    iconBg.ZIndex = 8
+    iconBg.Parent = card
+
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(0,14)
+    ic.Parent = iconBg
+
+    local icon = Instance.new("TextLabel")
+    icon.BackgroundTransparency = 1
+    icon.Size = UDim2.fromScale(1,1)
+    icon.Text = "🛡"
+    icon.Font = Enum.Font.GothamBold
+    icon.TextSize = 21
+    icon.TextColor3 = Color3.new(1,1,1)
+    icon.ZIndex = 9
+    icon.Parent = iconBg
+
+    local label = Instance.new("TextLabel")
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.fromOffset(70,14)
+    label.Size = UDim2.new(1,-170,0,22)
+    label.Text = "ANTI HIT"
+    label.Font = Enum.Font.GothamBlack
+    label.TextSize = 13
+    label.TextColor3 = Color3.new(1,1,1)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 8
+    label.Parent = card
+
+    local desc = Instance.new("TextLabel")
+    desc.BackgroundTransparency = 1
+    desc.Position = UDim2.fromOffset(70,36)
+    desc.Size = UDim2.new(1,-170,0,30)
+    desc.Text = "Teleport route protection"
+    desc.Font = Enum.Font.Gotham
+    desc.TextSize = 8
+    desc.TextColor3 = Color3.fromRGB(140,145,160)
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.TextYAlignment = Enum.TextYAlignment.Top
+    desc.ZIndex = 8
+    desc.Parent = card
+
+    local state = Instance.new("TextLabel")
+    state.BackgroundTransparency = 1
+    state.Position = UDim2.new(1,-82,0,17)
+    state.Size = UDim2.fromOffset(70,18)
+    state.Text = "OFF"
+    state.Font = Enum.Font.GothamBlack
+    state.TextSize = 9
+    state.TextColor3 = Color3.fromRGB(255,145,160)
+    state.TextXAlignment = Enum.TextXAlignment.Right
+    state.ZIndex = 9
+    state.Parent = card
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.fromOffset(48,25)
+    track.Position = UDim2.new(1,-60,0,42)
+    track.BackgroundColor3 = Color3.fromRGB(55,57,67)
+    track.BorderSizePixel = 0
+    track.ZIndex = 8
+    track.Parent = card
+    local tc = Instance.new("UICorner")
+    tc.CornerRadius = UDim.new(1,0)
+    tc.Parent = track
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.fromOffset(19,19)
+    knob.Position = UDim2.fromOffset(3,3)
+    knob.BackgroundColor3 = Color3.fromRGB(235,235,240)
+    knob.BorderSizePixel = 0
+    knob.ZIndex = 9
+    knob.Parent = track
+    local kc = Instance.new("UICorner")
+    kc.CornerRadius = UDim.new(1,0)
+    kc.Parent = knob
+
+    return card, state, track, knob, iconBg
+end
+
+local antiHitCard, antiHitStatus, antiHitTrack, antiHitKnob, antiHitIcon =
+    createToggleCard(homePage,102)
+
+local hint = Instance.new("TextLabel")
+hint.BackgroundTransparency = 1
+hint.Position = UDim2.fromOffset(2,194)
+hint.Size = UDim2.new(1,-4,0,20)
+hint.Text = "Tap the card to toggle • Press CONFIG for appearance"
+hint.Font = Enum.Font.Gotham
+hint.TextSize = 8
+hint.TextColor3 = Color3.fromRGB(105,110,125)
+hint.TextXAlignment = Enum.TextXAlignment.Left
+hint.ZIndex = 7
+hint.Parent = homePage
+
+--==============================================================
+-- ANTI-HIT LOGIC (kept from original)
+--==============================================================
+
+local AntiHitEnabled = false
+local IsAntiHitRunning = false
+local ANTI_HIT_SPEED = 0.005
+
+local TeleportPoints = {
+    Vector3.new(500.62, 241.28, -366.64),
+    Vector3.new(504.45, 155.80, -366.35),
+    Vector3.new(508.30, 70.28, -366.03),
+    Vector3.new(513.86, 70.28, -366.25),
+    Vector3.new(519.43, 70.28, -366.47),
+    Vector3.new(524.32, 70.28, -366.59),
+    Vector3.new(529.22, 70.28, -366.71),
+    Vector3.new(538.01, 70.28, -365.55),
+    Vector3.new(546.80, 70.28, -364.40)
+}
+
+local function TeleportRoute(character)
+    if not character then return end
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    IsAntiHitRunning = true
+
+    for _,position in ipairs(TeleportPoints) do
+        if not AntiHitEnabled or not root.Parent then
+            IsAntiHitRunning = false
+            return
+        end
+        root.CFrame = CFrame.new(position)
+        task.wait(ANTI_HIT_SPEED)
+    end
+
+    IsAntiHitRunning = false
+end
+
+local function setAntiHitVisual(enabled)
+    AntiHitEnabled = enabled
+
+    if enabled then
+        antiHitStatus.Text = "ON"
+        antiHitStatus.TextColor3 = Color3.fromRGB(105,255,155)
+        antiHitTrack.BackgroundColor3 = theme.Accent
+        antiHitKnob.BackgroundColor3 = Color3.new(1,1,1)
+        tw(antiHitKnob,.22,{Position=UDim2.fromOffset(26,3)},Enum.EasingStyle.Back)
+        tw(antiHitIcon,.22,{BackgroundTransparency=.58},Enum.EasingStyle.Quart)
+        statusText.Text = "SYSTEM ACTIVE\nAnti-Hit is enabled"
+        statusDot.BackgroundColor3 = Color3.fromRGB(75,245,135)
+    else
+        antiHitStatus.Text = "OFF"
+        antiHitStatus.TextColor3 = Color3.fromRGB(255,145,160)
+        antiHitTrack.BackgroundColor3 = Color3.fromRGB(55,57,67)
+        tw(antiHitKnob,.18,{Position=UDim2.fromOffset(3,3)},Enum.EasingStyle.Quart)
+        tw(antiHitIcon,.18,{BackgroundTransparency=.72},Enum.EasingStyle.Quart)
+        statusText.Text = "SYSTEM READY\nAnti-Hit is available"
+        statusDot.BackgroundColor3 = Color3.fromRGB(75,230,130)
+    end
+end
+
+antiHitCard.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        click()
+        setAntiHitVisual(not AntiHitEnabled)
+    end
+end)
+
+ProximityPromptService.PromptTriggered:Connect(function(prompt, player)
+    if player ~= Player then return end
+    if not AntiHitEnabled or IsAntiHitRunning then return end
+
+    local character = Player.Character
+    if not character then return end
+
+    task.spawn(function()
+        TeleportRoute(character)
     end)
+end)
+
+setAntiHitVisual(false)
+
+--==============================================================
+-- CONFIG PAGE
+--==============================================================
+
+local configTitle = Instance.new("TextLabel")
+configTitle.BackgroundTransparency = 1
+configTitle.Size = UDim2.new(1,0,0,25)
+configTitle.Text = "APPEARANCE"
+configTitle.Font = Enum.Font.GothamBlack
+configTitle.TextSize = 16
+configTitle.TextColor3 = Color3.new(1,1,1)
+configTitle.TextXAlignment = Enum.TextXAlignment.Left
+configTitle.ZIndex = 7
+configTitle.Parent = configPage
+
+local configSub = Instance.new("TextLabel")
+configSub.BackgroundTransparency = 1
+configSub.Position = UDim2.fromOffset(0,25)
+configSub.Size = UDim2.new(1,0,0,18)
+configSub.Text = "Customize the hub without changing its functions."
+configSub.Font = Enum.Font.Gotham
+configSub.TextSize = 9
+configSub.TextColor3 = Color3.fromRGB(135,140,155)
+configSub.TextXAlignment = Enum.TextXAlignment.Left
+configSub.ZIndex = 7
+configSub.Parent = configPage
+
+local function sectionLabel(text,y)
+    local l = Instance.new("TextLabel")
+    l.BackgroundTransparency = 1
+    l.Position = UDim2.fromOffset(2,y)
+    l.Size = UDim2.new(1,-4,0,17)
+    l.Text = text
+    l.Font = Enum.Font.GothamBold
+    l.TextSize = 8
+    l.TextColor3 = theme.Accent2
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.ZIndex = 7
+    l.Parent = configPage
+    return l
+end
+
+sectionLabel("WINDOW SIZE",52)
+
+local sizeBar = Instance.new("Frame")
+sizeBar.Position = UDim2.fromOffset(0,73)
+sizeBar.Size = UDim2.new(1,0,0,42)
+sizeBar.BackgroundColor3 = theme.Panel
+sizeBar.BorderSizePixel = 0
+sizeBar.ZIndex = 7
+sizeBar.Parent = configPage
+local sbc = Instance.new("UICorner")
+sbc.CornerRadius = UDim.new(0,13)
+sbc.Parent = sizeBar
+
+local sizeText = Instance.new("TextLabel")
+sizeText.BackgroundTransparency = 1
+sizeText.Size = UDim2.new(1,-100,1,0)
+sizeText.Position = UDim2.fromOffset(50,0)
+sizeText.Text = "MEDIUM"
+sizeText.Font = Enum.Font.GothamBlack
+sizeText.TextSize = 9
+sizeText.TextColor3 = Color3.new(1,1,1)
+sizeText.ZIndex = 8
+sizeText.Parent = sizeBar
+
+local sizeMinus = Instance.new("TextButton")
+sizeMinus.Size = UDim2.fromOffset(42,42)
+sizeMinus.Text = "−"
+sizeMinus.Font = Enum.Font.GothamBold
+sizeMinus.TextSize = 18
+sizeMinus.TextColor3 = Color3.new(1,1,1)
+sizeMinus.BackgroundTransparency = 1
+sizeMinus.AutoButtonColor = false
+sizeMinus.ZIndex = 9
+sizeMinus.Parent = sizeBar
+
+local sizePlus = sizeMinus:Clone()
+sizePlus.Text = "+"
+sizePlus.Position = UDim2.new(1,-42,0,0)
+sizePlus.Parent = sizeBar
+
+local sizes = {
+    {name="SMALL",size=UDim2.fromOffset(350,270)},
+    {name="MEDIUM",size=UDim2.fromOffset(390,300)},
+    {name="LARGE",size=UDim2.fromOffset(430,330)},
+}
+local sizeIndex = 2
+
+local function setSize(index)
+    sizeIndex = math.clamp(index,1,#sizes)
+    sizeText.Text = sizes[sizeIndex].name
+    tw(main,.22,{Size=sizes[sizeIndex].size},Enum.EasingStyle.Quart)
+    tw(shadow,.22,{Size=sizes[sizeIndex].size},Enum.EasingStyle.Quart)
+end
+
+sizeMinus.Activated:Connect(function() click(); setSize(sizeIndex-1) end)
+sizePlus.Activated:Connect(function() click(); setSize(sizeIndex+1) end)
+
+sectionLabel("COLOR THEME",126)
+
+local themeGrid = Instance.new("Frame")
+themeGrid.Position = UDim2.fromOffset(0,147)
+themeGrid.Size = UDim2.new(1,0,0,78)
+themeGrid.BackgroundTransparency = 1
+themeGrid.ZIndex = 7
+themeGrid.Parent = configPage
+
+local grid = Instance.new("UIGridLayout")
+grid.CellSize = UDim2.new(.48,0,0,32)
+grid.CellPadding = UDim2.new(.04,0,0,8)
+grid.Parent = themeGrid
+
+local function applyTheme(index)
+    ThemeIndex = index
+    theme = Themes[index]
+
+    main.BackgroundColor3 = theme.Bg
+    mainGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0,theme.Bg),
+        ColorSequenceKeypoint.new(.55,theme.Panel),
+        ColorSequenceKeypoint.new(1,Color3.fromRGB(8,8,12)),
+    })
+    mainStroke.Color = theme.Accent
+    glow.BackgroundColor3 = theme.Accent
+    logo.BackgroundColor3 = theme.Accent
+    activeBar.BackgroundColor3 = theme.Accent
+    statusStroke.Color = theme.Accent
+    statusCard.BackgroundColor3 = theme.Panel
+    sidebar.BackgroundColor3 = theme.Panel
+    sizeBar.BackgroundColor3 = theme.Panel
+    configSub.TextColor3 = Color3.fromRGB(135,140,155)
+
+    for _,b in ipairs(themeGrid:GetChildren()) do
+        if b:IsA("TextButton") then
+            b.TextColor3 = Color3.new(1,1,1)
+        end
+    end
+
+    setAntiHitVisual(AntiHitEnabled)
+    switchPage(currentPage, currentPage=="Home" and scriptsTab or currentPage=="Config" and configTab or infoTab)
+end
+
+for i,th in ipairs(Themes) do
+    local b = Instance.new("TextButton")
+    b.Text = th.Name
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 8
+    b.TextColor3 = Color3.new(1,1,1)
+    b.BackgroundColor3 = th.Accent
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.ZIndex = 8
+    b.Parent = themeGrid
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,10)
+    c.Parent = b
+
+    b.Activated:Connect(function()
+        click()
+        applyTheme(i)
+    end)
+end
+
+--==============================================================
+-- INFO PAGE
+--==============================================================
+
+local infoTitle = Instance.new("TextLabel")
+infoTitle.BackgroundTransparency = 1
+infoTitle.Size = UDim2.new(1,0,0,25)
+infoTitle.Text = "LEMON HUB"
+infoTitle.Font = Enum.Font.GothamBlack
+infoTitle.TextSize = 18
+infoTitle.TextColor3 = Color3.new(1,1,1)
+infoTitle.TextXAlignment = Enum.TextXAlignment.Left
+infoTitle.ZIndex = 7
+infoTitle.Parent = infoPage
+
+local infoCard = Instance.new("Frame")
+infoCard.Position = UDim2.fromOffset(0,38)
+infoCard.Size = UDim2.new(1,0,0,132)
+infoCard.BackgroundColor3 = theme.Panel
+infoCard.BorderSizePixel = 0
+infoCard.ZIndex = 7
+infoCard.Parent = infoPage
+
+local infoCorner = Instance.new("UICorner")
+infoCorner.CornerRadius = UDim.new(0,16)
+infoCorner.Parent = infoCard
+
+local infoText = Instance.new("TextLabel")
+infoText.BackgroundTransparency = 1
+infoText.Position = UDim2.fromOffset(15,14)
+infoText.Size = UDim2.new(1,-30,1,-28)
+infoText.Text = "LEMON HUB V2\n\nMobile-friendly interface\nSmooth open / close animations\nTheme + window size controls\nAnti-Hit route preserved"
+infoText.Font = Enum.Font.GothamMedium
+infoText.TextSize = 9
+infoText.TextColor3 = Color3.fromRGB(185,190,205)
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.TextYAlignment = Enum.TextYAlignment.Top
+infoText.ZIndex = 8
+infoText.Parent = infoCard
+
+local credit = Instance.new("TextLabel")
+credit.BackgroundTransparency = 1
+credit.Position = UDim2.fromOffset(0,184)
+credit.Size = UDim2.new(1,0,0,20)
+credit.Text = "REDESIGNED • V2"
+credit.Font = Enum.Font.GothamBold
+credit.TextSize = 8
+credit.TextColor3 = theme.Accent2
+credit.TextXAlignment = Enum.TextXAlignment.Left
+credit.ZIndex = 7
+credit.Parent = infoPage
+
+--==============================================================
+-- DRAG SYSTEM
+--==============================================================
+
+local dragBar = Instance.new("TextButton")
+dragBar.Name = "DragBar"
+dragBar.AnchorPoint = Vector2.new(.5,.5)
+dragBar.Position = UDim2.new(.5,0,.49,166)
+dragBar.Size = UDim2.fromOffset(130,18)
+dragBar.BackgroundTransparency = 1
+dragBar.Text = ""
+dragBar.AutoButtonColor = false
+dragBar.ZIndex = 20
+dragBar.Parent = gui
+
+local dragLine = Instance.new("Frame")
+dragLine.AnchorPoint = Vector2.new(.5,.5)
+dragLine.Position = UDim2.fromScale(.5,.5)
+dragLine.Size = UDim2.fromOffset(78,3)
+dragLine.BackgroundColor3 = theme.Accent
+dragLine.BorderSizePixel = 0
+dragLine.ZIndex = 21
+dragLine.Parent = dragBar
+
+local dlc = Instance.new("UICorner")
+dlc.CornerRadius = UDim.new(1,0)
+dlc.Parent = dragLine
+
+local dragging = false
+local dragStart
+local startPos
+
+local function updateDragBar()
+    local p = main.Position
+    dragBar.Position = UDim2.new(p.X.Scale,p.X.Offset,p.Y.Scale,p.Y.Offset + main.AbsoluteSize.Y/2 + 12)
+end
+
+dragBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        tw(dragLine,.12,{Size=UDim2.fromOffset(108,5)})
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not dragging then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+
+    local delta = input.Position - dragStart
+    local camera = workspace.CurrentCamera
+    local viewport = camera and camera.ViewportSize or Vector2.new(1920,1080)
+    local halfW = main.AbsoluteSize.X/2
+    local halfH = main.AbsoluteSize.Y/2
+
+    local minX = -viewport.X/2 + halfW + 6
+    local maxX = viewport.X/2 - halfW - 6
+    local minY = -viewport.Y/2 + halfH + 6
+    local maxY = viewport.Y/2 - halfH - 6
+
+    local x = math.clamp(startPos.X.Offset + delta.X,minX,maxX)
+    local y = math.clamp(startPos.Y.Offset + delta.Y,minY,maxY)
+
+    main.Position = UDim2.new(.5,x,.49,y)
+    shadow.Position = main.Position
+    updateDragBar()
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        tw(dragLine,.16,{Size=UDim2.fromOffset(78,3)})
+    end
+end)
+
+--==============================================================
+-- RESIZE
+--==============================================================
+
+local resize = Instance.new("TextButton")
+resize.Size = UDim2.fromOffset(28,28)
+resize.AnchorPoint = Vector2.new(.5,.5)
+resize.BackgroundTransparency = 1
+resize.Text = "⌟"
+resize.Font = Enum.Font.GothamBold
+resize.TextSize = 18
+resize.TextColor3 = theme.Accent
+resize.AutoButtonColor = false
+resize.ZIndex = 20
+resize.Parent = gui
+
+local resizing = false
+local resizeStart
+local resizeSize
+
+local function updateResizePos()
+    resize.Position = UDim2.new(
+        main.Position.X.Scale,
+        main.Position.X.Offset + main.AbsoluteSize.X/2 + 12,
+        main.Position.Y.Scale,
+        main.Position.Y.Offset + main.AbsoluteSize.Y/2 + 12
+    )
+end
+
+resize.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        resizing = true
+        resizeStart = input.Position
+        resizeSize = main.Size
+        click()
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not resizing then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+    and input.UserInputType ~= Enum.UserInputType.Touch then return end
+
+    local d = input.Position - resizeStart
+    local w = math.clamp(resizeSize.X.Offset + d.X*2,330,520)
+    local h = math.clamp(resizeSize.Y.Offset + d.Y*2,250,390)
+
+    main.Size = UDim2.fromOffset(w,h)
+    shadow.Size = main.Size
+    updateDragBar()
+    updateResizePos()
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        resizing = false
+    end
+end)
+
+--==============================================================
+-- LAUNCHER / MINIMIZE
+--==============================================================
+
+local launcher = Instance.new("TextButton")
+launcher.Name = "OpenLEMON HUB"
+launcher.AnchorPoint = Vector2.new(1,.5)
+launcher.Position = UDim2.new(1,-14,.5,0)
+launcher.Size = UDim2.fromOffset(158,48)
+launcher.BackgroundColor3 = theme.Bg
+launcher.BorderSizePixel = 0
+launcher.Text = ""
+launcher.AutoButtonColor = false
+launcher.Visible = false
+launcher.ZIndex = 30
+launcher.Parent = gui
+
+local launcherCorner = Instance.new("UICorner")
+launcherCorner.CornerRadius = UDim.new(0,20)
+launcherCorner.Parent = launcher
+
+local launcherStroke = Instance.new("UIStroke")
+launcherStroke.Color = theme.Accent
+launcherStroke.Thickness = 1.5
+launcherStroke.Transparency = .08
+launcherStroke.Parent = launcher
+
+local launcherIcon = Instance.new("ImageLabel")
+launcherIcon.BackgroundColor3 = theme.Accent
+launcherIcon.Size = UDim2.fromOffset(34,34)
+launcherIcon.Position = UDim2.fromOffset(7,7)
+launcherIcon.Image = LEMON_LOGO
+launcherIcon.ScaleType = Enum.ScaleType.Fit
+launcherIcon.ImageTransparency = 0
+launcherIcon.BorderSizePixel = 0
+launcherIcon.ZIndex = 31
+launcherIcon.Parent = launcher
+local lic = Instance.new("UICorner")
+lic.CornerRadius = UDim.new(0,11)
+lic.Parent = launcherIcon
+
+local launcherText = Instance.new("TextLabel")
+launcherText.BackgroundTransparency = 1
+launcherText.Position = UDim2.fromOffset(49,5)
+launcherText.Size = UDim2.new(1,-55,0,20)
+launcherText.Text = "LEMON HUB"
+launcherText.Font = Enum.Font.GothamBlack
+launcherText.TextSize = 11
+launcherText.TextColor3 = Color3.new(1,1,1)
+launcherText.TextXAlignment = Enum.TextXAlignment.Left
+launcherText.ZIndex = 31
+launcherText.Parent = launcher
+
+local launcherSub = Instance.new("TextLabel")
+launcherSub.BackgroundTransparency = 1
+launcherSub.Position = UDim2.fromOffset(49,24)
+launcherSub.Size = UDim2.new(1,-55,0,15)
+launcherSub.Text = "TAP TO OPEN"
+launcherSub.Font = Enum.Font.GothamBold
+launcherSub.TextSize = 7
+launcherSub.TextColor3 = theme.Accent2
+launcherSub.TextXAlignment = Enum.TextXAlignment.Left
+launcherSub.ZIndex = 31
+launcherSub.Parent = launcher
+
+local function showLauncher()
+    launcher.Visible = true
+    launcher.Size = UDim2.fromOffset(40,48)
+    launcher.BackgroundTransparency = 1
+    launcherText.TextTransparency = 1
+    launcherSub.TextTransparency = 1
+    launcherIcon.ImageTransparency = 1
+
+    tw(launcher,.30,{Size=UDim2.fromOffset(158,48),BackgroundTransparency=0},Enum.EasingStyle.Back)
+    tw(launcherText,.20,{TextTransparency=0})
+    tw(launcherSub,.20,{TextTransparency=0})
+    tw(launcherIcon,.20,{ImageTransparency=0})
+end
+
+local function hideLauncher()
+    tw(launcher,.20,{Size=UDim2.fromOffset(40,46),BackgroundTransparency=1},Enum.EasingStyle.Quart,Enum.EasingDirection.In)
+    tw(launcherText,.15,{TextTransparency=1})
+    tw(launcherSub,.15,{TextTransparency=1})
+    tw(launcherIcon,.15,{ImageTransparency=1})
+    task.delay(.22,function()
+        if launcher then launcher.Visible=false end
+    end)
+end
+
+local minimized = false
+local transitioning = false
+local savedSize = main.Size
+local savedPosition = main.Position
+
+local function closeGui()
+    if transitioning then return end
+    transitioning = true
+    if not main.Visible then return end
+    savedPosition = main.Position
+    savedSize = main.Size
+    local outPos = UDim2.new(main.Position.X.Scale,main.Position.X.Offset+28,main.Position.Y.Scale,main.Position.Y.Offset)
+
+    tw(main,.24,{Position=outPos},Enum.EasingStyle.Quart,Enum.EasingDirection.In)
+    tw(main,.24,{BackgroundTransparency=1},Enum.EasingStyle.Quart,Enum.EasingDirection.In)
+    tw(shadow,.24,{BackgroundTransparency=1},Enum.EasingStyle.Quart,Enum.EasingDirection.In)
+
+    task.delay(.25,function()
+        main.Visible=false
+        shadow.Visible=false
+        dragBar.Visible=false
+        resize.Visible=false
+        main.BackgroundTransparency=0
+        main.Position=savedPosition
+        shadow.Position=savedPosition
+        shadow.BackgroundTransparency=.45
+        showLauncher()
+        transitioning = false
+    end)
+end
+
+local function openGui()
+    if transitioning then return end
+    transitioning = true
+    hideLauncher()
+    main.Visible=true
+    shadow.Visible=true
+    dragBar.Visible=true
+    resize.Visible=true
+    main.Position=UDim2.new(savedPosition.X.Scale,savedPosition.X.Offset+28,savedPosition.Y.Scale,savedPosition.Y.Offset)
+    main.Size=savedSize
+    main.BackgroundTransparency=1
+    shadow.BackgroundTransparency=1
+    tw(main,.30,{Position=savedPosition,BackgroundTransparency=0},Enum.EasingStyle.Back)
+    tw(shadow,.30,{Position=savedPosition,BackgroundTransparency=.45},Enum.EasingStyle.Back)
+    task.delay(.32,function()
+        transitioning = false
+    end)
+end
+
+close.Activated:Connect(function()
+    click()
+    closeGui()
+end)
+
+minimize.Activated:Connect(function()
+    click()
+    if minimized then
+        minimized=false
+        openGui()
+    else
+        minimized=true
+        closeGui()
+    end
+end)
+
+launcher.Activated:Connect(function()
+    click()
+    minimized=false
+    openGui()
+end)
+
+--==============================================================
+-- POSITION FOLLOW
+--==============================================================
+
+RunService.RenderStepped:Connect(function()
+    if gui.Parent and main.Visible then
+        updateDragBar()
+        updateResizePos()
+    end
+end)
+
+--==============================================================
+-- RESPAWN SAFE
+--==============================================================
+
+Player.CharacterAdded:Connect(function()
+    task.wait(.35)
+    if not gui.Parent then
+        gui.Parent = PlayerGui
+    end
+end)
+
+-- initial state
+switchPage("Home",scriptsTab)
+setSize(2)
+savedSize = main.Size
+updateDragBar()
+updateResizePos()
+
+-- subtle header animation
+task.spawn(function()
+    while gui.Parent do
+        tw(mainStroke,1.2,{Transparency=.20},Enum.EasingStyle.Sine)
+        task.wait(1.2)
+        tw(mainStroke,1.2,{Transparency=.55},Enum.EasingStyle.Sine)
+        task.wait(1.2)
+    end
+end)
+
+-- initial entrance
+transitioning = false
+main.Visible=true
+shadow.Visible=true
+dragBar.Visible=true
+resize.Visible=true
+
+main.Size=UDim2.fromOffset(360,270)
+shadow.Size=main.Size
+main.BackgroundTransparency=1
+shadow.BackgroundTransparency=1
+main.Position=UDim2.fromScale(.5,.53)
+shadow.Position=main.Position
+
+tw(main,.42,{
+    Size=UDim2.fromOffset(390,300),
+    Position=UDim2.fromScale(.5,.49),
+    BackgroundTransparency=0
+},Enum.EasingStyle.Back)
+tw(shadow,.42,{
+    Size=UDim2.fromOffset(390,300),
+    Position=UDim2.fromScale(.5,.52),
+    BackgroundTransparency=.45
+},Enum.EasingStyle.Back)
+
+task.delay(.45,function()
+    updateDragBar()
+    updateResizePos()
 end)
