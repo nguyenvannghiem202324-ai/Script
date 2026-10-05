@@ -1,0 +1,1637 @@
+--========================================================--
+-- CHILLI HUB
+-- VIETNAMESE TRANSLATOR
+-- COMPACT MOVABLE TOGGLE
+--========================================================--
+
+--// SERVICES
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+--========================================================--
+-- SETTINGS
+--========================================================--
+
+local GUI_NAME = "ChilliVietnameseTranslator"
+
+local Enabled = true
+
+local Cache = setmetatable({}, {
+    __mode = "k"
+})
+
+--========================================================--
+-- TRANSLATION DATABASE
+--========================================================--
+
+local T = {
+
+    --====================================================--
+    -- MAIN
+    --====================================================--
+
+    ["Chilli Hub"] = "Chilli Hub",
+    ["Farm"] = "Nông trại",
+    ["Player"] = "Người chơi",
+    ["Predictor"] = "Dự đoán",
+    ["Progress"] = "Tiến trình",
+    ["Server"] = "Máy chủ",
+    ["Misc"] = "Khác",
+    ["Auto Hop"] = "Tự động đổi máy chủ",
+    ["Discord"] = "Discord",
+    ["Quick & Keys"] = "Phím nhanh & Phím tắt",
+    ["Settings"] = "Cài đặt",
+    ["Config"] = "Cấu hình",
+    ["Shop"] = "Cửa hàng",
+    ["Index"] = "Danh mục",
+    ["Search"] = "Tìm kiếm",
+    ["Filter features..."] = "Lọc tính năng",
+
+    --====================================================--
+    -- DR SCRAMBLE
+    --====================================================--
+
+    ["Dr Scramble Lab & Mech"] =
+        "Phòng thí nghiệm & Mech Dr Scramble",
+
+    ["Next Mech portal in"] =
+        "Cổng Mech tiếp theo sau",
+
+    ["Auto Mech Boss"] =
+        "Tự động đánh Boss Mech",
+
+    ["Mech Tween Speed"] =
+        "Tốc độ Tween Mech",
+
+    ["Main Weapon Hold"] =
+        "Thời gian giữ vũ khí chính",
+
+    ["Scrambler Hold"] =
+        "Thời gian giữ Scrambler",
+
+    ["Swap Two Weapons"] =
+        "Đổi hai vũ khí",
+
+    ["Boss Server Hop"] =
+        "Đổi máy chủ sau Boss",
+
+    ["Keep Hopping For"] =
+        "Tiếp tục đổi máy chủ trong",
+
+    ["Priority"] =
+        "Ưu tiên",
+
+    --====================================================--
+    -- BUTTERFLY
+    --====================================================--
+
+    ["Butterfly Bloom"] =
+        "Butterfly Bloom",
+
+    ["Auto Butterfly Bloom"] =
+        "Tự động Butterfly Bloom",
+
+    ["Catch Mode"] =
+        "Chế độ bắt",
+
+    ["Catch Priority"] =
+        "Ưu tiên bắt",
+
+    ["Catch Butterflies"] =
+        "Bắt bướm",
+
+    ["Tween Speed"] =
+        "Tốc độ Tween",
+
+    ["Auto Trade Up"] =
+        "Tự động nâng cấp trao đổi",
+
+    ["Trade Up Tiers"] =
+        "Bậc nâng cấp trao đổi",
+
+    ["None"] =
+        "Không có",
+
+    --====================================================--
+    -- WISP
+    --====================================================--
+
+    ["Wisp Companion"] =
+        "Bạn đồng hành Wisp",
+
+    ["Auto Wisp"] =
+        "Tự động Wisp",
+
+    ["Auto Banjo Cricket"] =
+        "Tự động Banjo Cricket",
+
+    ["Auto Steal"] =
+        "Tự động trộm",
+
+    ["Auto Place Egg"] =
+        "Tự động đặt trứng",
+
+    ["Auto Treadmill"] =
+        "Tự động máy chạy",
+
+    ["Auto Hatch & Equip"] =
+        "Tự động ấp & trang bị",
+
+    ["Auto Sell"] =
+        "Tự động bán",
+
+    ["Auto Sell Lab Egg"] =
+        "Tự động bán trứng Lab",
+
+    ["Auto Fuse Machine"] =
+        "Tự động dùng máy hợp nhất",
+
+    ["Auto Favorite"] =
+        "Tự động yêu thích",
+
+    --====================================================--
+    -- INSTANT STEAL
+    --====================================================--
+
+    ["Instant Steal"] =
+        "Trộm ngay lập tức",
+
+    ["Instant Steal V2"] =
+        "Trộm ngay lập tức V2",
+
+    ["Target Areas"] =
+        "Khu vực mục tiêu",
+
+    ["Min Rarity"] =
+        "Độ hiếm tối thiểu",
+
+    ["Min Steal Value"] =
+        "Giá trị trộm tối thiểu",
+
+    ["Target Specific Eggs"] =
+        "Trứng mục tiêu cụ thể",
+
+    ["Steal Missing Lab Eggs"] =
+        "Trộm trứng Lab còn thiếu",
+
+    ["Steal Missing Index Eggs"] =
+        "Trộm trứng Index còn thiếu",
+
+    ["Steal Priority"] =
+        "Ưu tiên trộm",
+
+    ["Best Rarity"] =
+        "Độ hiếm tốt nhất",
+
+    ["Biggest Weight"] =
+        "Trọng lượng lớn nhất",
+
+    ["Best Mutation"] =
+        "Đột biến tốt nhất",
+
+    ["Highest Value"] =
+        "Giá trị cao nhất",
+
+    ["Lowest Value"] =
+        "Giá trị thấp nhất",
+
+    ["Carry Speed"] =
+        "Tốc độ mang",
+
+    ["Anti Guard Panel"] =
+        "Bảng chống Guard",
+
+    --====================================================--
+    -- PLACE EGG
+    --====================================================--
+
+    ["Place Egg Rule"] =
+        "Quy tắc đặt trứng",
+
+    ["Place Egg Order"] =
+        "Thứ tự đặt trứng",
+
+    ["Place Rarity"] =
+        "Độ hiếm đặt",
+
+    ["Place Specific Eggs"] =
+        "Đặt trứng cụ thể",
+
+    ["Min Place Value"] =
+        "Giá trị đặt tối thiểu",
+
+    ["Eggs placed"] =
+        "Trứng đã đặt",
+
+    ["equipped"] =
+        "Đang trang bị",
+
+    ["in bag"] =
+        "Trong túi",
+
+    --====================================================--
+    -- HATCH
+    --====================================================--
+
+    ["Auto Hatch"] =
+        "Tự động ấp",
+
+    ["Hatch Min Rarity"] =
+        "Độ hiếm ấp tối thiểu",
+
+    ["Min Hatch Value"] =
+        "Giá trị ấp tối thiểu",
+
+    ["Hatch Specific Eggs"] =
+        "Ấp trứng cụ thể",
+
+    ["Auto Equip Best"] =
+        "Tự động trang bị tốt nhất",
+
+    ["Stay On Treadmill"] =
+        "Luôn ở trên máy chạy",
+
+    --====================================================--
+    -- SELL PET
+    --====================================================--
+
+    ["Auto Sell Pet"] =
+        "Tự động bán Pet",
+
+    ["Sell Pets Now"] =
+        "Bán Pet ngay",
+
+    ["Sell Pet Rule"] =
+        "Quy tắc bán Pet",
+
+    ["Pet Max Rarity"] =
+        "Độ hiếm Pet tối đa",
+
+    ["Pet Min Value"] =
+        "Giá trị Pet tối thiểu",
+
+    ["Keep Mutated Pets"] =
+        "Giữ Pet đã đột biến",
+
+    ["Blacklist Sell Pets"] =
+        "Danh sách Pet không bán",
+
+    ["Pet matches"] =
+        "Pet phù hợp",
+
+    ["Sell"] =
+        "Bán",
+
+    --====================================================--
+    -- SELL EGG
+    --====================================================--
+
+    ["Auto Sell Egg"] =
+        "Tự động bán trứng",
+
+    ["Sell Egg Rule"] =
+        "Quy tắc bán trứng",
+
+    ["Sell Eggs Now"] =
+        "Bán trứng ngay",
+
+    ["Egg Max Rarity"] =
+        "Độ hiếm trứng tối đa",
+
+    ["Egg Sell Value"] =
+        "Giá trị bán trứng",
+
+    ["Keep Mutated Eggs"] =
+        "Giữ trứng đã đột biến",
+
+    ["Blacklist Sell Eggs"] =
+        "Danh sách trứng không bán",
+
+    ["Egg matches"] =
+        "Trứng phù hợp",
+
+    --====================================================--
+    -- FUSE
+    --====================================================--
+
+    ["Auto Fuse Machine"] =
+        "Tự động dùng máy hợp nhất",
+
+    ["Fuse Priority Mode"] =
+        "Chế độ ưu tiên hợp nhất",
+
+    ["Pets To Use"] =
+        "Pet sử dụng",
+
+    ["Max Rarity to Fuse"] =
+        "Độ hiếm tối đa để hợp nhất",
+
+    ["Specific Species to Fuse"] =
+        "Loài cụ thể để hợp nhất",
+
+    ["Skip Mutated Pets"] =
+        "Bỏ qua Pet đột biến",
+
+    ["Eject Incomplete Slots"] =
+        "Đẩy Pet khỏi ô chưa hoàn chỉnh",
+
+    ["No three matching pets"] =
+        "Không có ba Pet phù hợp",
+
+    --====================================================--
+    -- FAVORITE
+    --====================================================--
+
+    ["Favorite"] =
+        "Yêu thích",
+
+    ["Favorite Pets Now"] =
+        "Yêu thích Pet ngay",
+
+    ["Favorite Rule"] =
+        "Quy tắc yêu thích",
+
+    ["Favorite Min Rarity"] =
+        "Độ hiếm yêu thích tối thiểu",
+
+    ["Favorite Mutations"] =
+        "Đột biến yêu thích",
+
+    ["Mutation Check"] =
+        "Kiểm tra đột biến",
+
+    ["Min Favorite Value"] =
+        "Giá trị yêu thích tối thiểu",
+
+    ["Always Favorite Species"] =
+        "Luôn yêu thích loài",
+
+    ["Auto Favorite Equipped"] =
+        "Tự động yêu thích Pet đang trang bị",
+
+    ["Auto Unfavorite Equipped"] =
+        "Tự động bỏ yêu thích Pet đang trang bị",
+
+    ["Favorite Equipped Now"] =
+        "Yêu thích Pet đang trang bị ngay",
+
+    ["Unfavorite Equipped Now"] =
+        "Bỏ yêu thích Pet đang trang bị ngay",
+
+    --====================================================--
+    -- LAB
+    --====================================================--
+
+    ["Lab Banners"] =
+        "Banner phòng thí nghiệm",
+
+    ["Biohazard Pets"] =
+        "Pet Biohazard",
+
+    ["Experimental Pets"] =
+        "Pet thí nghiệm",
+
+    ["Unstable DNA"] =
+        "DNA không ổn định",
+
+    ["Scramble Shop Items"] =
+        "Vật phẩm cửa hàng Scramble",
+
+    ["Keep Samples"] =
+        "Giữ mẫu",
+
+    ["Auto Use Scrambled"] =
+        "Tự động sử dụng Scrambled",
+
+    ["Mutation Min Rarity"] =
+        "Độ hiếm đột biến tối thiểu",
+
+    ["Min Mutation Value"] =
+        "Giá trị đột biến tối thiểu",
+
+    ["Mutation Priority"] =
+        "Ưu tiên đột biến",
+
+    ["Mutation Target Eggs"] =
+        "Trứng mục tiêu đột biến",
+
+    ["Auto Buy Scrambled"] =
+        "Tự động mua Scrambled",
+
+    ["Auto Lab Trade-In"] =
+        "Tự động đổi vật phẩm Lab",
+
+    ["Auto Reroll Lab Recipe"] =
+        "Tự động quay lại công thức Lab",
+
+    ["Auto Place Lab Reward Eggs"] =
+        "Tự động đặt trứng thưởng Lab",
+
+    ["Auto Buy Scramble Shop"] =
+        "Tự động mua trong cửa hàng Scramble",
+
+    --====================================================--
+    -- ESSENCE
+    --====================================================--
+
+    ["Smart Trade For Essence"] =
+        "Trao đổi Essence thông minh",
+
+    ["Auto Craft Essence"] =
+        "Tự động chế tạo Essence",
+
+    ["Auto Use Enchanted Essence"] =
+        "Tự động sử dụng Essence phù phép",
+
+    ["Essence Min Rarity"] =
+        "Độ hiếm Essence tối thiểu",
+
+    ["Essence Min Value"] =
+        "Giá trị Essence tối thiểu",
+
+    ["Essence Target Eggs"] =
+        "Trứng mục tiêu Essence",
+
+    ["Essence Priority"] =
+        "Ưu tiên Essence",
+
+    ["Essence Skip Enchanted Eggs"] =
+        "Bỏ qua trứng đã phù phép",
+
+    --====================================================--
+    -- PROGRESSION
+    --====================================================--
+
+    ["Auto Progression"] =
+        "Tự động tiến trình",
+
+    ["Auto Buy Trail"] =
+        "Tự động mua Trail",
+
+    ["Auto Upgrade Base"] =
+        "Tự động nâng cấp căn cứ",
+
+    ["Auto Upgrade Treadmill"] =
+        "Tự động nâng cấp máy chạy",
+
+    ["Auto Claim"] =
+        "Tự động nhận",
+
+    ["Auto Claim Index"] =
+        "Tự động nhận Index",
+
+    ["Auto Claim Mastery"] =
+        "Tự động nhận Mastery",
+
+    --====================================================--
+    -- ESP
+    --====================================================--
+
+    ["ESP Eggs"] =
+        "ESP trứng",
+
+    ["ESP Fixed Size"] =
+        "ESP kích thước cố định",
+
+    ["ESP Own Base Eggs"] =
+        "ESP trứng căn cứ của mình",
+
+    ["ESP Other Base Eggs"] =
+        "ESP trứng căn cứ người khác",
+
+    ["ESP Min Rarity"] =
+        "Độ hiếm ESP tối thiểu",
+
+    ["ESP Show Info"] =
+        "Hiển thị thông tin ESP",
+
+    ["Min ESP Value"] =
+        "Giá trị ESP tối thiểu",
+
+    ["ESP Egg Size"] =
+        "Kích thước ESP trứng",
+
+    ["ESP Guards"] =
+        "ESP Guard",
+
+    ["ESP Guard Size"] =
+        "Kích thước ESP Guard",
+
+    ["ESP Lost Parts"] =
+        "ESP bộ phận bị mất",
+
+    ["ESP Players"] =
+        "ESP người chơi",
+
+    ["ESP Player Info"] =
+        "Thông tin ESP người chơi",
+
+    ["ESP Player Size"] =
+        "Kích thước ESP người chơi",
+
+    --====================================================--
+    -- MOVEMENT
+    --====================================================--
+
+    ["Movement"] =
+        "Di chuyển",
+
+    ["Speed Boost"] =
+        "Tăng tốc",
+
+    ["Boost Speed"] =
+        "Mức tăng tốc",
+
+    ["Infinite Jump"] =
+        "Nhảy vô hạn",
+
+    ["Hit Player"] =
+        "Đánh người chơi",
+
+    ["Hit Aura"] =
+        "Vùng đánh",
+
+    ["Chase Settings"] =
+        "Cài đặt truy đuổi",
+
+    ["Hit Tween Speed"] =
+        "Tốc độ Tween khi đánh",
+
+    ["Hit Max Speed"] =
+        "Tốc độ đánh tối đa",
+
+    ["Hit Lead"] =
+        "Độ dẫn mục tiêu",
+
+    ["Hit Sweep"] =
+        "Quét mục tiêu",
+
+    ["Add/Remove Hits On Quick Bar 2"] =
+        "Thêm/Xóa đánh khỏi Thanh nhanh 2",
+
+    ["Anti Guard"] =
+        "Chống Guard",
+
+    ["Anti AFK"] =
+        "Chống AFK",
+
+    ["Anti Ragdoll"] =
+        "Chống Ragdoll",
+
+    ["Anti Trap"] =
+        "Chống bẫy",
+
+    ["Invisibility"] =
+        "Tàng hình",
+
+    ["Instant Prompts"] =
+        "Tương tác Prompt ngay lập tức",
+
+    ["Combat"] =
+        "Chiến đấu",
+
+    ["Idle"] =
+        "Không hoạt động",
+
+    ["Auto Hit Nearest Player"] =
+        "Tự động đánh người chơi gần nhất",
+
+    ["Auto Hit Egg Holders"] =
+        "Tự động đánh người đang giữ trứng",
+
+    ["Auto Hit Specific Player"] =
+        "Tự động đánh người chơi cụ thể",
+
+    --====================================================--
+    -- SERVER
+    --====================================================--
+
+    ["Auto Load Script"] =
+        "Tự động tải Script",
+
+    ["Server Hop Mode"] =
+        "Chế độ đổi máy chủ",
+
+    ["Server Hop"] =
+        "Đổi máy chủ",
+
+    ["Most Players"] =
+        "Nhiều người chơi nhất",
+
+    ["Least Players"] =
+        "Ít người chơi nhất",
+
+    ["Random"] =
+        "Ngẫu nhiên",
+
+    ["Job ID"] =
+        "ID máy chủ",
+
+    ["Join Job ID"] =
+        "Vào máy chủ bằng Job ID",
+
+    ["Copy Current Job ID"] =
+        "Sao chép Job ID hiện tại",
+
+    ["Rejoin Server"] =
+        "Vào lại máy chủ",
+
+    ["Auto Rejoin When Disconnect"] =
+        "Tự động vào lại khi mất kết nối",
+
+    --====================================================--
+    -- PERFORMANCE
+    --====================================================--
+
+    ["Performance"] =
+        "Hiệu năng",
+
+    ["FPS Cap"] =
+        "Giới hạn FPS",
+
+    ["Optimizer"] =
+        "Tối ưu hóa",
+
+    ["FPS and Ping"] =
+        "FPS và Ping",
+
+    ["FPS and Ping Size"] =
+        "Kích thước FPS và Ping",
+
+    ["Disable 3D Render"] =
+        "Tắt kết xuất 3D",
+
+    ["Farm HUD"] =
+        "HUD Farm",
+
+    ["Utility"] =
+        "Tiện ích",
+
+    --====================================================--
+    -- INTERFACE
+    --====================================================--
+
+    ["Interface"] =
+        "Giao diện",
+
+    ["UI Size"] =
+        "Kích thước giao diện",
+
+    ["Notifications"] =
+        "Thông báo",
+
+    ["Open On Launch"] =
+        "Mở khi khởi chạy",
+
+    ["Defaults"] =
+        "Mặc định",
+
+    ["Reset to Defaults"] =
+        "Đặt lại về mặc định",
+
+    ["Turn Off All Toggles"] =
+        "Tắt tất cả công tắc",
+
+    ["Reset"] =
+        "Đặt lại",
+
+    ["Turn Off"] =
+        "Tắt",
+
+    --====================================================--
+    -- COMMON
+    --====================================================--
+
+    ["On"] =
+        "Bật",
+
+    ["Off"] =
+        "Tắt",
+
+    ["Enabled"] =
+        "Đã bật",
+
+    ["Disabled"] =
+        "Đã tắt",
+
+    ["Enable"] =
+        "Bật",
+
+    ["Disable"] =
+        "Tắt",
+
+    ["Open"] =
+        "Mở",
+
+    ["Close"] =
+        "Đóng",
+
+    ["Save"] =
+        "Lưu",
+
+    ["Refresh"] =
+        "Làm mới",
+
+    ["Cancel"] =
+        "Hủy",
+
+    ["Apply"] =
+        "Áp dụng",
+
+    ["Confirm"] =
+        "Xác nhận",
+
+    ["Select"] =
+        "Chọn",
+
+    ["Selected"] =
+        "Đã chọn",
+
+    ["Start"] =
+        "Bắt đầu",
+
+    ["Stop"] =
+        "Dừng",
+
+    ["Loading"] =
+        "Đang tải",
+
+    ["Done"] =
+        "Hoàn tất",
+
+    ["Back"] =
+        "Quay lại",
+
+    ["Next"] =
+        "Tiếp theo",
+
+    ["Previous"] =
+        "Trước",
+
+    ["Clear"] =
+        "Xóa",
+
+    ["Copy"] =
+        "Sao chép",
+
+    ["Paste"] =
+        "Dán",
+
+    ["Update"] =
+        "Cập nhật",
+
+    ["Close Menu"] =
+        "Đóng menu",
+
+    ["Open Menu"] =
+        "Mở menu",
+}
+
+--========================================================--
+-- SORT TRANSLATION KEYS
+-- Dài trước để tránh thay nhầm chuỗi
+--========================================================--
+
+local Keys = {}
+
+for English, Vietnamese in pairs(T) do
+    table.insert(Keys, {
+        English,
+        Vietnamese
+    })
+end
+
+table.sort(Keys, function(a, b)
+    return #a[1] > #b[1]
+end)
+
+--========================================================--
+-- TRANSLATE TEXT
+--========================================================--
+
+local function TranslateText(Text)
+
+    if type(Text) ~= "string" then
+        return Text
+    end
+
+    if Text == "" then
+        return Text
+    end
+
+    -- Exact match
+    local Exact = T[Text]
+
+    if Exact then
+        return Exact
+    end
+
+    -- Partial match
+    local Result = Text
+
+    for _, Pair in ipairs(Keys) do
+
+        local English = Pair[1]
+        local Vietnamese = Pair[2]
+
+        if string.find(
+            Result,
+            English,
+            1,
+            true
+        ) then
+
+            Result = string.gsub(
+                Result,
+                English,
+                Vietnamese
+            )
+
+        end
+
+    end
+
+    return Result
+end
+
+--========================================================--
+-- TRANSLATE OBJECT
+--========================================================--
+
+local function TranslateObject(Object)
+
+    if not Enabled then
+        return
+    end
+
+    if not Object:IsA("TextLabel")
+        and not Object:IsA("TextButton")
+        and not Object:IsA("TextBox") then
+
+        return
+
+    end
+
+    -- Cache kiểm tra
+    local OldText = Cache[Object]
+
+    local CurrentText = Object.Text
+
+    if OldText == CurrentText then
+        return
+    end
+
+    local NewText =
+        TranslateText(CurrentText)
+
+    if NewText ~= CurrentText then
+
+        Cache[Object] = NewText
+
+        pcall(function()
+            Object.Text = NewText
+        end)
+
+    else
+
+        Cache[Object] = CurrentText
+
+    end
+
+    -- Placeholder
+    if Object:IsA("TextBox") then
+
+        local Placeholder =
+            Object.PlaceholderText
+
+        local NewPlaceholder =
+            TranslateText(Placeholder)
+
+        if NewPlaceholder ~= Placeholder then
+
+            pcall(function()
+                Object.PlaceholderText =
+                    NewPlaceholder
+            end)
+
+        end
+
+    end
+end
+
+--========================================================--
+-- SCAN GUI
+--========================================================--
+
+local function ScanContainer(Container)
+
+    if not Container then
+        return
+    end
+
+    local Objects
+
+    local Success = pcall(function()
+        Objects = Container:GetDescendants()
+    end)
+
+    if not Success or not Objects then
+        return
+    end
+
+    for _, Object in ipairs(Objects) do
+
+        if not Enabled then
+            break
+        end
+
+        TranslateObject(Object)
+
+    end
+end
+
+--========================================================--
+-- SCAN ALL
+--========================================================--
+
+function ScanAll()
+
+    if not Enabled then
+        return
+    end
+
+    task.spawn(function()
+
+        ScanContainer(PlayerGui)
+
+    end)
+
+    task.spawn(function()
+
+        pcall(function()
+            ScanContainer(CoreGui)
+        end)
+
+    end)
+
+end
+
+--========================================================--
+-- NEW GUI DETECTOR
+-- Không quét liên tục
+--========================================================--
+
+local function ConnectContainer(Container)
+
+    if not Container then
+        return
+    end
+
+    Container.DescendantAdded:Connect(function(Object)
+
+        if not Enabled then
+            return
+        end
+
+        task.defer(function()
+
+            TranslateObject(Object)
+
+        end)
+
+    end)
+
+end
+
+ConnectContainer(PlayerGui)
+
+pcall(function()
+    ConnectContainer(CoreGui)
+end)
+
+--========================================================--
+-- INITIAL TRANSLATION
+--========================================================--
+
+task.spawn(function()
+
+    task.wait(0.3)
+
+    ScanAll()
+
+end)
+
+-- Quét lại một lần sau khi menu load hoàn toàn
+task.delay(2, function()
+
+    if Enabled then
+        ScanAll()
+    end
+
+end)
+
+--========================================================--
+-- CHILLI HUB
+-- COMPACT MOVABLE TOGGLE
+--========================================================--
+
+local ToggleGuiName =
+    "ChilliVietnameseTranslatorToggle"
+
+-- Xóa toggle cũ
+pcall(function()
+
+    local Old =
+        CoreGui:FindFirstChild(ToggleGuiName)
+
+    if Old then
+        Old:Destroy()
+    end
+
+end)
+
+pcall(function()
+
+    local Old =
+        PlayerGui:FindFirstChild(ToggleGuiName)
+
+    if Old then
+        Old:Destroy()
+    end
+
+end)
+
+--========================================================--
+-- GUI PARENT
+--========================================================--
+
+local GuiParent
+
+pcall(function()
+
+    if typeof(gethui) == "function" then
+        GuiParent = gethui()
+    end
+
+end)
+
+if not GuiParent then
+    GuiParent = CoreGui
+end
+
+--========================================================--
+-- SCREEN GUI
+--========================================================--
+
+local ScreenGui =
+    Instance.new("ScreenGui")
+
+ScreenGui.Name =
+    ToggleGuiName
+
+ScreenGui.ResetOnSpawn =
+    false
+
+ScreenGui.IgnoreGuiInset =
+    true
+
+ScreenGui.DisplayOrder =
+    999999
+
+ScreenGui.ZIndexBehavior =
+    Enum.ZIndexBehavior.Global
+
+local ParentSuccess =
+    pcall(function()
+
+        ScreenGui.Parent =
+            GuiParent
+
+    end)
+
+if not ParentSuccess
+    or not ScreenGui.Parent then
+
+    ScreenGui.Parent =
+        PlayerGui
+
+end
+
+--========================================================--
+-- TOGGLE
+--========================================================--
+
+local Toggle =
+    Instance.new("Frame")
+
+Toggle.Name =
+    "CompactMovableToggle"
+
+Toggle.Size =
+    UDim2.fromOffset(78, 30)
+
+Toggle.Position =
+    UDim2.new(
+        0,
+        15,
+        0.5,
+        0
+    )
+
+Toggle.AnchorPoint =
+    Vector2.new(0, 0.5)
+
+Toggle.BackgroundColor3 =
+    Color3.fromRGB(
+        18,
+        18,
+        18
+    )
+
+Toggle.BorderSizePixel =
+    0
+
+Toggle.Active =
+    true
+
+Toggle.ZIndex =
+    1000
+
+Toggle.Parent =
+    ScreenGui
+
+--========================================================--
+-- CORNER
+--========================================================--
+
+local ToggleCorner =
+    Instance.new("UICorner")
+
+ToggleCorner.CornerRadius =
+    UDim.new(0, 4)
+
+ToggleCorner.Parent =
+    Toggle
+
+--========================================================--
+-- BLACK SOFT BORDER
+--========================================================--
+
+local ToggleStroke =
+    Instance.new("UIStroke")
+
+ToggleStroke.Thickness =
+    1.3
+
+ToggleStroke.Transparency =
+    0.35
+
+ToggleStroke.Color =
+    Color3.fromRGB(
+        0,
+        0,
+        0
+    )
+
+ToggleStroke.Parent =
+    Toggle
+
+--========================================================--
+-- BACKGROUND
+--========================================================--
+
+local Background =
+    Instance.new("Frame")
+
+Background.Name =
+    "Background"
+
+Background.Size =
+    UDim2.new(
+        1,
+        -6,
+        1,
+        -6
+    )
+
+Background.Position =
+    UDim2.fromOffset(
+        3,
+        3
+    )
+
+Background.BackgroundColor3 =
+    Color3.fromRGB(
+        35,
+        195,
+        20
+    )
+
+Background.BorderSizePixel =
+    0
+
+Background.ZIndex =
+    1001
+
+Background.Parent =
+    Toggle
+
+local BackgroundCorner =
+    Instance.new("UICorner")
+
+BackgroundCorner.CornerRadius =
+    UDim.new(0, 3)
+
+BackgroundCorner.Parent =
+    Background
+
+--========================================================--
+-- BACKGROUND BORDER
+--========================================================--
+
+local BackgroundStroke =
+    Instance.new("UIStroke")
+
+BackgroundStroke.Thickness =
+    1
+
+BackgroundStroke.Transparency =
+    0.45
+
+BackgroundStroke.Color =
+    Color3.fromRGB(
+        0,
+        0,
+        0
+    )
+
+BackgroundStroke.Parent =
+    Background
+
+--========================================================--
+-- VI TEXT
+--========================================================--
+
+local Label =
+    Instance.new("TextLabel")
+
+Label.Name =
+    "VI"
+
+Label.BackgroundTransparency =
+    1
+
+Label.Size =
+    UDim2.new(
+        1,
+        -30,
+        1,
+        0
+    )
+
+Label.Position =
+    UDim2.fromOffset(
+        6,
+        0
+    )
+
+Label.Font =
+    Enum.Font.GothamBold
+
+Label.TextSize =
+    10
+
+Label.Text =
+    "VI"
+
+Label.TextColor3 =
+    Color3.fromRGB(
+        255,
+        255,
+        255
+    )
+
+Label.TextXAlignment =
+    Enum.TextXAlignment.Left
+
+Label.TextYAlignment =
+    Enum.TextYAlignment.Center
+
+Label.ZIndex =
+    1002
+
+Label.Parent =
+    Background
+
+--========================================================--
+-- WHITE KNOB
+--========================================================--
+
+local Knob =
+    Instance.new("TextButton")
+
+Knob.Name =
+    "Knob"
+
+Knob.AutoButtonColor =
+    false
+
+Knob.Text =
+    ""
+
+Knob.Size =
+    UDim2.fromOffset(
+        20,
+        20
+    )
+
+Knob.Position =
+    UDim2.new(
+        1,
+        -23,
+        0.5,
+        0
+    )
+
+Knob.AnchorPoint =
+    Vector2.new(
+        0,
+        0.5
+    )
+
+Knob.BackgroundColor3 =
+    Color3.fromRGB(
+        245,
+        245,
+        245
+    )
+
+Knob.BorderSizePixel =
+    0
+
+Knob.ZIndex =
+    1003
+
+Knob.Parent =
+    Background
+
+local KnobCorner =
+    Instance.new("UICorner")
+
+KnobCorner.CornerRadius =
+    UDim.new(0, 2)
+
+KnobCorner.Parent =
+    Knob
+
+local KnobStroke =
+    Instance.new("UIStroke")
+
+KnobStroke.Thickness =
+    1.1
+
+KnobStroke.Transparency =
+    0.3
+
+KnobStroke.Color =
+    Color3.fromRGB(
+        0,
+        0,
+        0
+    )
+
+KnobStroke.Parent =
+    Knob
+
+--========================================================--
+-- COLORS
+--========================================================--
+
+local ON_COLOR =
+    Color3.fromRGB(
+        35,
+        195,
+        20
+    )
+
+local OFF_COLOR =
+    Color3.fromRGB(
+        62,
+        62,
+        62
+    )
+
+--========================================================--
+-- UPDATE TOGGLE
+--========================================================--
+
+local function UpdateToggle()
+
+    local Info =
+        TweenInfo.new(
+            0.18,
+            Enum.EasingStyle.Quint,
+            Enum.EasingDirection.Out
+        )
+
+    local TargetColor
+    local TargetPosition
+
+    if Enabled then
+
+        TargetColor =
+            ON_COLOR
+
+        TargetPosition =
+            UDim2.new(
+                1,
+                -23,
+                0.5,
+                0
+            )
+
+    else
+
+        TargetColor =
+            OFF_COLOR
+
+        TargetPosition =
+            UDim2.new(
+                0,
+                3,
+                0.5,
+                0
+            )
+
+    end
+
+    TweenService:Create(
+        Background,
+        Info,
+        {
+            BackgroundColor3 =
+                TargetColor
+        }
+    ):Play()
+
+    TweenService:Create(
+        Knob,
+        Info,
+        {
+            Position =
+                TargetPosition
+        }
+    ):Play()
+
+end
+
+--========================================================--
+-- DRAG
+--========================================================--
+
+local Dragging =
+    false
+
+local DragStart =
+    nil
+
+local StartPosition =
+    nil
+
+local DragMoved =
+    false
+
+Toggle.InputBegan:Connect(function(Input)
+
+    if Input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+
+        or
+
+        Input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        Dragging =
+            true
+
+        DragMoved =
+            false
+
+        DragStart =
+            Input.Position
+
+        StartPosition =
+            Toggle.Position
+
+    end
+
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+
+    if not Dragging then
+        return
+    end
+
+    if Input.UserInputType ==
+        Enum.UserInputType.MouseMovement
+
+        or
+
+        Input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        local Delta =
+            Input.Position -
+            DragStart
+
+        if math.abs(Delta.X) > 4
+            or math.abs(Delta.Y) > 4 then
+
+            DragMoved =
+                true
+
+        end
+
+        Toggle.Position =
+            UDim2.new(
+                StartPosition.X.Scale,
+                StartPosition.X.Offset +
+                    Delta.X,
+
+                StartPosition.Y.Scale,
+                StartPosition.Y.Offset +
+                    Delta.Y
+            )
+
+    end
+
+end)
+
+--========================================================--
+-- CLICK / RELEASE
+--========================================================--
+
+UserInputService.InputEnded:Connect(function(Input)
+
+    if Input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+
+        or
+
+        Input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        if Dragging
+            and not DragMoved then
+
+            Enabled =
+                not Enabled
+
+            if Enabled then
+
+                Cache =
+                    setmetatable(
+                        {},
+                        {
+                            __mode = "k"
+                        }
+                    )
+
+                task.spawn(
+                    ScanAll
+                )
+
+            end
+
+            UpdateToggle()
+
+        end
+
+        Dragging =
+            false
+
+    end
+
+end)
+
+--========================================================--
+-- START
+--========================================================--
+
+ScreenGui.Enabled =
+    true
+
+Toggle.Visible =
+    true
+
+UpdateToggle()
+
+print(
+    "[Chilli Hub Translator] Loaded"
+)
