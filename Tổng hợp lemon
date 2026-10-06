@@ -1,0 +1,1242 @@
+--//======================================================
+--// 🍋 LEMON HUB V4
+--// Logo: 99865556583586
+--// Logo format: rbxthumb:// ONLY
+--// Mobile • Draggable • Animation • Respawn Safe
+--//======================================================
+
+--// SERVICES
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--//======================================================
+--// CLEAN OLD GUI
+--//======================================================
+
+local Old = PlayerGui:FindFirstChild("LEMON_HUB_V4")
+if Old then
+    Old:Destroy()
+end
+
+--//======================================================
+--// CONFIG
+--//======================================================
+
+local LOGO_ID = "99865556583586"
+local LOGO = "rbxthumb://type=Asset&id=" .. LOGO_ID .. "&w=420&h=420"
+
+local C = {
+    BG = Color3.fromRGB(8, 7, 14),
+    BG2 = Color3.fromRGB(14, 10, 22),
+
+    PANEL = Color3.fromRGB(18, 13, 29),
+    PANEL2 = Color3.fromRGB(25, 17, 39),
+
+    PURPLE = Color3.fromRGB(143, 65, 255),
+    PURPLE2 = Color3.fromRGB(190, 80, 255),
+    PINK = Color3.fromRGB(255, 70, 185),
+
+    WHITE = Color3.fromRGB(245, 242, 255),
+    GRAY = Color3.fromRGB(145, 137, 160),
+    DARK = Color3.fromRGB(70, 64, 82),
+
+    GREEN = Color3.fromRGB(80, 255, 165),
+    RED = Color3.fromRGB(255, 80, 100)
+}
+
+--//======================================================
+--// SCREEN GUI
+--//======================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LEMON_HUB_V4"
+ScreenGui.DisplayOrder = 999999
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = PlayerGui
+
+--//======================================================
+--// HELPERS
+--//======================================================
+
+local function New(Class, Properties, Parent)
+    local Object = Instance.new(Class)
+
+    for Property, Value in pairs(Properties or {}) do
+        Object[Property] = Value
+    end
+
+    Object.Parent = Parent
+    return Object
+end
+
+local function Corner(Object, Radius)
+    return New("UICorner", {
+        CornerRadius = UDim.new(0, Radius or 10)
+    }, Object)
+end
+
+local function Stroke(Object, Color, Thickness, Transparency)
+    return New("UIStroke", {
+        Color = Color or C.PURPLE,
+        Thickness = Thickness or 1,
+        Transparency = Transparency or 0
+    }, Object)
+end
+
+local function Gradient(Object, Color1, Color2, Rotation)
+    return New("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color1),
+            ColorSequenceKeypoint.new(1, Color2)
+        }),
+        Rotation = Rotation or 0
+    }, Object)
+end
+
+local function Tween(Object, Time, Properties, Style, Direction)
+    local Info = TweenInfo.new(
+        Time or 0.25,
+        Style or Enum.EasingStyle.Quart,
+        Direction or Enum.EasingDirection.Out
+    )
+
+    local T = TweenService:Create(Object, Info, Properties)
+    T:Play()
+
+    return T
+end
+
+--//======================================================
+--// LOGO CREATOR
+--//======================================================
+
+local function CreateLogo(Parent, Size, Position, ZIndex)
+    --// Glow phía sau
+    local Glow = New("ImageLabel", {
+        Name = "LogoGlow",
+        BackgroundTransparency = 1,
+        Image = LOGO,
+        ImageColor3 = C.PURPLE2,
+        ImageTransparency = 0.72,
+        Size = UDim2.new(1, 10, 1, 10),
+        Position = UDim2.new(0, -5, 0, -5),
+        ScaleType = Enum.ScaleType.Fit,
+        ZIndex = (ZIndex or 10) - 1
+    }, Parent)
+
+    --// Logo chính
+    local Image = New("ImageLabel", {
+        Name = "Logo",
+        BackgroundTransparency = 1,
+        Image = LOGO,
+        ImageColor3 = Color3.fromRGB(255, 255, 255),
+        ImageTransparency = 0,
+        Size = Size,
+        Position = Position,
+        ScaleType = Enum.ScaleType.Fit,
+        ZIndex = ZIndex or 10
+    }, Parent)
+
+    --// Pulse logo
+    task.spawn(function()
+        while Image.Parent and ScreenGui.Parent do
+            Tween(Glow, 1.2, {
+                ImageTransparency = 0.58
+            })
+
+            task.wait(1.2)
+
+            if not Glow.Parent then
+                break
+            end
+
+            Tween(Glow, 1.2, {
+                ImageTransparency = 0.78
+            })
+
+            task.wait(1.2)
+        end
+    end)
+
+    return Image
+end
+
+--//======================================================
+--// SCRIPT DATA
+--//======================================================
+
+local STEAL_A_EGG_SCRIPTS = {
+
+    {
+        Name = "Seal A Egg 1",
+        Description = "Steal A Egg script 1",
+        Icon = "🥚",
+
+        Callback = function()
+            --// CODE STEAL A EGG 1
+            print("Seal A Egg 1")
+        end
+    },
+
+    {
+        Name = "Seal A Egg 2",
+        Description = "Steal A Egg script 2",
+        Icon = "🥚",
+
+        Callback = function()
+            --// CODE STEAL A EGG 2
+            print("Seal A Egg 2")
+        end
+    },
+
+    {
+        Name = "Seal A Egg 3",
+        Description = "Steal A Egg script 3",
+        Icon = "🥚",
+
+        Callback = function()
+            --// CODE STEAL A EGG 3
+            print("Seal A Egg 3")
+        end
+    },
+
+    {
+        Name = "Seal A Egg 4",
+        Description = "Steal A Egg script 4",
+        Icon = "🥚",
+
+        Callback = function()
+            --// CODE STEAL A EGG 4
+            print("Seal A Egg 4")
+        end
+    },
+
+    {
+        Name = "Seal A Egg 5",
+        Description = "Steal A Egg script 5",
+        Icon = "🥚",
+
+        Callback = function()
+            --// CODE STEAL A EGG 5
+            print("Seal A Egg 5")
+        end
+    }
+}
+
+local CUOI_THU_SCRIPTS = {
+
+    {
+        Name = "Cưỡi Thú",
+        Description = "Script cưỡi thú",
+        Icon = "🐾",
+
+        Callback = function()
+            --// CODE CƯỠI THÚ
+            print("Cưỡi Thú")
+        end
+    }
+}
+
+local CONFIG_SCRIPTS = {
+
+    {
+        Name = "Support 1",
+        Description = "Hỗ trợ script Home",
+        Icon = "⚙",
+
+        Callback = function(State)
+            --// CODE SUPPORT 1
+            print("Support 1:", State)
+        end
+    },
+
+    {
+        Name = "Support 2",
+        Description = "Hỗ trợ script Home",
+        Icon = "⚙",
+
+        Callback = function(State)
+            --// CODE SUPPORT 2
+            print("Support 2:", State)
+        end
+    },
+
+    {
+        Name = "Support 3",
+        Description = "Hỗ trợ script Home",
+        Icon = "⚙",
+
+        Callback = function(State)
+            --// CODE SUPPORT 3
+            print("Support 3:", State)
+        end
+    }
+}
+
+--//======================================================
+--// LAUNCHER
+--//======================================================
+
+local LauncherGlow = New("Frame", {
+    Name = "LauncherGlow",
+    BackgroundColor3 = C.PURPLE,
+    BackgroundTransparency = 0.78,
+    Size = UDim2.new(0, 142, 0, 48),
+    Position = UDim2.new(0, 14, 0.5, -24),
+    ZIndex = 999990
+}, ScreenGui)
+
+Corner(LauncherGlow, 20)
+
+local Launcher = New("Frame", {
+    Name = "Launcher",
+    BackgroundColor3 = C.BG,
+    Size = UDim2.new(0, 134, 0, 40),
+    Position = UDim2.new(0, 18, 0.5, -20),
+    ZIndex = 999991
+}, ScreenGui)
+
+Corner(Launcher, 18)
+Stroke(Launcher, C.PURPLE, 1.2, 0.2)
+
+Gradient(
+    Launcher,
+    Color3.fromRGB(18, 11, 31),
+    Color3.fromRGB(30, 12, 39),
+    0
+)
+
+--// LOGO NGOÀI MENU
+CreateLogo(
+    Launcher,
+    UDim2.new(0, 28, 0, 28),
+    UDim2.new(0, 7, 0.5, -14),
+    999994
+)
+
+local LauncherTitle = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "LEMON",
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextColor3 = C.WHITE,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Size = UDim2.new(0, 52, 0, 17),
+    Position = UDim2.new(0, 40, 0, 5),
+    ZIndex = 999994
+}, Launcher)
+
+local LauncherStatus = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "READY",
+    Font = Enum.Font.GothamMedium,
+    TextSize = 8,
+    TextColor3 = C.GREEN,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Size = UDim2.new(0, 52, 0, 12),
+    Position = UDim2.new(0, 40, 0, 22),
+    ZIndex = 999994
+}, Launcher)
+
+local Arrow = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "›",
+    Font = Enum.Font.GothamBold,
+    TextSize = 25,
+    TextColor3 = C.PURPLE2,
+    Size = UDim2.new(0, 20, 0, 30),
+    Position = UDim2.new(1, -24, 0.5, -15),
+    ZIndex = 999995
+}, Launcher)
+
+local LauncherButton = New("TextButton", {
+    BackgroundTransparency = 1,
+    Text = "",
+    AutoButtonColor = false,
+    Size = UDim2.new(1, 0, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    ZIndex = 999999
+}, Launcher)
+
+--//======================================================
+--// MAIN MENU
+--//======================================================
+
+local MenuGlow = New("Frame", {
+    Name = "MenuGlow",
+    BackgroundColor3 = C.PURPLE,
+    BackgroundTransparency = 0.76,
+    Size = UDim2.new(0, 525, 0, 365),
+    Position = UDim2.new(0.5, -262, 0.5, -182),
+    Visible = false,
+    ZIndex = 999900
+}, ScreenGui)
+
+Corner(MenuGlow, 22)
+
+local Outer = New("Frame", {
+    Name = "MainMenu",
+    BackgroundColor3 = C.BG,
+    Size = UDim2.new(0, 505, 0, 345),
+    Position = UDim2.new(0.5, -252, 0.5, -172),
+    Visible = false,
+    ZIndex = 999901
+}, ScreenGui)
+
+Corner(Outer, 20)
+
+local OuterStroke = Stroke(
+    Outer,
+    C.PURPLE,
+    1.5,
+    0.05
+)
+
+local OuterGradient = Gradient(
+    Outer,
+    C.PURPLE,
+    C.PINK,
+    25
+)
+
+--// UI SCALE
+local UIScale = New("UIScale", {
+    Scale = 0.84
+}, Outer)
+
+--//======================================================
+--// HEADER
+--//======================================================
+
+local Header = New("Frame", {
+    BackgroundColor3 = C.PANEL,
+    Size = UDim2.new(1, -18, 0, 60),
+    Position = UDim2.new(0, 9, 0, 9),
+    ZIndex = 999910
+}, Outer)
+
+Corner(Header, 14)
+Stroke(Header, C.PURPLE, 1, 0.65)
+
+Gradient(
+    Header,
+    Color3.fromRGB(22, 14, 36),
+    Color3.fromRGB(32, 15, 42),
+    0
+)
+
+--// LOGO TRONG MENU
+CreateLogo(
+    Header,
+    UDim2.new(0, 42, 0, 42),
+    UDim2.new(0, 9, 0.5, -21),
+    999915
+)
+
+local Title = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "LEMON HUB",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = C.WHITE,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Size = UDim2.new(0, 180, 0, 24),
+    Position = UDim2.new(0, 61, 0, 10),
+    ZIndex = 999916
+}, Header)
+
+local Subtitle = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "ONLINE • MOBILE",
+    Font = Enum.Font.GothamMedium,
+    TextSize = 9,
+    TextColor3 = C.GRAY,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Size = UDim2.new(0, 180, 0, 14),
+    Position = UDim2.new(0, 62, 0, 34),
+    ZIndex = 999916
+}, Header)
+
+local HeaderLine = New("Frame", {
+    BackgroundColor3 = C.PURPLE2,
+    BorderSizePixel = 0,
+    Size = UDim2.new(0, 42, 0, 2),
+    Position = UDim2.new(1, -55, 0, 29),
+    ZIndex = 999916
+}, Header)
+
+Corner(HeaderLine, 2)
+
+--//======================================================
+--// SIDEBAR
+--//======================================================
+
+local Sidebar = New("Frame", {
+    BackgroundColor3 = C.PANEL,
+    Size = UDim2.new(0, 105, 1, -83),
+    Position = UDim2.new(0, 9, 0, 74),
+    ZIndex = 999910
+}, Outer)
+
+Corner(Sidebar, 14)
+Stroke(Sidebar, C.PURPLE, 1, 0.75)
+
+local Content = New("Frame", {
+    BackgroundTransparency = 1,
+    Size = UDim2.new(1, -124, 1, -83),
+    Position = UDim2.new(0, 115, 0, 74),
+    ZIndex = 999910
+}, Outer)
+
+--//======================================================
+--// TAB BUTTONS
+--//======================================================
+
+local Tabs = {}
+
+local function CreateTab(Name, TextValue, Y)
+    local Button = New("TextButton", {
+        Name = Name,
+        BackgroundColor3 = Color3.fromRGB(24, 17, 37),
+        BackgroundTransparency = 0.25,
+        Text = TextValue,
+        Font = Enum.Font.GothamBold,
+        TextSize = 10,
+        TextColor3 = C.GRAY,
+        AutoButtonColor = false,
+        Size = UDim2.new(1, -12, 0, 42),
+        Position = UDim2.new(0, 6, 0, Y),
+        ZIndex = 999920
+    }, Sidebar)
+
+    Corner(Button, 10)
+
+    local Accent = New("Frame", {
+        BackgroundColor3 = C.PURPLE2,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 3, 0, 22),
+        Position = UDim2.new(0, 4, 0.5, -11),
+        ZIndex = 999921
+    }, Button)
+
+    Corner(Accent, 2)
+
+    Tabs[Name] = {
+        Button = Button,
+        Accent = Accent
+    }
+
+    return Button
+end
+
+local HomeTab = CreateTab("HOME", "🏠  HOME", 8)
+local ConfigTab = CreateTab("CONFIG", "⚙  CONFIG", 56)
+local InfoTab = CreateTab("INFO", "ⓘ  INFO", 104)
+
+--//======================================================
+--// PAGE SYSTEM
+--//======================================================
+
+local Pages = {}
+
+local function CreatePage(Name)
+    local Page = New("ScrollingFrame", {
+        Name = Name,
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 1, 0),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = C.PURPLE,
+        Visible = false,
+        ZIndex = 999915
+    }, Content)
+
+    Pages[Name] = Page
+
+    return Page
+end
+
+local HomePage = CreatePage("HOME")
+local ConfigPage = CreatePage("CONFIG")
+local InfoPage = CreatePage("INFO")
+
+--//======================================================
+--// HOME PAGE
+--//======================================================
+
+local CounterBox = New("Frame", {
+    BackgroundColor3 = C.PANEL2,
+    Size = UDim2.new(1, -8, 0, 35),
+    Position = UDim2.new(0, 4, 0, 4),
+    ZIndex = 999920
+}, HomePage)
+
+Corner(CounterBox, 10)
+Stroke(CounterBox, C.PURPLE, 1, 0.65)
+
+local CounterText = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "●  SEAL A EGG",
+    Font = Enum.Font.GothamBold,
+    TextSize = 11,
+    TextColor3 = C.PURPLE2,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Size = UDim2.new(1, -15, 1, 0),
+    Position = UDim2.new(0, 12, 0, 0),
+    ZIndex = 999921
+}, CounterBox)
+
+local function CreateSection(Page, TextValue, Y)
+    local Label = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = TextValue,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        TextColor3 = C.WHITE,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(1, -8, 0, 25),
+        Position = UDim2.new(0, 4, 0, Y),
+        ZIndex = 999920
+    }, Page)
+
+    return Label
+end
+
+CreateSection(HomePage, "STEAL A EGG", 48)
+CreateSection(HomePage, "CƯỠI THÚ", 48 + 5 * 49 + 20)
+
+--//======================================================
+--// SCRIPT CARD
+--//======================================================
+
+local function CreateScriptCard(Page, Data, Y, Index)
+
+    local Card = New("Frame", {
+        BackgroundColor3 = C.PANEL2,
+        BackgroundTransparency = 0.05,
+        Size = UDim2.new(1, -8, 0, 43),
+        Position = UDim2.new(0, 4, 0, Y + 12),
+        ZIndex = 999925
+    }, Page)
+
+    Corner(Card, 10)
+    Stroke(Card, C.PURPLE, 1, 0.78)
+
+    --// ICON
+    local Icon = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Icon or "●",
+        Font = Enum.Font.GothamBold,
+        TextSize = 17,
+        Size = UDim2.new(0, 31, 0, 31),
+        Position = UDim2.new(0, 7, 0.5, -15),
+        ZIndex = 999926
+    }, Card)
+
+    local Name = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Name,
+        Font = Enum.Font.GothamBold,
+        TextSize = 10,
+        TextColor3 = C.WHITE,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(0, 145, 0, 16),
+        Position = UDim2.new(0, 39, 0, 6),
+        ZIndex = 999926
+    }, Card)
+
+    local Description = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Description,
+        Font = Enum.Font.GothamMedium,
+        TextSize = 7,
+        TextColor3 = C.GRAY,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(0, 145, 0, 12),
+        Position = UDim2.new(0, 39, 0, 23),
+        ZIndex = 999926
+    }, Card)
+
+    local Status = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = "READY",
+        Font = Enum.Font.GothamBold,
+        TextSize = 7,
+        TextColor3 = C.GREEN,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        Size = UDim2.new(0, 45, 0, 13),
+        Position = UDim2.new(1, -112, 0, 5),
+        ZIndex = 999927
+    }, Card)
+
+    local Run = New("TextButton", {
+        BackgroundColor3 = C.PURPLE,
+        Text = "RUN",
+        Font = Enum.Font.GothamBold,
+        TextSize = 8,
+        TextColor3 = C.WHITE,
+        AutoButtonColor = false,
+        Size = UDim2.new(0, 55, 0, 27),
+        Position = UDim2.new(1, -63, 0.5, -13),
+        ZIndex = 999928
+    }, Card)
+
+    Corner(Run, 8)
+
+    Gradient(
+        Run,
+        C.PURPLE,
+        C.PINK,
+        0
+    )
+
+    Run.MouseEnter:Connect(function()
+        Tween(Run, 0.15, {
+            Size = UDim2.new(0, 59, 0, 29),
+            Position = UDim2.new(1, -65, 0.5, -14)
+        })
+    end)
+
+    Run.MouseLeave:Connect(function()
+        Tween(Run, 0.15, {
+            Size = UDim2.new(0, 55, 0, 27),
+            Position = UDim2.new(1, -63, 0.5, -13)
+        })
+    end)
+
+    Run.MouseButton1Click:Connect(function()
+
+        Status.Text = "RUNNING"
+        Status.TextColor3 = C.PURPLE2
+        Run.Text = "..."
+
+        Tween(Card, 0.15, {
+            BackgroundColor3 = Color3.fromRGB(31, 19, 47)
+        })
+
+        task.spawn(function()
+
+            local Success, ErrorMessage = pcall(function()
+                Data.Callback()
+            end)
+
+            if Success then
+                Status.Text = "DONE"
+                Status.TextColor3 = C.GREEN
+                Run.Text = "DONE"
+            else
+                Status.Text = "ERROR"
+                Status.TextColor3 = C.RED
+                Run.Text = "ERR"
+
+                warn("[LEMON HUB] " .. tostring(ErrorMessage))
+            end
+
+            task.wait(0.7)
+
+            Status.Text = "READY"
+            Status.TextColor3 = C.GREEN
+            Run.Text = "RUN"
+
+            Tween(Card, 0.2, {
+                BackgroundColor3 = C.PANEL2
+            })
+        end)
+    end)
+
+    --// Entrance animation
+    Card.Position = UDim2.new(0, 14, 0, Y + 12)
+
+    task.delay(Index * 0.04, function()
+        if Card.Parent then
+            Tween(Card, 0.3, {
+                Position = UDim2.new(0, 4, 0, Y + 12)
+            })
+        end
+    end)
+
+    return Card
+end
+
+--//======================================================
+--// CREATE HOME SCRIPTS
+--//======================================================
+
+for Index, Data in ipairs(STEAL_A_EGG_SCRIPTS) do
+    CreateScriptCard(
+        HomePage,
+        Data,
+        48 + ((Index - 1) * 49),
+        Index
+    )
+end
+
+for Index, Data in ipairs(CUOI_THU_SCRIPTS) do
+    CreateScriptCard(
+        HomePage,
+        Data,
+        48 + (5 * 49) + 20 + ((Index - 1) * 49),
+        Index
+    )
+end
+
+HomePage.CanvasSize = UDim2.new(
+    0,
+    0,
+    0,
+    48 + (5 * 49) + 20 + (1 * 49) + 20
+)
+
+--//======================================================
+--// CONFIG PAGE
+--//======================================================
+
+CreateSection(ConfigPage, "SCRIPT HỖ TRỢ", 4)
+
+local function CreateToggle(Page, Data, Index)
+
+    local Y = 40 + ((Index - 1) * 53)
+
+    local Card = New("Frame", {
+        BackgroundColor3 = C.PANEL2,
+        Size = UDim2.new(1, -8, 0, 45),
+        Position = UDim2.new(0, 4, 0, Y),
+        ZIndex = 999925
+    }, Page)
+
+    Corner(Card, 10)
+    Stroke(Card, C.PURPLE, 1, 0.78)
+
+    local Icon = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Icon,
+        Font = Enum.Font.GothamBold,
+        TextSize = 15,
+        Size = UDim2.new(0, 28, 0, 28),
+        Position = UDim2.new(0, 8, 0.5, -14),
+        ZIndex = 999926
+    }, Card)
+
+    local Name = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Name,
+        Font = Enum.Font.GothamBold,
+        TextSize = 10,
+        TextColor3 = C.WHITE,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(0, 145, 0, 16),
+        Position = UDim2.new(0, 41, 0, 6),
+        ZIndex = 999926
+    }, Card)
+
+    local Description = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = Data.Description,
+        Font = Enum.Font.GothamMedium,
+        TextSize = 7,
+        TextColor3 = C.GRAY,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(0, 150, 0, 12),
+        Position = UDim2.new(0, 41, 0, 24),
+        ZIndex = 999926
+    }, Card)
+
+    local Toggle = New("TextButton", {
+        BackgroundColor3 = C.DARK,
+        Text = "",
+        AutoButtonColor = false,
+        Size = UDim2.new(0, 48, 0, 25),
+        Position = UDim2.new(1, -58, 0.5, -12),
+        ZIndex = 999928
+    }, Card)
+
+    Corner(Toggle, 20)
+
+    local Knob = New("Frame", {
+        BackgroundColor3 = C.WHITE,
+        Size = UDim2.new(0, 19, 0, 19),
+        Position = UDim2.new(0, 3, 0.5, -9),
+        ZIndex = 999929
+    }, Toggle)
+
+    Corner(Knob, 20)
+
+    local Enabled = false
+
+    Toggle.MouseButton1Click:Connect(function()
+
+        Enabled = not Enabled
+
+        if Enabled then
+
+            Tween(Toggle, 0.2, {
+                BackgroundColor3 = C.PURPLE
+            })
+
+            Tween(Knob, 0.2, {
+                Position = UDim2.new(1, -22, 0.5, -9)
+            })
+
+        else
+
+            Tween(Toggle, 0.2, {
+                BackgroundColor3 = C.DARK
+            })
+
+            Tween(Knob, 0.2, {
+                Position = UDim2.new(0, 3, 0.5, -9)
+            })
+
+        end
+
+        task.spawn(function()
+            pcall(function()
+                Data.Callback(Enabled)
+            end)
+        end)
+    end)
+end
+
+for Index, Data in ipairs(CONFIG_SCRIPTS) do
+    CreateToggle(ConfigPage, Data, Index)
+end
+
+ConfigPage.CanvasSize = UDim2.new(
+    0,
+    0,
+    0,
+    40 + (#CONFIG_SCRIPTS * 53) + 15
+)
+
+--//======================================================
+--// INFO PAGE
+--//======================================================
+
+local InfoBox = New("Frame", {
+    BackgroundColor3 = C.PANEL2,
+    Size = UDim2.new(1, -8, 0, 185),
+    Position = UDim2.new(0, 4, 0, 4),
+    ZIndex = 999925
+}, InfoPage)
+
+Corner(InfoBox, 13)
+Stroke(InfoBox, C.PURPLE, 1, 0.65)
+
+local InfoTitle = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = "🍋  LEMON HUB",
+    Font = Enum.Font.GothamBold,
+    TextSize = 17,
+    TextColor3 = C.WHITE,
+    Size = UDim2.new(1, -20, 0, 30),
+    Position = UDim2.new(0, 10, 0, 12),
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 999926
+}, InfoBox)
+
+local InfoText = New("TextLabel", {
+    BackgroundTransparency = 1,
+    Text = 
+        "LEMON HUB V4\n\n" ..
+        "🥚  STEAL A EGG  —  5 SCRIPTS\n" ..
+        "🐾  CƯỠI THÚ       —  1 SCRIPT\n" ..
+        "⚙  CONFIG          —  3 SUPPORT SCRIPTS\n\n" ..
+        "Mobile optimized\n" ..
+        "Responsive animations\n" ..
+        "Respawn safe",
+    Font = Enum.Font.GothamMedium,
+    TextSize = 9,
+    TextColor3 = C.GRAY,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Top,
+    Size = UDim2.new(1, -20, 1, -48),
+    Position = UDim2.new(0, 10, 0, 48),
+    ZIndex = 999926
+}, InfoBox)
+
+InfoPage.CanvasSize = UDim2.new(0, 0, 0, 210)
+
+--//======================================================
+--// TAB SYSTEM
+--//======================================================
+
+local CurrentTab = nil
+
+local function SetTab(Name)
+
+    if CurrentTab == Name then
+        return
+    end
+
+    CurrentTab = Name
+
+    for TabName, TabData in pairs(Tabs) do
+
+        local Active = TabName == Name
+
+        Tween(TabData.Button, 0.2, {
+            BackgroundColor3 = Active
+                and Color3.fromRGB(45, 24, 67)
+                or Color3.fromRGB(24, 17, 37),
+
+            TextColor3 = Active
+                and C.WHITE
+                or C.GRAY
+        })
+
+        Tween(TabData.Accent, 0.2, {
+            BackgroundTransparency = Active and 0 or 1
+        })
+    end
+
+    for PageName, Page in pairs(Pages) do
+
+        if PageName == Name then
+
+            Page.Visible = true
+            Page.Position = UDim2.new(0, 10, 0, 0)
+
+            Tween(Page, 0.22, {
+                Position = UDim2.new(0, 0, 0, 0)
+            })
+
+        else
+            Page.Visible = false
+        end
+    end
+end
+
+HomeTab.MouseButton1Click:Connect(function()
+    SetTab("HOME")
+end)
+
+ConfigTab.MouseButton1Click:Connect(function()
+    SetTab("CONFIG")
+end)
+
+InfoTab.MouseButton1Click:Connect(function()
+    SetTab("INFO")
+end)
+
+--//======================================================
+--// DRAG MENU
+--//======================================================
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+local function UpdateDrag(Input)
+
+    local Delta = Input.Position - DragStart
+
+    Outer.Position = UDim2.new(
+        StartPosition.X.Scale,
+        StartPosition.X.Offset + Delta.X,
+        StartPosition.Y.Scale,
+        StartPosition.Y.Offset + Delta.Y
+    )
+
+    MenuGlow.Position = UDim2.new(
+        StartPosition.X.Scale,
+        StartPosition.X.Offset + Delta.X - 10,
+        StartPosition.Y.Scale,
+        StartPosition.Y.Offset + Delta.Y - 10
+    )
+end
+
+Header.InputBegan:Connect(function(Input)
+
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+    or Input.UserInputType == Enum.UserInputType.Touch then
+
+        Dragging = true
+        DragStart = Input.Position
+        StartPosition = Outer.Position
+
+        Input.Changed:Connect(function()
+
+            if Input.UserInputState == Enum.UserInputState.End then
+                Dragging = false
+            end
+
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+
+    if Dragging then
+
+        if Input.UserInputType == Enum.UserInputType.MouseMovement
+        or Input.UserInputType == Enum.UserInputType.Touch then
+
+            UpdateDrag(Input)
+        end
+    end
+end)
+
+--//======================================================
+--// OPEN / CLOSE
+--//======================================================
+
+local Open = false
+
+local function OpenMenu()
+
+    if Open then
+        return
+    end
+
+    Open = true
+
+    MenuGlow.Visible = true
+    Outer.Visible = true
+
+    UIScale.Scale = 0.84
+
+    Tween(UIScale, 0.32, {
+        Scale = 1
+    }, Enum.EasingStyle.Back)
+
+    Tween(MenuGlow, 0.3, {
+        BackgroundTransparency = 0.68
+    })
+
+    Tween(LauncherGlow, 0.25, {
+        BackgroundTransparency = 0.65
+    })
+
+    Arrow.Text = "‹"
+end
+
+local function CloseMenu()
+
+    if not Open then
+        return
+    end
+
+    Open = false
+
+    Tween(UIScale, 0.22, {
+        Scale = 0.84
+    }, Enum.EasingStyle.Quad)
+
+    Tween(MenuGlow, 0.22, {
+        BackgroundTransparency = 1
+    })
+
+    Tween(LauncherGlow, 0.25, {
+        BackgroundTransparency = 0.78
+    })
+
+    task.delay(0.22, function()
+
+        if not Open then
+            Outer.Visible = false
+            MenuGlow.Visible = false
+        end
+
+    end)
+
+    Arrow.Text = "›"
+end
+
+LauncherButton.MouseButton1Click:Connect(function()
+
+    if Open then
+        CloseMenu()
+    else
+        OpenMenu()
+    end
+
+end)
+
+--//======================================================
+--// LAUNCHER GLOW ANIMATION
+--//======================================================
+
+task.spawn(function()
+
+    while ScreenGui.Parent do
+
+        Tween(LauncherGlow, 1.4, {
+            BackgroundTransparency = Open and 0.65 or 0.72
+        })
+
+        task.wait(1.4)
+
+        if not ScreenGui.Parent then
+            break
+        end
+
+        Tween(LauncherGlow, 1.4, {
+            BackgroundTransparency = Open and 0.72 or 0.82
+        })
+
+        task.wait(1.4)
+    end
+
+end)
+
+--//======================================================
+--// HEADER LINE ANIMATION
+--//======================================================
+
+task.spawn(function()
+
+    while ScreenGui.Parent do
+
+        Tween(HeaderLine, 1.2, {
+            Size = UDim2.new(0, 58, 0, 2)
+        })
+
+        task.wait(1.2)
+
+        if not HeaderLine.Parent then
+            break
+        end
+
+        Tween(HeaderLine, 1.2, {
+            Size = UDim2.new(0, 42, 0, 2)
+        })
+
+        task.wait(1.2)
+    end
+
+end)
+
+--//======================================================
+--// INITIAL TAB
+--//======================================================
+
+SetTab("HOME")
+
+--//======================================================
+--// RESPAWN SAFETY
+--//======================================================
+
+Player.CharacterAdded:Connect(function()
+
+    task.wait(1)
+
+    if not ScreenGui.Parent then
+        ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+    end
+
+end)
+
+--//======================================================
+--// DONE
+--//======================================================
+
+print("[LEMON HUB V4] Loaded")
+print("[LEMON HUB V4] Logo:", LOGO)
+print("[LEMON HUB V4] ZIndex:", ScreenGui.DisplayOrder)
