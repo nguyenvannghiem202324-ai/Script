@@ -1,4 +1,4 @@
---//======================================================
+s--//======================================================
 --// 🍋 LEMON HUB V4
 --// Logo: 99865556583586
 --// Logo format: rbxthumb:// ONLY
@@ -174,57 +174,57 @@ end
 local STEAL_A_EGG_SCRIPTS = {
 
     {
-        Name = "Seal A Egg 1",
-        Description = "Steal A Egg script 1",
+        Name = "Lemon Hub",
+        Description = "Lemon Hub",
         Icon = "🥚",
 
         Callback = function()
-            --// CODE STEAL A EGG 1
-            print("Seal A Egg 1")
+            --// loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/73260ee6e0b3892aa700a13e1fd7d3c9.lua"))()
+            print("Seal A Egg ")
         end
     },
 
     {
-        Name = "Seal A Egg 2",
-        Description = "Steal A Egg script 2",
+        Name = "Miranda Hub",
+        Description = "Steal A Egg script",
         Icon = "🥚",
 
         Callback = function()
-            --// CODE STEAL A EGG 2
-            print("Seal A Egg 2")
+            --// loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/6b07a458832f08b2314f706f14723212.lua"))()
+            print("Seal A Egg ")
         end
     },
 
     {
-        Name = "Seal A Egg 3",
-        Description = "Steal A Egg script 3",
+        Name = "Chilli Hub",
+        Description = "Steal A Egg ",
         Icon = "🥚",
 
         Callback = function()
-            --// CODE STEAL A EGG 3
-            print("Seal A Egg 3")
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))()
+            print("Seal A Egg ")
         end
     },
 
     {
-        Name = "Seal A Egg 4",
-        Description = "Steal A Egg script 4",
+        Name = "ajjans",
+        Description = "Steal A Egg",
         Icon = "🥚",
 
         Callback = function()
-            --// CODE STEAL A EGG 4
-            print("Seal A Egg 4")
+            --// loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/359e97f8618e9008afe5f496184ebb7c.lua"))()
+            print("Seal A Egg ")
         end
     },
 
     {
-        Name = "Seal A Egg 5",
-        Description = "Steal A Egg script 5",
+        Name = "Thú ngủ",
+        Description = "Steal A egg",
         Icon = "🥚",
 
         Callback = function()
-            --// CODE STEAL A EGG 5
-            print("Seal A Egg 5")
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Lemon%20Hub"))()
+            print("Seal A Egg ")
         end
     }
 }
@@ -232,12 +232,12 @@ local STEAL_A_EGG_SCRIPTS = {
 local CUOI_THU_SCRIPTS = {
 
     {
-        Name = "Cưỡi Thú",
+        Name = "Chilli Hub",
         Description = "Script cưỡi thú",
         Icon = "🐾",
 
         Callback = function()
-            --// CODE CƯỠI THÚ
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))()
             print("Cưỡi Thú")
         end
     }
@@ -246,34 +246,34 @@ local CUOI_THU_SCRIPTS = {
 local CONFIG_SCRIPTS = {
 
     {
-        Name = "Support 1",
-        Description = "Hỗ trợ script Home",
+        Name = "Chilli Hub",
+        Description = "Dịch sang Tiếng Việt",
         Icon = "⚙",
 
         Callback = function(State)
-            --// CODE SUPPORT 1
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20chilli%20hub"))()
             print("Support 1:", State)
         end
     },
 
     {
-        Name = "Support 2",
-        Description = "Hỗ trợ script Home",
+        Name = "ajjans",
+        Description = "Dịch sang tiếng Việt",
         Icon = "⚙",
 
         Callback = function(State)
-            --// CODE SUPPORT 2
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20ajjans"))()
             print("Support 2:", State)
         end
     },
 
     {
-        Name = "Support 3",
-        Description = "Hỗ trợ script Home",
+        Name = "Miranda",
+        Description = "dịch sang Tiếng Việt",
         Icon = "⚙",
 
         Callback = function(State)
-            --// CODE SUPPORT 3
+            --// loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20miranda%20hub"))()
             print("Support 3:", State)
         end
     }
