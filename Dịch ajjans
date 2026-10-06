@@ -1,0 +1,914 @@
+--==================================================
+-- AJJANS VIETNAMESE TRANSLATOR
+-- MINI TOGGLE
+--==================================================
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
+local Player = Players.LocalPlayer
+if not Player then return end
+
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--==================================================
+-- CONFIG
+--==================================================
+
+local Enabled = true
+local GUI_NAME = "AjjansVietnameseTranslator"
+
+--==================================================
+-- XÓA GUI CŨ NẾU SCRIPT CHẠY LẠI
+--==================================================
+
+pcall(function()
+    local old = CoreGui:FindFirstChild(GUI_NAME)
+    if old then
+        old:Destroy()
+    end
+end)
+
+--==================================================
+-- BẢNG DỊCH
+--==================================================
+
+local Translation = {
+
+    ["AJJANS"] = "AJJANS",
+    ["Ajjans Steal a Egg V4.9"] = "Ajjans Cướp Trứng V4.9",
+
+    ["Search..."] = "Tìm kiếm...",
+    ["Search"] = "Tìm kiếm",
+    ["Lock"] = "Khóa",
+
+    ["Main"] = "Chính",
+    ["Automation"] = "Tự động",
+    ["Events"] = "Sự kiện",
+    ["Predictor"] = "Dự đoán",
+    ["Misc"] = "Khác",
+
+    ["Stats"] = "Thống kê",
+    ["Status"] = "Trạng thái",
+
+    ["Enabled"] = "Đã bật",
+    ["Disabled"] = "Đã tắt",
+
+    ["ON"] = "BẬT",
+    ["OFF"] = "TẮT",
+    ["On"] = "Bật",
+    ["Off"] = "Tắt",
+
+    ["Yes"] = "Có",
+    ["No"] = "Không",
+
+    -- STEAL
+    ["Steal Eggs"] = "Cướp Trứng",
+    ["Steal Egg"] = "Cướp Trứng",
+    ["Steal"] = "Cướp",
+
+    ["Auto Hit Player"] = "Tự động đánh người chơi",
+    ["Invisibility [OP]"] = "Tàng hình [OP]",
+
+    ["Enable Server Hop"] = "Bật đổi máy chủ",
+    ["Server Hop"] = "Đổi máy chủ",
+    ["Hop When"] = "Đổi máy chủ khi",
+
+    ["No Matching Eggs"] = "Không có Trứng phù hợp",
+    ["Hop Threshold"] = "Ngưỡng đổi máy chủ",
+    ["Threshold"] = "Ngưỡng",
+
+    ["Steal Single Best Egg"] = "Cướp Trứng tốt nhất",
+    ["1 Player Server"] = "Máy chủ 1 người",
+
+    ["Tween To Safezone"] = "Di chuyển đến vùng an toàn",
+    ["Areas"] = "Khu vực",
+    ["Area"] = "Khu vực",
+
+    ["Target Priority"] = "Ưu tiên mục tiêu",
+    ["Highest KG First"] = "KG cao nhất trước",
+
+    ["Method"] = "Phương thức",
+    ["Fast Steal"] = "Cướp nhanh",
+    ["Instant Steal Steps"] = "Số bước cướp tức thì",
+    ["Speed"] = "Tốc độ",
+
+    ["Auto Steal Selected"] = "Tự động cướp mục đã chọn",
+    ["Auto Steal All"] = "Tự động cướp tất cả",
+    ["Auto Drop Held Egg"] = "Tự động thả Trứng đang cầm",
+
+    -- DEFENSE
+    ["Defense"] = "Phòng thủ",
+    ["Trails"] = "Dấu vết",
+
+    ["Bat Kill Aura"] = "Aura diệt Dơi",
+    ["Aura Range"] = "Phạm vi Aura",
+    ["Attack Delay"] = "Độ trễ tấn công",
+
+    ["Auto Equip Bat"] = "Tự động trang bị Gậy",
+    ["Anti-Hit"] = "Chống đánh",
+    ["Capture Egg"] = "Bắt Trứng",
+    ["Anti-Trap"] = "Chống bẫy",
+
+    -- UPGRADES
+    ["Upgrades"] = "Nâng cấp",
+    ["Auto Equip Best Pet"] = "Tự động trang bị Pet tốt nhất",
+    ["Auto Treadmill Training"] = "Tự động tập máy chạy bộ",
+    ["Auto Treadmill Upgrade"] = "Tự động nâng cấp máy chạy bộ",
+    ["Auto Base Upgrade"] = "Tự động nâng cấp căn cứ",
+    ["Cash Reserve"] = "Tiền dự trữ",
+
+    -- PETS
+    ["Pets"] = "Pet",
+    ["Pet"] = "Pet",
+    ["Pet Type"] = "Loại Pet",
+    ["Categories"] = "Danh mục",
+    ["Category"] = "Danh mục",
+
+    ["Rarities"] = "Độ hiếm",
+    ["Rarity"] = "Độ hiếm",
+
+    ["Mutations"] = "Đột biến",
+    ["Mutation"] = "Đột biến",
+
+    ["Sell Below $/s (0 = off)"] =
+        "Bán dưới $/s (0 = tắt)",
+
+    ["Auto Sell Pets"] =
+        "Tự động bán Pet",
+
+    ["Auto Favorite Pets"] =
+        "Tự động yêu thích Pet",
+
+    ["Auto Favorite Equipped"] =
+        "Tự động yêu thích Pet đang trang bị",
+
+    ["Unfavorite All"] =
+        "Bỏ yêu thích tất cả",
+
+    -- EGGS
+    ["Eggs"] = "Trứng",
+    ["Egg"] = "Trứng",
+
+    ["Egg Lifecycle"] =
+        "Vòng đời Trứng",
+
+    ["Egg Names"] =
+        "Tên Trứng",
+
+    ["Egg Rarities"] =
+        "Độ hiếm Trứng",
+
+    ["Min $/s (0 = any)"] =
+        "Tối thiểu $/s (0 = bất kỳ)",
+
+    ["Auto Sell Eggs"] =
+        "Tự động bán Trứng",
+
+    ["Auto Place Selected"] =
+        "Tự động đặt mục đã chọn",
+
+    ["Auto Place All"] =
+        "Tự động đặt tất cả",
+
+    ["Auto Hatch Selected"] =
+        "Tự động ấp mục đã chọn",
+
+    ["Auto Hatch All"] =
+        "Tự động ấp tất cả",
+
+    ["Min KG (0 = any)"] =
+        "KG tối thiểu (0 = bất kỳ)",
+
+    -- FUSE
+    ["Fuse"] = "Ghép",
+
+    ["Auto Fuse Pets"] =
+        "Tự động ghép Pet",
+
+    ["Fuse Rarities"] =
+        "Độ hiếm ghép",
+
+    ["Fuse Mutations"] =
+        "Đột biến ghép",
+
+    ["Pick Group By"] =
+        "Nhóm theo",
+
+    ["Highest Rarity"] =
+        "Độ hiếm cao nhất",
+
+    ["Never Fuse Mutated"] =
+        "Không ghép Pet đột biến",
+
+    ["Never Fuse Equipped"] =
+        "Không ghép Pet đang trang bị",
+
+    ["Auto Complete Reveal"] =
+        "Tự động hoàn tất khám phá",
+
+    ["Maximum Scale to Fuse"] =
+        "Số lượng tối đa để ghép",
+
+    ["Max pet size to fuse (protects huge pets)"] =
+        "Kích thước Pet tối đa để ghép (bảo vệ Pet khổng lồ)",
+
+    ["Keep Per Pet Type"] =
+        "Giữ lại mỗi loại Pet",
+
+    ["Fuse Interval"] =
+        "Khoảng thời gian ghép",
+
+    ["Fuse Now"] =
+        "Ghép ngay",
+
+    -- REWARDS
+    ["Rewards"] = "Phần thưởng",
+
+    ["Auto Claim Index Rewards"] =
+        "Tự động nhận thưởng Bộ sưu tập",
+
+    ["Auto Claim Group Reward"] =
+        "Tự động nhận thưởng nhóm",
+
+    ["Auto Claim Offline Earnings"] =
+        "Tự động nhận thu nhập ngoại tuyến",
+
+    -- WISP
+    ["Wisp"] = "Wisp",
+    ["Wisp Event"] = "Sự kiện Wisp",
+
+    ["Auto Beanstalk Event"] =
+        "Tự động tham gia sự kiện Beanstalk",
+
+    ["Auto Wisp Quests"] =
+        "Tự động làm nhiệm vụ Wisp",
+
+    ["Auto Fuse For Quest"] =
+        "Tự động ghép để làm nhiệm vụ",
+
+    ["Automate Eggs For Fuse"] =
+        "Tự động lấy Trứng để ghép",
+
+    ["Allowed Fuse Rarities"] =
+        "Độ hiếm được phép ghép",
+
+    ["Steal Wisp Quest Eggs"] =
+        "Cướp Trứng nhiệm vụ Wisp",
+
+    ["Auto Claim Butterfly Net"] =
+        "Tự động nhận Vợt bắt bướm",
+
+    ["Auto Catch Butterflies"] =
+        "Tự động bắt bướm",
+
+    ["Auto Essence"] =
+        "Tự động thu thập Essence",
+
+    ["Auto Banjo Cricket"] =
+        "Tự động Banjo Cricket",
+
+    ["Stops Moving On Red Light"] =
+        "Dừng di chuyển khi đèn đỏ",
+
+    ["Open Wisp Window"] =
+        "Mở cửa sổ Wisp",
+
+    ["Mutation Items"] =
+        "Vật phẩm đột biến",
+
+    ["Auto Mutate Egg"] =
+        "Tự động đột biến Trứng",
+
+    -- SCRAMBLE
+    ["Scramble Lab"] =
+        "Phòng thí nghiệm Scramble",
+
+    ["Banner"] = "Biểu ngữ",
+    ["Unstable DNA"] = "DNA không ổn định",
+    ["Rotates in"] = "Xoay vòng sau",
+    ["Pity"] = "Bảo hiểm may mắn",
+    ["Requirements"] = "Yêu cầu",
+
+    ["Salamander (Legendary)"] =
+        "Salamander (Huyền thoại)",
+
+    ["Imp (Cosmic)"] =
+        "Imp (Vũ trụ)",
+
+    ["Demon Hound (Cosmic)"] =
+        "Demon Hound (Vũ trụ)",
+
+    ["Eggs Ready"] =
+        "Trứng đã sẵn sàng",
+
+    ["Missing"] =
+        "Còn thiếu",
+
+    ["Status:"] =
+        "Trạng thái:",
+
+    ["Teleport to Scramble Lab"] =
+        "Dịch chuyển đến Phòng thí nghiệm Scramble",
+
+    -- DR SCRAMBLE
+    ["Dr. Scramble Boss"] =
+        "Trùm Dr. Scramble",
+
+    ["Auto Enter Boss"] =
+        "Tự động vào khu vực Trùm",
+
+    ["Auto Fight Boss"] =
+        "Tự động đánh Trùm",
+
+    ["Fast Swing (Tool Swap)"] =
+        "Đánh nhanh (đổi công cụ)",
+
+    ["Auto Claim Boss Mastery"] =
+        "Tự động nhận thông thạo Trùm",
+
+    ["Tween Speed"] =
+        "Tốc độ di chuyển",
+
+    ["Boss: Next in"] =
+        "Trùm: xuất hiện sau",
+
+    ["Auto Buy Shop"] =
+        "Tự động mua trong Cửa hàng",
+
+    ["Shop Items"] =
+        "Vật phẩm Cửa hàng",
+
+    ["Shop"] =
+        "Cửa hàng",
+
+    -- STATS
+    ["Overview"] = "Tổng quan",
+    ["Economy"] = "Kinh tế",
+    ["World"] = "Thế giới",
+    ["Activity"] = "Hoạt động",
+
+    ["Boss Fight"] =
+        "Đánh Trùm",
+
+    ["Fighting Dr. Scramble"] =
+        "Đang chiến đấu với Dr. Scramble",
+
+    ["Collection"] =
+        "Bộ sưu tập",
+
+    ["Stealing"] =
+        "Đang cướp",
+
+    ["Top Pets"] =
+        "Pet hàng đầu",
+
+    ["View All"] =
+        "Xem tất cả",
+
+    ["Top Eggs"] =
+        "Trứng hàng đầu",
+
+    ["Money"] =
+        "Tiền",
+
+    ["Income"] =
+        "Thu nhập",
+
+    ["Treadmill"] =
+        "Máy chạy bộ",
+
+    ["Guardian"] =
+        "Hộ vệ",
+
+    ["Steal History"] =
+        "Lịch sử cướp",
+
+    ["Eggs Stolen"] =
+        "Trứng đã cướp",
+
+    ["Best Steal"] =
+        "Vụ cướp tốt nhất",
+
+    ["None yet"] =
+        "Chưa có",
+
+    ["Boss Mastery"] =
+        "Thông thạo Trùm",
+
+    ["Boss Kills"] =
+        "Số Trùm đã hạ",
+
+    ["Samples"] =
+        "Mẫu",
+
+    ["Mech Fights"] =
+        "Trận chiến Mech",
+
+    ["Lab"] =
+        "Phòng thí nghiệm",
+
+    ["Ready"] =
+        "Sẵn sàng",
+
+    ["Growing"] =
+        "Đang phát triển",
+
+    -- STEAL PANEL
+    ["Steal Panel"] =
+        "Bảng Cướp",
+
+    ["Sort By:"] =
+        "Sắp xếp theo:",
+
+    ["Sort By"] =
+        "Sắp xếp theo",
+
+    ["Best Rarity"] =
+        "Độ hiếm tốt nhất",
+
+    ["Money/Sec"] =
+        "Tiền/Giây",
+
+    ["Weight"] =
+        "Trọng lượng",
+
+    ["Value"] =
+        "Giá trị",
+
+    ["Auto Steal"] =
+        "Tự động cướp",
+
+    ["Automatically steal new pets as they appear"] =
+        "Tự động cướp Pet mới khi chúng xuất hiện",
+
+    ["Instant Steal"] =
+        "Cướp tức thì",
+
+    ["Brings pets back instantly"] =
+        "Đưa Pet về ngay lập tức",
+
+    ["Fast steal method"] =
+        "Phương pháp cướp nhanh",
+
+    -- COMMON
+    ["Auto"] = "Tự động",
+    ["Never"] = "Không bao giờ",
+    ["Complete"] = "Hoàn tất",
+    ["Reveal"] = "Khám phá",
+    ["Equipped"] = "Đang trang bị",
+    ["Selected"] = "Đã chọn",
+    ["All"] = "Tất cả",
+    ["Best"] = "Tốt nhất",
+    ["Highest"] = "Cao nhất",
+    ["First"] = "Trước",
+    ["Fast"] = "Nhanh",
+    ["Instant"] = "Tức thì",
+    ["Maximum"] = "Tối đa",
+    ["Scale"] = "Số lượng",
+    ["Keep"] = "Giữ",
+    ["Per"] = "Mỗi",
+    ["Interval"] = "Khoảng thời gian",
+    ["Upgrade"] = "Nâng cấp",
+    ["Training"] = "Luyện tập",
+    ["Base"] = "Căn cứ",
+    ["Cash"] = "Tiền",
+    ["Reserve"] = "Dự trữ",
+    ["Group"] = "Nhóm",
+    ["Reward"] = "Phần thưởng",
+    ["Offline"] = "Ngoại tuyến",
+    ["Earnings"] = "Thu nhập",
+    ["Index"] = "Bộ sưu tập",
+    ["Player"] = "Người chơi",
+    ["Server"] = "Máy chủ",
+
+    -- DROPDOWN
+    ["Select options..."] =
+        "Chọn tùy chọn...",
+
+    ["Select options"] =
+        "Chọn tùy chọn",
+
+    ["Select option..."] =
+        "Chọn tùy chọn...",
+
+    ["None"] =
+        "Không có",
+
+    ["Any"] =
+        "Bất kỳ",
+
+    ["0 = any"] =
+        "0 = bất kỳ",
+
+    ["0 = off"] =
+        "0 = tắt",
+
+    ["Next in"] =
+        "Tiếp theo sau",
+
+    ["pets"] =
+        "Pet",
+}
+
+--==================================================
+-- SORT KEY
+--==================================================
+
+local Keys = {}
+
+for key in pairs(Translation) do
+    table.insert(Keys, key)
+end
+
+table.sort(Keys, function(a, b)
+    return #a > #b
+end)
+
+--==================================================
+-- HÀM DỊCH
+--==================================================
+
+local function TranslateText(text)
+
+    if type(text) ~= "string" or text == "" then
+        return text
+    end
+
+    local exact = Translation[text]
+
+    if exact then
+        return exact
+    end
+
+    local result = text
+
+    for _, key in ipairs(Keys) do
+
+        if string.find(result, key, 1, true) then
+
+            result = string.gsub(
+                result,
+                key,
+                Translation[key]
+            )
+
+        end
+
+    end
+
+    return result
+end
+
+--==================================================
+-- CACHE
+--==================================================
+
+local Cache = setmetatable({}, {
+    __mode = "k"
+})
+
+--==================================================
+-- DỊCH OBJECT
+--==================================================
+
+local function TranslateObject(obj)
+
+    if not obj then
+        return
+    end
+
+    if not (
+        obj:IsA("TextLabel")
+        or obj:IsA("TextButton")
+        or obj:IsA("TextBox")
+    ) then
+        return
+    end
+
+    local data = Cache[obj]
+
+    if not data then
+
+        data = {
+            Text = nil,
+            Placeholder = nil
+        }
+
+        Cache[obj] = data
+    end
+
+    -- TEXT
+    pcall(function()
+
+        local current = obj.Text
+
+        if current ~= data.Text then
+
+            local translated =
+                TranslateText(current)
+
+            if translated ~= current then
+                obj.Text = translated
+            end
+
+            data.Text = translated
+        end
+
+    end)
+
+    -- PLACEHOLDER
+    if obj:IsA("TextBox") then
+
+        pcall(function()
+
+            local current =
+                obj.PlaceholderText
+
+            if current ~= data.Placeholder then
+
+                local translated =
+                    TranslateText(current)
+
+                if translated ~= current then
+                    obj.PlaceholderText = translated
+                end
+
+                data.Placeholder = translated
+            end
+
+        end)
+
+    end
+end
+
+--==================================================
+-- QUÉT GUI
+--==================================================
+
+local function Scan(container)
+
+    if not container then
+        return
+    end
+
+    for _, obj in ipairs(
+        container:GetDescendants()
+    ) do
+
+        TranslateObject(obj)
+
+    end
+end
+
+--==================================================
+-- GUI TOGGLE
+--==================================================
+
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = GUI_NAME
+ToggleGui.ResetOnSpawn = false
+ToggleGui.IgnoreGuiInset = true
+ToggleGui.Parent = CoreGui
+
+local Button = Instance.new("TextButton")
+Button.Name = "TranslatorToggle"
+Button.Size = UDim2.fromOffset(92, 34)
+Button.Position = UDim2.new(1, -105, 0.5, 0)
+Button.AnchorPoint = Vector2.new(0, 0.5)
+
+Button.BackgroundColor3 =
+    Color3.fromRGB(24, 24, 31)
+
+Button.BorderSizePixel = 0
+Button.Text = ""
+Button.AutoButtonColor = false
+Button.Parent = ToggleGui
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius =
+    UDim.new(0, 10)
+ButtonCorner.Parent = Button
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Thickness = 1.5
+ButtonStroke.Color =
+    Color3.fromRGB(150, 70, 220)
+ButtonStroke.Parent = Button
+
+local Label = Instance.new("TextLabel")
+Label.Size = UDim2.new(1, -38, 1, 0)
+Label.Position = UDim2.fromOffset(7, 0)
+Label.BackgroundTransparency = 1
+Label.Text = "VI  BẬT"
+Label.TextColor3 =
+    Color3.fromRGB(255, 255, 255)
+Label.TextSize = 13
+Label.Font = Enum.Font.GothamBold
+Label.TextXAlignment = Enum.TextXAlignment.Left
+Label.Parent = Button
+
+local Dot = Instance.new("Frame")
+Dot.Size = UDim2.fromOffset(18, 18)
+Dot.Position = UDim2.new(1, -25, 0.5, 0)
+Dot.AnchorPoint = Vector2.new(0.5, 0.5)
+Dot.BackgroundColor3 =
+    Color3.fromRGB(180, 80, 255)
+Dot.BorderSizePixel = 0
+Dot.Parent = Button
+
+local DotCorner = Instance.new("UICorner")
+DotCorner.CornerRadius =
+    UDim.new(1, 0)
+DotCorner.Parent = Dot
+
+--==================================================
+-- CẬP NHẬT TOGGLE
+--==================================================
+
+local function UpdateToggle()
+
+    if Enabled then
+
+        Label.Text = "VI  BẬT"
+
+        Dot.BackgroundColor3 =
+            Color3.fromRGB(180, 80, 255)
+
+        ButtonStroke.Color =
+            Color3.fromRGB(180, 80, 255)
+
+    else
+
+        Label.Text = "VI  TẮT"
+
+        Dot.BackgroundColor3 =
+            Color3.fromRGB(80, 80, 90)
+
+        ButtonStroke.Color =
+            Color3.fromRGB(75, 75, 85)
+
+    end
+end
+
+UpdateToggle()
+
+--==================================================
+-- TOGGLE
+--==================================================
+
+Button.MouseButton1Click:Connect(function()
+
+    Enabled = not Enabled
+
+    UpdateToggle()
+
+    if Enabled then
+
+        Scan(PlayerGui)
+
+        pcall(function()
+            Scan(CoreGui)
+        end)
+
+    end
+end)
+
+--==================================================
+-- KÉO NÚT
+--==================================================
+
+local UserInputService =
+    game:GetService("UserInputService")
+
+local dragging = false
+local dragStart
+local startPosition
+
+Button.InputBegan:Connect(function(input)
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        dragging = true
+
+        dragStart = input.Position
+        startPosition = Button.Position
+    end
+end)
+
+Button.InputEnded:Connect(function(input)
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+    if not dragging then
+        return
+    end
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseMovement
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        local delta =
+            input.Position - dragStart
+
+        Button.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+--==================================================
+-- DỊCH GUI HIỆN TẠI
+--==================================================
+
+Scan(PlayerGui)
+
+pcall(function()
+    Scan(CoreGui)
+end)
+
+--==================================================
+-- THEO DÕI GUI MỚI
+--==================================================
+
+PlayerGui.DescendantAdded:Connect(function(obj)
+
+    if not Enabled then
+        return
+    end
+
+    task.defer(function()
+
+        if Enabled then
+            TranslateObject(obj)
+        end
+
+    end)
+
+end)
+
+pcall(function()
+
+    CoreGui.DescendantAdded:Connect(function(obj)
+
+        if not Enabled then
+            return
+        end
+
+        task.defer(function()
+
+            if Enabled then
+                TranslateObject(obj)
+            end
+
+        end)
+
+    end)
+
+end)
+
+--==================================================
+-- QUÉT BỔ SUNG KHI MENU LOAD CHẬM
+--==================================================
+
+task.delay(2, function()
+
+    if Enabled then
+        Scan(PlayerGui)
+
+        pcall(function()
+            Scan(CoreGui)
+        end)
+    end
+
+end)
+
+task.delay(5, function()
+
+    if Enabled then
+        Scan(PlayerGui)
+
+        pcall(function()
+            Scan(CoreGui)
+        end)
+    end
+
+end)
+
+print("[AJJANS TRANSLATOR] Vietnamese Translator Loaded")
