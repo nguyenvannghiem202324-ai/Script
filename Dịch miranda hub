@@ -1,0 +1,330 @@
+--// MIRANDA VN TRANSLATOR
+--// Chỉ dịch giao diện - KHÔNG kích hoạt Miranda
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--==================================================
+-- TRANSLATION
+--==================================================
+
+local Translation = {
+    ["Steals"] = "Trộm",
+    ["Pet Filter"] = "Lọc Pet",
+    ["Settings"] = "Cài đặt",
+    ["Fav Eggs"] = "Trứng yêu thích",
+    ["Webhooks"] = "Webhook",
+
+    ["Auto Farm Settings!"] = "Cài đặt Auto Farm!",
+    ["Farm Speed While Idle"] = "Tốc độ Farm khi chờ",
+    ["Auto Place After Steal"] = "Tự đặt Pet sau khi trộm",
+    ["Auto Farm Missing Index"] = "Tự Farm Index còn thiếu",
+    ["Auto Open Eggs And Place Best Pets"] =
+        "Tự mở trứng và đặt Pet tốt nhất",
+
+    ["Auto Upgrade Treadmill"] = "Tự nâng cấp máy chạy",
+    ["Auto Upgrade Plot"] = "Tự nâng cấp Plot",
+    ["Auto Dr Scramble Event"] = "Tự tham gia sự kiện Dr Scramble",
+    ["Auto Farm"] = "Tự động Farm",
+
+    ["WEBHOOK NOTIFIER"] = "THÔNG BÁO WEBHOOK",
+    ["Discord alerts for your steals"] =
+        "Thông báo Discord khi có Pet bị trộm",
+
+    ["Not configured"] = "Chưa cấu hình",
+    ["WEBHOOK URL"] = "URL WEBHOOK",
+    ["WHO TO SEND?"] = "GỬI CHO AI?",
+
+    ["All Pets"] = "Tất cả Pet",
+    ["Divine / Eternal"] = "Divine / Eternal",
+    ["Above >"] = "Trên mức >",
+    ["Generation"] = "Thế hệ",
+
+    ["Any generation, as long as it is Divine / Eternal"] =
+        "Bất kỳ thế hệ nào, miễn là Divine / Eternal",
+
+    ["Mention @everyone"] = "Nhắc @everyone",
+    ["Adds a normal ping above the embed"] =
+        "Thêm ping thông thường phía trên embed",
+
+    ["STEAL NOTIFICATIONS"] = "THÔNG BÁO TRỘM",
+
+    ["Auto Favorite Eggs to apply mutation and not open"] =
+        "Tự yêu thích trứng để áp dụng mutation và không mở",
+
+    ["Don't Open Favorite Eggs"] = "Không mở trứng yêu thích",
+    ["Auto Apply Mutation Favorite"] =
+        "Tự áp dụng mutation cho trứng yêu thích",
+
+    ["Favorite Egg Filter"] = "Bộ lọc trứng yêu thích",
+    ["All Divines"] = "Tất cả Divine",
+    ["All Egg Min Generation"] =
+        "Thế hệ tối thiểu của tất cả trứng",
+
+    ["No eggs match the Favorite Egg Filter."] =
+        "Không có trứng nào phù hợp với bộ lọc trứng yêu thích."
+}
+
+--==================================================
+-- TOGGLE GUI
+--==================================================
+
+local OldGui = PlayerGui:FindFirstChild("MirandaVNTranslator")
+if OldGui then
+    OldGui:Destroy()
+end
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "MirandaVNTranslator"
+Gui.ResetOnSpawn = false
+Gui.IgnoreGuiInset = true
+Gui.DisplayOrder = 999999
+Gui.Parent = PlayerGui
+
+local Toggle = Instance.new("TextButton")
+Toggle.Name = "TranslatorToggle"
+Toggle.Size = UDim2.fromOffset(92, 34)
+Toggle.Position = UDim2.new(0, 15, 0.5, -17)
+
+Toggle.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+Toggle.BackgroundTransparency = 0.08
+
+Toggle.Text = ""
+Toggle.AutoButtonColor = false
+Toggle.BorderSizePixel = 0
+Toggle.Parent = Gui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 9)
+Corner.Parent = Toggle
+
+-- Viền tối nhẹ
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(80, 80, 88)
+Stroke.Transparency = 0.35
+Stroke.Thickness = 1
+Stroke.Parent = Toggle
+
+--==================================================
+-- TITLE
+--==================================================
+
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.fromOffset(8, 0)
+Title.Size = UDim2.fromOffset(43, 34)
+
+Title.Text = "VN"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 13
+Title.TextColor3 = Color3.fromRGB(235, 235, 240)
+
+Title.Parent = Toggle
+
+--==================================================
+-- STATUS DOT
+--==================================================
+
+local Dot = Instance.new("Frame")
+Dot.Size = UDim2.fromOffset(8, 8)
+Dot.Position = UDim2.new(1, -27, 0.5, -4)
+
+Dot.BackgroundColor3 = Color3.fromRGB(80, 80, 85)
+Dot.BorderSizePixel = 0
+Dot.Parent = Toggle
+
+local DotCorner = Instance.new("UICorner")
+DotCorner.CornerRadius = UDim.new(1, 0)
+DotCorner.Parent = Dot
+
+--==================================================
+-- STATUS TEXT
+--==================================================
+
+local Status = Instance.new("TextLabel")
+Status.BackgroundTransparency = 1
+Status.Position = UDim2.new(1, -48, 0, 0)
+Status.Size = UDim2.fromOffset(18, 34)
+
+Status.Text = ""
+Status.Parent = Toggle
+
+--==================================================
+-- DRAG
+--==================================================
+
+local dragging = false
+local dragStart
+local startPos
+
+Toggle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPos = Toggle.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Toggle.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch then
+
+        input.Changed:Connect(function()
+            if dragging then
+                local delta = input.Position - dragStart
+
+                Toggle.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+    end
+end)
+
+--==================================================
+-- TRANSLATOR
+--==================================================
+
+local Enabled = false
+
+local function TranslateObject(Object)
+    if not Enabled then
+        return
+    end
+
+    if Object:IsA("TextLabel")
+    or Object:IsA("TextButton")
+    or Object:IsA("TextBox") then
+
+        local Text = Object.Text
+
+        if Translation[Text] then
+            Object.Text = Translation[Text]
+        end
+
+        if Object:IsA("TextBox") then
+            local Placeholder = Object.PlaceholderText
+
+            if Translation[Placeholder] then
+                Object.PlaceholderText =
+                    Translation[Placeholder]
+            end
+        end
+    end
+end
+
+local function TranslateAll()
+    if not Enabled then
+        return
+    end
+
+    for _, Object in ipairs(PlayerGui:GetDescendants()) do
+        pcall(function()
+            TranslateObject(Object)
+        end)
+    end
+end
+
+--==================================================
+-- TOGGLE ANIMATION
+--==================================================
+
+local function UpdateToggle()
+    if Enabled then
+
+        Dot.BackgroundColor3 =
+            Color3.fromRGB(90, 255, 130)
+
+        Stroke.Color =
+            Color3.fromRGB(90, 255, 130)
+
+        Stroke.Transparency = 0.05
+
+        Title.Text = "VN ✓"
+
+        TweenService:Create(
+            Toggle,
+            TweenInfo.new(0.18),
+            {
+                BackgroundColor3 =
+                    Color3.fromRGB(28, 38, 31)
+            }
+        ):Play()
+
+        TranslateAll()
+
+    else
+
+        Dot.BackgroundColor3 =
+            Color3.fromRGB(80, 80, 85)
+
+        Stroke.Color =
+            Color3.fromRGB(80, 80, 88)
+
+        Stroke.Transparency = 0.35
+
+        Title.Text = "VN"
+
+        TweenService:Create(
+            Toggle,
+            TweenInfo.new(0.18),
+            {
+                BackgroundColor3 =
+                    Color3.fromRGB(24, 24, 28)
+            }
+        ):Play()
+    end
+end
+
+Toggle.Activated:Connect(function()
+    Enabled = not Enabled
+    UpdateToggle()
+end)
+
+--==================================================
+-- GUI MỚI XUẤT HIỆN
+--==================================================
+
+PlayerGui.DescendantAdded:Connect(function(Object)
+
+    if not Enabled then
+        return
+    end
+
+    task.defer(function()
+        pcall(function()
+            TranslateObject(Object)
+
+            for _, Child in ipairs(Object:GetDescendants()) do
+                TranslateObject(Child)
+            end
+        end)
+    end)
+end)
+
+-- Quét định kỳ để bắt những text được script thay đổi
+task.spawn(function()
+    while Gui.Parent do
+        task.wait(2)
+
+        if Enabled then
+            TranslateAll()
+        end
+    end
+end)
+
+print("[Miranda VN] Translator loaded")
