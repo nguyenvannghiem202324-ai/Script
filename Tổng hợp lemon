@@ -1,1852 +1,642 @@
---//======================================================
---// 🍋 LEMON HUB V4
---// Logo: 99865556583586
---// Logo format: rbxthumb:// ONLY
---// Mobile • Draggable • Animation • Respawn Safe
---//======================================================
-
---// SERVICES
+-- ==========================================
+-- BẢO MẬT: ĐÁNH CHẶN SCRIPT LẠ & BLACKLIST (Dùng hookmetamethod)
+-- ==========================================
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Danh sách URL bị CẤM NGẶT (Blacklist) - Dành riêng cho các script muốn kick cụ thể
+local blacklistedScriptURLs = {
+    "raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
+}
+
+-- Danh sách 3 URL chính thức của bạn (Whitelist)
+local allowedScriptURLs = {
+    "raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Lemon%20Hub",
+    "raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Giao%20di%E1%BB%87n",
+    "raw.githubusercontent.com/nguyenvannghiem202324-ai/Lemon/refs/heads/main/LemonHub"
+}
+
+-- Hàm kiểm tra Blacklist
+local function isURLBlacklisted(urlToCheck)
+    if type(urlToCheck) ~= "string" then return false end
+    for _, blacklistedURL in ipairs(blacklistedScriptURLs) do
+        if string.find(urlToCheck, blacklistedURL, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Hàm kiểm tra Whitelist
+local function isURLAllowed(urlToCheck)
+    if type(urlToCheck) ~= "string" then return false end
+    for _, allowedURL in ipairs(allowedScriptURLs) do
+        if string.find(urlToCheck, allowedURL, 1, true) then
+            return true 
+        end
+    end
+    return false 
+end
+
+-- Sử dụng hookmetamethod để chặn namecall (Cách này chặn game:HttpGet cực mạnh)
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    -- Chỉ kiểm tra khi đối tượng gọi là 'game' và phương thức là HttpGet/HttpGetAsync
+    if self == game and (method == "HttpGet" or method == "HttpGetAsync") then
+        local url = args[1]
+        
+        if type(url) == "string" then
+            -- 1. Ưu tiên check Blacklist
+            if isURLBlacklisted(url) then
+                LocalPlayer:Kick("Bảo mật: Phát hiện gian lận sử dụng FlyGuiV3! Cấm sử dụng script này.")
+                return ""
+            end
+            
+            -- 2. Check Whitelist
+            if not isURLAllowed(url) then
+                LocalPlayer:Kick("Bảo mật: Phát hiện chạy script lạ! Vui lòng không dùng chung với script khác.")
+                return "" 
+            end
+        end
+    end
+    
+    -- Trả về phương thức gốc nếu hợp lệ
+    return oldNamecall(self, ...)
+end)
+
+-- ==========================================
+-- NHẬT HUB Key System - Toàn Diện [360x190]
+-- ==========================================
+local service = 33297; 
+local secret = "aa58f87e-28c2-4e6e-8f86-1477128b27fb";
+local useNonce = true; 
+
+-- BẢO MẬT ADMIN KHÓA THEO THIẾT BỊ CỦA BẠN
+local adminKey = "NHATVIPFCM";
+local adminHWID = "4ceb8be32caa5b0e81471368874bdb9388e00f23620419af9db1f92978706010";
+local DELTA_X_LOGO = "rbxthumb://type=Asset&id=73261925593164&w=420&h=420"; 
+
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local fSetClipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set) or function() end
+local fRequest = request or http_request or (http and http.request)
+local fStringChar, fToString, fStringSub, fOsTime, fMathRandom, fMathFloor = string.char, tostring, string.sub, os.time, math.random, math.floor
+local fGetHwid = gethwid or function() return game:GetService("Players").LocalPlayer.UserId end
+local cachedLink, cachedTime = "", 0;
+local host = "https://api.platoboost.net";
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-
---//======================================================
---// CLEAN OLD GUI
---//======================================================
-
-local Old = PlayerGui:FindFirstChild("LEMON_HUB_V4")
-
-if Old then
-    Old:Destroy()
+-- ==========================================
+-- SAVE KEY / AUTO ACTIVATE
+-- ==========================================
+local KEY_FILE = "DeltaX_SavedKey.txt"
+local AUTO_FILE = "DeltaX_AutoActivate.txt"
+local function canFileIO()
+    return type(readfile) == "function" and type(writefile) == "function"
 end
-
---//======================================================
---// CONFIG
---//======================================================
-
-local LOGO_ID = "99865556583586"
-
---// CHỈ DÙNG RBXTHUMB
-local LOGO = "rbxthumb://type=Asset&id=" .. LOGO_ID .. "&w=420&h=420"
-
-local C = {
-    BG = Color3.fromRGB(8, 7, 14),
-    BG2 = Color3.fromRGB(14, 10, 22),
-
-    PANEL = Color3.fromRGB(18, 13, 29),
-    PANEL2 = Color3.fromRGB(25, 17, 39),
-
-    PURPLE = Color3.fromRGB(143, 65, 255),
-    PURPLE2 = Color3.fromRGB(190, 80, 255),
-    PINK = Color3.fromRGB(255, 70, 185),
-
-    WHITE = Color3.fromRGB(245, 242, 255),
-    GRAY = Color3.fromRGB(145, 137, 160),
-    DARK = Color3.fromRGB(70, 64, 82),
-
-    GREEN = Color3.fromRGB(80, 255, 165),
-    RED = Color3.fromRGB(255, 80, 100)
-}
-
---//======================================================
---// SCREEN GUI
---//======================================================
-
-local ScreenGui = Instance.new("ScreenGui")
-
-ScreenGui.Name = "LEMON_HUB_V4"
-ScreenGui.DisplayOrder = 999999
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-
-ScreenGui.Parent = PlayerGui
-
---//======================================================
---// HELPERS
---//======================================================
-
-local function New(Class, Properties, Parent)
-
-    local Object = Instance.new(Class)
-
-    for Property, Value in pairs(Properties or {}) do
-        Object[Property] = Value
-    end
-
-    Object.Parent = Parent
-
-    return Object
+local function saveKey(key)
+    if not canFileIO() or not key or key == "" then return false end
+    local ok = pcall(function() writefile(KEY_FILE, tostring(key)) end)
+    return ok
 end
-
-local function Corner(Object, Radius)
-
-    return New("UICorner", {
-        CornerRadius = UDim.new(0, Radius or 10)
-    }, Object)
-
-end
-
-local function Stroke(Object, Color, Thickness, Transparency)
-
-    return New("UIStroke", {
-        Color = Color or C.PURPLE,
-        Thickness = Thickness or 1,
-        Transparency = Transparency or 0
-    }, Object)
-
-end
-
-local function Gradient(Object, Color1, Color2, Rotation)
-
-    return New("UIGradient", {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color1),
-            ColorSequenceKeypoint.new(1, Color2)
-        }),
-        Rotation = Rotation or 0
-    }, Object)
-
-end
-
-local function Tween(Object, Time, Properties, Style, Direction)
-
-    if not Object or not Object.Parent then
-        return
-    end
-
-    local Info = TweenInfo.new(
-        Time or 0.25,
-        Style or Enum.EasingStyle.Quart,
-        Direction or Enum.EasingDirection.Out
-    )
-
-    local T = TweenService:Create(Object, Info, Properties)
-
-    T:Play()
-
-    return T
-end
-
---//======================================================
---// LOGO
---//======================================================
-
-local function CreateLogo(Parent, Size, Position, ZIndex)
-
-    local MainZ = ZIndex or 10
-
-    --// Glow
-    local Glow = New("ImageLabel", {
-        Name = "LogoGlow",
-
-        BackgroundTransparency = 1,
-
-        Image = LOGO,
-
-        ImageColor3 = C.PURPLE2,
-
-        ImageTransparency = 0.72,
-
-        Size = UDim2.new(
-            Size.X.Scale,
-            Size.X.Offset + 10,
-            Size.Y.Scale,
-            Size.Y.Offset + 10
-        ),
-
-        Position = UDim2.new(
-            Position.X.Scale,
-            Position.X.Offset - 5,
-            Position.Y.Scale,
-            Position.Y.Offset - 5
-        ),
-
-        ScaleType = Enum.ScaleType.Fit,
-
-        ZIndex = MainZ - 1
-    }, Parent)
-
-    --// Logo chính
-    local Image = New("ImageLabel", {
-
-        Name = "Logo",
-
-        BackgroundTransparency = 1,
-
-        Image = LOGO,
-
-        ImageTransparency = 0,
-
-        Size = Size,
-
-        Position = Position,
-
-        ScaleType = Enum.ScaleType.Fit,
-
-        ZIndex = MainZ
-
-    }, Parent)
-
-    --// Logo pulse
-    task.spawn(function()
-
-        while Image.Parent and ScreenGui.Parent do
-
-            Tween(Glow, 1.2, {
-                ImageTransparency = 0.56
-            })
-
-            task.wait(1.2)
-
-            if not Glow.Parent then
-                break
-            end
-
-            Tween(Glow, 1.2, {
-                ImageTransparency = 0.78
-            })
-
-            task.wait(1.2)
-        end
-
+local function loadSavedKey()
+    if not canFileIO() or not isfile then return "" end
+    local ok, value = pcall(function()
+        if isfile(KEY_FILE) then return readfile(KEY_FILE) end
+        return ""
     end)
-
-    return Image
+    if ok and type(value) == "string" then return value end
+    return ""
+end
+local function saveAutoActivate(enabled)
+    if not canFileIO() then return false end
+    local ok = pcall(function() writefile(AUTO_FILE, enabled and "1" or "0") end)
+    return ok
+end
+local function loadAutoActivate()
+    if not canFileIO() or not isfile then return true end
+    local ok, value = pcall(function()
+        if isfile(AUTO_FILE) then return readfile(AUTO_FILE) end
+        return "1"
+    end)
+    return ok and value ~= "0"
 end
 
---//======================================================
---// LOADSTRING HELPER
---//======================================================
-
-local function ExecuteURL(URL)
-
-    if type(loadstring) ~= "function" then
-        error("loadstring is not available")
-    end
-
-    local Source = game:HttpGet(URL)
-
-    if not Source or Source == "" then
-        error("Không lấy được script")
-    end
-
-    local Function, CompileError = loadstring(Source)
-
-    if not Function then
-        error(CompileError or "Không compile được script")
-    end
-
-    return Function()
+function lEncode(data) return HttpService:JSONEncode(data) end
+function lDecode(data) return HttpService:JSONDecode(data) end
+local function lDigest(input)
+    local inputStr = tostring(input)
+    local hash = {}
+    for i = 1, #inputStr do table.insert(hash, string.byte(inputStr, i)) end
+    local hashHex = ""
+    for _, byte in ipairs(hash) do hashHex = hashHex .. string.format("%02x", byte) end
+    return hashHex
 end
 
---//======================================================
---// SCRIPT DATA
---//======================================================
-
-local STEAL_A_EGG_SCRIPTS = {
-
-    {
-        Name = "Lemon Hub",
-        Description = "Steal A Egg",
-        Icon = "🥚",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://api.luarmor.net/files/v4/loaders/73260ee6e0b3892aa700a13e1fd7d3c9.lua"
-            )
-
-        end
-    },
-
-    {
-        Name = "Miranda Hub",
-        Description = "Steal A Egg",
-        Icon = "🥚",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://api.luarmor.net/files/v4/loaders/6b07a458832f08b2314f706f14723212.lua"
-            )
-
-        end
-    },
-
-    {
-        Name = "Chilli Hub",
-        Description = "Steal A Egg",
-        Icon = "🥚",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"
-            )
-
-        end
-    },
-
-    {
-        Name = "ajjans",
-        Description = "Steal A Egg",
-        Icon = "🥚",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://api.luarmor.net/files/v4/loaders/359e97f8618e9008afe5f496184ebb7c.lua"
-            )
-
-        end
-    },
-
-    {
-        Name = "Thú ngủ",
-        Description = "Steal A Egg",
-        Icon = "🥚",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Lemon%20Hub"
-            )
-
-        end
-    }
-}
-
-local CUOI_THU_SCRIPTS = {
-
-    {
-        Name = "Chilli Hub",
-        Description = "Script cưỡi thú",
-        Icon = "🐾",
-
-        Callback = function()
-
-            ExecuteURL(
-                "https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"
-            )
-
-        end
-    }
-}
-
-local CONFIG_SCRIPTS = {
-
-    {
-        Name = "Chilli Hub",
-        Description = "Dịch sang Tiếng Việt",
-        Icon = "⚙",
-
-        Callback = function(State)
-
-            if State then
-
-                ExecuteURL(
-                    "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20chilli%20hub"
-                )
-
-            end
-
-        end
-    },
-
-    {
-        Name = "ajjans",
-        Description = "Dịch sang Tiếng Việt",
-        Icon = "⚙",
-
-        Callback = function(State)
-
-            if State then
-
-                ExecuteURL(
-                    "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20ajjans"
-                )
-
-            end
-
-        end
-    },
-
-    {
-        Name = "Miranda",
-        Description = "Dịch sang Tiếng Việt",
-        Icon = "⚙",
-
-        Callback = function(State)
-
-            if State then
-
-                ExecuteURL(
-                    "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/D%E1%BB%8Bch%20miranda%20hub"
-                )
-
-            end
-
-        end
-    }
-}
-
---//======================================================
---// LAUNCHER
---//======================================================
-
-local LauncherGlow = New("Frame", {
-
-    Name = "LauncherGlow",
-
-    BackgroundColor3 = C.PURPLE,
-
-    BackgroundTransparency = 0.78,
-
-    Size = UDim2.new(0, 142, 0, 48),
-
-    Position = UDim2.new(
-        0,
-        14,
-        0.5,
-        -24
-    ),
-
-    ZIndex = 999990
-
-}, ScreenGui)
-
-Corner(LauncherGlow, 20)
-
-local Launcher = New("Frame", {
-
-    Name = "Launcher",
-
-    BackgroundColor3 = C.BG,
-
-    Size = UDim2.new(0, 134, 0, 40),
-
-    Position = UDim2.new(
-        0,
-        18,
-        0.5,
-        -20
-    ),
-
-    ZIndex = 999991
-
-}, ScreenGui)
-
-Corner(Launcher, 18)
-
-Stroke(
-    Launcher,
-    C.PURPLE,
-    1.2,
-    0.2
-)
-
-Gradient(
-    Launcher,
-    Color3.fromRGB(18, 11, 31),
-    Color3.fromRGB(30, 12, 39),
-    0
-)
-
---// LOGO NGOÀI MENU
-CreateLogo(
-    Launcher,
-    UDim2.new(0, 28, 0, 28),
-    UDim2.new(0, 7, 0.5, -14),
-    999994
-)
-
-local LauncherTitle = New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "LEMON",
-
-    Font = Enum.Font.GothamBold,
-
-    TextSize = 12,
-
-    TextColor3 = C.WHITE,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    Size = UDim2.new(0, 52, 0, 17),
-
-    Position = UDim2.new(0, 40, 0, 5),
-
-    ZIndex = 999994
-
-}, Launcher)
-
-local LauncherStatus = New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "READY",
-
-    Font = Enum.Font.GothamMedium,
-
-    TextSize = 8,
-
-    TextColor3 = C.GREEN,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    Size = UDim2.new(0, 52, 0, 12),
-
-    Position = UDim2.new(0, 40, 0, 22),
-
-    ZIndex = 999994
-
-}, Launcher)
-
-local Arrow = New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "›",
-
-    Font = Enum.Font.GothamBold,
-
-    TextSize = 25,
-
-    TextColor3 = C.PURPLE2,
-
-    Size = UDim2.new(0, 20, 0, 30),
-
-    Position = UDim2.new(1, -24, 0.5, -15),
-
-    ZIndex = 999995
-
-}, Launcher)
-
-local LauncherButton = New("TextButton", {
-
-    BackgroundTransparency = 1,
-
-    Text = "",
-
-    AutoButtonColor = false,
-
-    Size = UDim2.new(1, 0, 1, 0),
-
-    Position = UDim2.new(0, 0, 0, 0),
-
-    ZIndex = 999999
-
-}, Launcher)
-
---//======================================================
---// MAIN MENU
---//======================================================
-
-local MenuGlow = New("Frame", {
-
-    Name = "MenuGlow",
-
-    BackgroundColor3 = C.PURPLE,
-
-    BackgroundTransparency = 0.76,
-
-    Size = UDim2.new(0.94, 0, 0, 365),
-
-    AnchorPoint = Vector2.new(0.5, 0.5),
-
-    Position = UDim2.new(0.5, 0, 0.5, 0),
-
-    Visible = false,
-
-    ZIndex = 999900
-
-}, ScreenGui)
-
-Corner(MenuGlow, 22)
-
-local Outer = New("Frame", {
-
-    Name = "MainMenu",
-
-    BackgroundColor3 = C.BG,
-
-    Size = UDim2.new(0.92, 0, 0, 345),
-
-    AnchorPoint = Vector2.new(0.5, 0.5),
-
-    Position = UDim2.new(0.5, 0, 0.5, 0),
-
-    Visible = false,
-
-    ZIndex = 999901
-
-}, ScreenGui)
-
-Corner(Outer, 20)
-
-Stroke(
-    Outer,
-    C.PURPLE,
-    1.5,
-    0.05
-)
-
-Gradient(
-    Outer,
-    C.PURPLE,
-    C.PINK,
-    25
-)
-
-local UIScale = New("UIScale", {
-    Scale = 0.84
-}, Outer)
-
---//======================================================
---// HEADER
---//======================================================
-
-local Header = New("Frame", {
-
-    BackgroundColor3 = C.PANEL,
-
-    Size = UDim2.new(1, -18, 0, 60),
-
-    Position = UDim2.new(0, 9, 0, 9),
-
-    ZIndex = 999910
-
-}, Outer)
-
-Corner(Header, 14)
-
-Stroke(
-    Header,
-    C.PURPLE,
-    1,
-    0.65
-)
-
-Gradient(
-    Header,
-    Color3.fromRGB(22, 14, 36),
-    Color3.fromRGB(32, 15, 42),
-    0
-)
-
---// LOGO TRONG MENU
-CreateLogo(
-    Header,
-    UDim2.new(0, 42, 0, 42),
-    UDim2.new(0, 9, 0.5, -21),
-    999915
-)
-
-local Title = New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "LEMON HUB",
-
-    Font = Enum.Font.GothamBold,
-
-    TextSize = 18,
-
-    TextColor3 = C.WHITE,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    Size = UDim2.new(0, 180, 0, 24),
-
-    Position = UDim2.new(0, 61, 0, 10),
-
-    ZIndex = 999916
-
-}, Header)
-
-local Subtitle = New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "ONLINE • MOBILE",
-
-    Font = Enum.Font.GothamMedium,
-
-    TextSize = 9,
-
-    TextColor3 = C.GRAY,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    Size = UDim2.new(0, 180, 0, 14),
-
-    Position = UDim2.new(0, 62, 0, 34),
-
-    ZIndex = 999916
-
-}, Header)
-
-local HeaderLine = New("Frame", {
-
-    BackgroundColor3 = C.PURPLE2,
-
-    BorderSizePixel = 0,
-
-    Size = UDim2.new(0, 42, 0, 2),
-
-    Position = UDim2.new(1, -55, 0, 29),
-
-    ZIndex = 999916
-
-}, Header)
-
-Corner(HeaderLine, 2)
-
---//======================================================
---// SIDEBAR
---//======================================================
-
-local Sidebar = New("Frame", {
-
-    BackgroundColor3 = C.PANEL,
-
-    Size = UDim2.new(0, 105, 1, -83),
-
-    Position = UDim2.new(0, 9, 0, 74),
-
-    ZIndex = 999910
-
-}, Outer)
-
-Corner(Sidebar, 14)
-
-Stroke(
-    Sidebar,
-    C.PURPLE,
-    1,
-    0.75
-)
-
-local Content = New("Frame", {
-
-    BackgroundTransparency = 1,
-
-    Size = UDim2.new(1, -124, 1, -83),
-
-    Position = UDim2.new(0, 115, 0, 74),
-
-    ZIndex = 999910
-
-}, Outer)
-
---//======================================================
---// TABS
---//======================================================
-
-local Tabs = {}
-
-local function CreateTab(Name, TextValue, Y)
-
-    local Button = New("TextButton", {
-
-        Name = Name,
-
-        BackgroundColor3 = Color3.fromRGB(24, 17, 37),
-
-        BackgroundTransparency = 0.25,
-
-        Text = TextValue,
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 10,
-
-        TextColor3 = C.GRAY,
-
-        AutoButtonColor = false,
-
-        Size = UDim2.new(1, -12, 0, 42),
-
-        Position = UDim2.new(0, 6, 0, Y),
-
-        ZIndex = 999920
-
-    }, Sidebar)
-
-    Corner(Button, 10)
-
-    local Accent = New("Frame", {
-
-        BackgroundColor3 = C.PURPLE2,
-
-        BackgroundTransparency = 1,
-
-        Size = UDim2.new(0, 3, 0, 22),
-
-        Position = UDim2.new(0, 4, 0.5, -11),
-
-        ZIndex = 999921
-
-    }, Button)
-
-    Corner(Accent, 2)
-
-    Tabs[Name] = {
-        Button = Button,
-        Accent = Accent
-    }
-
-    return Button
-end
-
-local HomeTab = CreateTab(
-    "HOME",
-    "🏠  HOME",
-    8
-)
-
-local ConfigTab = CreateTab(
-    "CONFIG",
-    "⚙  CONFIG",
-    56
-)
-
-local InfoTab = CreateTab(
-    "INFO",
-    "ⓘ  INFO",
-    104
-)
-
---//======================================================
---// PAGE SYSTEM
---//======================================================
-
-local Pages = {}
-
-local function CreatePage(Name)
-
-    local Page = New("ScrollingFrame", {
-
-        Name = Name,
-
-        BackgroundTransparency = 1,
-
-        BorderSizePixel = 0,
-
-        Size = UDim2.new(1, 0, 1, 0),
-
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-
-        ScrollBarThickness = 2,
-
-        ScrollBarImageColor3 = C.PURPLE,
-
-        Visible = false,
-
-        ZIndex = 999915
-
-    }, Content)
-
-    Pages[Name] = Page
-
-    return Page
-end
-
-local HomePage = CreatePage("HOME")
-local ConfigPage = CreatePage("CONFIG")
-local InfoPage = CreatePage("INFO")
-
---//======================================================
---// SECTION
---//======================================================
-
-local function CreateSection(Page, TextValue, Y)
-
-    return New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = TextValue,
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 11,
-
-        TextColor3 = C.WHITE,
-
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-        Size = UDim2.new(1, -8, 0, 25),
-
-        Position = UDim2.new(0, 4, 0, Y),
-
-        ZIndex = 999920
-
-    }, Page)
-
-end
-
---//======================================================
---// HOME
---//======================================================
-
-local CounterBox = New("Frame", {
-
-    BackgroundColor3 = C.PANEL2,
-
-    Size = UDim2.new(1, -8, 0, 35),
-
-    Position = UDim2.new(0, 4, 0, 4),
-
-    ZIndex = 999920
-
-}, HomePage)
-
-Corner(CounterBox, 10)
-
-Stroke(
-    CounterBox,
-    C.PURPLE,
-    1,
-    0.65
-)
-
-New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "●  SEAL A EGG",
-
-    Font = Enum.Font.GothamBold,
-
-    TextSize = 11,
-
-    TextColor3 = C.PURPLE2,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    Size = UDim2.new(1, -15, 1, 0),
-
-    Position = UDim2.new(0, 12, 0, 0),
-
-    ZIndex = 999921
-
-}, CounterBox)
-
---// Section positions
-local STEAL_SECTION_Y = 46
-
-CreateSection(
-    HomePage,
-    "STEAL A EGG",
-    STEAL_SECTION_Y
-)
-
---//======================================================
---// SCRIPT CARD
---//======================================================
-
-local function CreateScriptCard(Page, Data, Y, Index)
-
-    local Card = New("Frame", {
-
-        BackgroundColor3 = C.PANEL2,
-
-        BackgroundTransparency = 0.05,
-
-        Size = UDim2.new(1, -8, 0, 43),
-
-        Position = UDim2.new(
-            0,
-            4,
-            0,
-            Y
-        ),
-
-        ZIndex = 999925
-
-    }, Page)
-
-    Corner(Card, 10)
-
-    Stroke(
-        Card,
-        C.PURPLE,
-        1,
-        0.78
-    )
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Icon or "●",
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 17,
-
-        Size = UDim2.new(0, 31, 0, 31),
-
-        Position = UDim2.new(0, 7, 0.5, -15),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Name,
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 10,
-
-        TextColor3 = C.WHITE,
-
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-        Size = UDim2.new(0, 145, 0, 16),
-
-        Position = UDim2.new(0, 39, 0, 6),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Description,
-
-        Font = Enum.Font.GothamMedium,
-
-        TextSize = 7,
-
-        TextColor3 = C.GRAY,
-
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-        Size = UDim2.new(0, 145, 0, 12),
-
-        Position = UDim2.new(0, 39, 0, 23),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    local Status = New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = "READY",
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 7,
-
-        TextColor3 = C.GREEN,
-
-        TextXAlignment = Enum.TextXAlignment.Right,
-
-        Size = UDim2.new(0, 45, 0, 13),
-
-        Position = UDim2.new(1, -112, 0, 5),
-
-        ZIndex = 999927
-
-    }, Card)
-
-    local Run = New("TextButton", {
-
-        BackgroundColor3 = C.PURPLE,
-
-        Text = "RUN",
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 8,
-
-        TextColor3 = C.WHITE,
-
-        AutoButtonColor = false,
-
-        Size = UDim2.new(0, 55, 0, 27),
-
-        Position = UDim2.new(1, -63, 0.5, -13),
-
-        ZIndex = 999928
-
-    }, Card)
-
-    Corner(Run, 8)
-
-    Gradient(
-        Run,
-        C.PURPLE,
-        C.PINK,
-        0
-    )
-
-    Run.MouseButton1Click:Connect(function()
-
-        Status.Text = "RUNNING"
-        Status.TextColor3 = C.PURPLE2
-        Run.Text = "..."
-
-        Tween(Card, 0.15, {
-            BackgroundColor3 = Color3.fromRGB(31, 19, 47)
-        })
-
-        task.spawn(function()
-
-            local Success, ErrorMessage = pcall(function()
-
-                Data.Callback()
-
-            end)
-
-            if Success then
-
-                Status.Text = "DONE"
-                Status.TextColor3 = C.GREEN
-                Run.Text = "DONE"
-
-            else
-
-                Status.Text = "ERROR"
-                Status.TextColor3 = C.RED
-                Run.Text = "ERR"
-
-                warn(
-                    "[LEMON HUB] " ..
-                    tostring(ErrorMessage)
-                )
-
-            end
-
-            task.wait(0.8)
-
-            if Card.Parent then
-
-                Status.Text = "READY"
-                Status.TextColor3 = C.GREEN
-                Run.Text = "RUN"
-
-                Tween(Card, 0.2, {
-                    BackgroundColor3 = C.PANEL2
-                })
-
-            end
-
+function cacheLink()
+    if cachedTime + (10*60) < fOsTime() then
+        local success, response = pcall(function()
+            return fRequest({
+                Url = host .. "/public/start",
+                Method = "POST",
+                Body = lEncode({ service = service, identifier = lDigest(fGetHwid()) }),
+                Headers = { ["Content-Type"] = "application/json" }
+            });
         end)
-
-    end)
-
-    return Card
-end
-
---//======================================================
---// CREATE STEAL A EGG
---//======================================================
-
-local CurrentY = STEAL_SECTION_Y + 27
-
-for Index, Data in ipairs(STEAL_A_EGG_SCRIPTS) do
-
-    CreateScriptCard(
-        HomePage,
-        Data,
-        CurrentY,
-        Index
-    )
-
-    CurrentY += 48
-end
-
---//======================================================
---// CƯỠI THÚ
---//======================================================
-
-local CuoiThuSectionY = CurrentY + 5
-
-CreateSection(
-    HomePage,
-    "CƯỠI THÚ",
-    CuoiThuSectionY
-)
-
-CurrentY = CuoiThuSectionY + 27
-
-for Index, Data in ipairs(CUOI_THU_SCRIPTS) do
-
-    CreateScriptCard(
-        HomePage,
-        Data,
-        CurrentY,
-        Index
-    )
-
-    CurrentY += 48
-end
-
-HomePage.CanvasSize = UDim2.new(
-    0,
-    0,
-    0,
-    CurrentY + 15
-)
-
---//======================================================
---// CONFIG
---//======================================================
-
-CreateSection(
-    ConfigPage,
-    "SCRIPT HỖ TRỢ",
-    4
-)
-
-local function CreateToggle(Page, Data, Index)
-
-    local Y = 40 + ((Index - 1) * 53)
-
-    local Card = New("Frame", {
-
-        BackgroundColor3 = C.PANEL2,
-
-        Size = UDim2.new(1, -8, 0, 45),
-
-        Position = UDim2.new(0, 4, 0, Y),
-
-        ZIndex = 999925
-
-    }, Page)
-
-    Corner(Card, 10)
-
-    Stroke(
-        Card,
-        C.PURPLE,
-        1,
-        0.78
-    )
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Icon,
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 15,
-
-        Size = UDim2.new(0, 28, 0, 28),
-
-        Position = UDim2.new(0, 8, 0.5, -14),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Name,
-
-        Font = Enum.Font.GothamBold,
-
-        TextSize = 10,
-
-        TextColor3 = C.WHITE,
-
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-        Size = UDim2.new(0, 145, 0, 16),
-
-        Position = UDim2.new(0, 41, 0, 6),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    New("TextLabel", {
-
-        BackgroundTransparency = 1,
-
-        Text = Data.Description,
-
-        Font = Enum.Font.GothamMedium,
-
-        TextSize = 7,
-
-        TextColor3 = C.GRAY,
-
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-        Size = UDim2.new(0, 150, 0, 12),
-
-        Position = UDim2.new(0, 41, 0, 24),
-
-        ZIndex = 999926
-
-    }, Card)
-
-    local Toggle = New("TextButton", {
-
-        BackgroundColor3 = C.DARK,
-
-        Text = "",
-
-        AutoButtonColor = false,
-
-        Size = UDim2.new(0, 48, 0, 25),
-
-        Position = UDim2.new(1, -58, 0.5, -12),
-
-        ZIndex = 999928
-
-    }, Card)
-
-    Corner(Toggle, 20)
-
-    local Knob = New("Frame", {
-
-        BackgroundColor3 = C.WHITE,
-
-        Size = UDim2.new(0, 19, 0, 19),
-
-        Position = UDim2.new(0, 3, 0.5, -9),
-
-        ZIndex = 999929
-
-    }, Toggle)
-
-    Corner(Knob, 20)
-
-    local Enabled = false
-
-    Toggle.MouseButton1Click:Connect(function()
-
-        Enabled = not Enabled
-
-        if Enabled then
-
-            Tween(Toggle, 0.2, {
-                BackgroundColor3 = C.PURPLE
-            })
-
-            Tween(Knob, 0.2, {
-                Position = UDim2.new(
-                    1,
-                    -22,
-                    0.5,
-                    -9
-                )
-            })
-
-        else
-
-            Tween(Toggle, 0.2, {
-                BackgroundColor3 = C.DARK
-            })
-
-            Tween(Knob, 0.2, {
-                Position = UDim2.new(
-                    0,
-                    3,
-                    0.5,
-                    -9
-                )
-            })
-
-        end
-
-        task.spawn(function()
-
-            local Success, ErrorMessage = pcall(function()
-
-                Data.Callback(Enabled)
-
-            end)
-
-            if not Success then
-
-                warn(
-                    "[LEMON HUB CONFIG] " ..
-                    tostring(ErrorMessage)
-                )
-
+        if success and response and response.StatusCode == 200 then
+            local decoded = lDecode(response.Body);
+            if decoded.success == true then
+                cachedLink = decoded.data.url;
+                cachedTime = fOsTime();
+                return true, cachedLink;
             end
-
-        end)
-
-    end)
-end
-
-for Index, Data in ipairs(CONFIG_SCRIPTS) do
-
-    CreateToggle(
-        ConfigPage,
-        Data,
-        Index
-    )
-
-end
-
-ConfigPage.CanvasSize = UDim2.new(
-    0,
-    0,
-    0,
-    40 + (#CONFIG_SCRIPTS * 53) + 15
-)
-
---//======================================================
---// INFO
---//======================================================
-
-local InfoBox = New("Frame", {
-
-    BackgroundColor3 = C.PANEL2,
-
-    Size = UDim2.new(1, -8, 0, 185),
-
-    Position = UDim2.new(0, 4, 0, 4),
-
-    ZIndex = 999925
-
-}, InfoPage)
-
-Corner(InfoBox, 13)
-
-Stroke(
-    InfoBox,
-    C.PURPLE,
-    1,
-    0.65
-)
-
-New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text = "🍋  LEMON HUB",
-
-    Font = Enum.Font.GothamBold,
-
-    TextSize = 17,
-
-    TextColor3 = C.WHITE,
-
-    Size = UDim2.new(1, -20, 0, 30),
-
-    Position = UDim2.new(0, 10, 0, 12),
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    ZIndex = 999926
-
-}, InfoBox)
-
-New("TextLabel", {
-
-    BackgroundTransparency = 1,
-
-    Text =
-        "LEMON HUB V4\n\n" ..
-        "🥚  STEAL A EGG  —  5 SCRIPTS\n" ..
-        "🐾  CƯỠI THÚ       —  1 SCRIPT\n" ..
-        "⚙  CONFIG          —  3 SUPPORT SCRIPTS\n\n" ..
-        "Mobile optimized\n" ..
-        "Responsive animations\n" ..
-        "Respawn safe",
-
-    Font = Enum.Font.GothamMedium,
-
-    TextSize = 9,
-
-    TextColor3 = C.GRAY,
-
-    TextXAlignment = Enum.TextXAlignment.Left,
-
-    TextYAlignment = Enum.TextYAlignment.Top,
-
-    Size = UDim2.new(1, -20, 1, -48),
-
-    Position = UDim2.new(0, 10, 0, 48),
-
-    ZIndex = 999926
-
-}, InfoBox)
-
-InfoPage.CanvasSize = UDim2.new(
-    0,
-    0,
-    0,
-    210
-)
-
---//======================================================
---// TAB SYSTEM
---//======================================================
-
-local CurrentTab = nil
-
-local function SetTab(Name)
-
-    if CurrentTab == Name then
-        return
-    end
-
-    CurrentTab = Name
-
-    for TabName, TabData in pairs(Tabs) do
-
-        local Active = TabName == Name
-
-        Tween(TabData.Button, 0.2, {
-
-            BackgroundColor3 =
-                Active
-                and Color3.fromRGB(45, 24, 67)
-                or Color3.fromRGB(24, 17, 37),
-
-            TextColor3 =
-                Active
-                and C.WHITE
-                or C.GRAY
-
-        })
-
-        Tween(TabData.Accent, 0.2, {
-
-            BackgroundTransparency =
-                Active and 0 or 1
-
-        })
-
-    end
-
-    for PageName, Page in pairs(Pages) do
-
-        if PageName == Name then
-
-            Page.Visible = true
-
-            Page.Position = UDim2.new(
-                0,
-                10,
-                0,
-                0
-            )
-
-            Tween(Page, 0.22, {
-
-                Position = UDim2.new(
-                    0,
-                    0,
-                    0,
-                    0
-                )
-
-            })
-
-        else
-
-            Page.Visible = false
-
         end
-
-    end
-end
-
-HomeTab.MouseButton1Click:Connect(function()
-    SetTab("HOME")
-end)
-
-ConfigTab.MouseButton1Click:Connect(function()
-    SetTab("CONFIG")
-end)
-
-InfoTab.MouseButton1Click:Connect(function()
-    SetTab("INFO")
-end)
-
---//======================================================
---// DRAG
---//======================================================
-
-local Dragging = false
-local DragStart
-local StartPosition
-
-Header.InputBegan:Connect(function(Input)
-
-    if Input.UserInputType == Enum.UserInputType.MouseButton1
-    or Input.UserInputType == Enum.UserInputType.Touch then
-
-        Dragging = true
-
-        DragStart = Input.Position
-
-        StartPosition = Outer.Position
-
-        Input.Changed:Connect(function()
-
-            if Input.UserInputState == Enum.UserInputState.End then
-                Dragging = false
-            end
-
-        end)
-
-    end
-
-end)
-
-UserInputService.InputChanged:Connect(function(Input)
-
-    if not Dragging then
-        return
-    end
-
-    if Input.UserInputType ~= Enum.UserInputType.MouseMovement
-    and Input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
-
-    local Delta = Input.Position - DragStart
-
-    Outer.Position = UDim2.new(
-
-        StartPosition.X.Scale,
-
-        StartPosition.X.Offset + Delta.X,
-
-        StartPosition.Y.Scale,
-
-        StartPosition.Y.Offset + Delta.Y
-
-    )
-
-    MenuGlow.Position = UDim2.new(
-
-        StartPosition.X.Scale,
-
-        StartPosition.X.Offset + Delta.X,
-
-        StartPosition.Y.Scale,
-
-        StartPosition.Y.Offset + Delta.Y
-
-    )
-
-end)
-
---//======================================================
---// OPEN / CLOSE
---//======================================================
-
-local Open = false
-
-local function OpenMenu()
-
-    if Open then
-        return
-    end
-
-    Open = true
-
-    MenuGlow.Visible = true
-    Outer.Visible = true
-
-    UIScale.Scale = 0.84
-
-    Tween(
-        UIScale,
-        0.32,
-        {
-            Scale = 1
-        },
-        Enum.EasingStyle.Back
-    )
-
-    Tween(
-        MenuGlow,
-        0.3,
-        {
-            BackgroundTransparency = 0.68
-        }
-    )
-
-    Arrow.Text = "‹"
-
-end
-
-local function CloseMenu()
-
-    if not Open then
-        return
-    end
-
-    Open = false
-
-    Tween(
-        UIScale,
-        0.22,
-        {
-            Scale = 0.84
-        },
-        Enum.EasingStyle.Quad
-    )
-
-    Tween(
-        MenuGlow,
-        0.22,
-        {
-            BackgroundTransparency = 1
-        }
-    )
-
-    task.delay(0.22, function()
-
-        if not Open then
-
-            Outer.Visible = false
-            MenuGlow.Visible = false
-
-        end
-
-    end)
-
-    Arrow.Text = "›"
-
-end
-
-LauncherButton.MouseButton1Click:Connect(function()
-
-    if Open then
-        CloseMenu()
+        return false, "Failed to cache link."
     else
-        OpenMenu()
+        return true, cachedLink;
+    end
+end
+
+local generateNonce = function()
+    local str = ""
+    for _ = 1, 16 do str = str .. fStringChar(fMathFloor(fMathRandom() * (122 - 97 + 1)) + 97) end
+    return str
+end
+
+local verifyKey = function(key)
+    if not fRequest then return false end
+    local nonce = generateNonce();
+    local endpoint = host .. "/public/whitelist/" .. fToString(service) .. "?identifier=" .. lDigest(fGetHwid()) .. "&key=" .. key;
+    if useNonce then endpoint = endpoint .. "&nonce=" .. nonce; end
+
+    local success, response = pcall(function()
+        return fRequest({ Url = endpoint, Method = "GET" });
+    end)
+
+    if success and response and response.StatusCode == 200 then
+        local decoded = lDecode(response.Body);
+        if decoded.success == true and decoded.data.valid == true then return true; end
+    end
+    return false;
+end
+
+-- ==========================================
+-- DELTA X KEY SYSTEM UI
+-- ==========================================
+task.spawn(function()
+    local Player = game.Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui", 30)
+    if not PlayerGui then
+        warn("[DELTA X]: Không tìm thấy PlayerGui.")
+        return
     end
 
-end)
-
---//======================================================
---// LAUNCHER GLOW
---//======================================================
-
-task.spawn(function()
-
-    while ScreenGui.Parent do
-
-        Tween(
-            LauncherGlow,
-            1.4,
-            {
-                BackgroundTransparency =
-                    Open and 0.65 or 0.72
-            }
-        )
-
-        task.wait(1.4)
-
-        if not ScreenGui.Parent then
-            break
+    local mainSuccess, mainError = pcall(function()
+        if PlayerGui:FindFirstChild("DeltaXKeySystem") then
+            PlayerGui.DeltaXKeySystem:Destroy()
         end
 
-        Tween(
-            LauncherGlow,
-            1.4,
-            {
-                BackgroundTransparency =
-                    Open and 0.72 or 0.82
-            }
-        )
+        local TweenService = game:GetService("TweenService")
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "DeltaXKeySystem"
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.IgnoreGuiInset = true
+        ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        ScreenGui.Parent = PlayerGui
 
-        task.wait(1.4)
+        local Purple = Color3.fromRGB(145, 75, 255)
+        local Purple2 = Color3.fromRGB(91, 45, 190)
+        local White = Color3.fromRGB(245, 242, 255)
+        local Muted = Color3.fromRGB(165, 158, 185)
+        local Panel = Color3.fromRGB(15, 13, 23)
+        local Panel2 = Color3.fromRGB(22, 19, 32)
+        local Red = Color3.fromRGB(255, 80, 100)
+        local AutoActivate = loadAutoActivate()
 
-    end
-
-end)
-
---//======================================================
---// HEADER LINE
---//======================================================
-
-task.spawn(function()
-
-    while ScreenGui.Parent do
-
-        Tween(
-            HeaderLine,
-            1.2,
-            {
-                Size = UDim2.new(0, 58, 0, 2)
-            }
-        )
-
-        task.wait(1.2)
-
-        if not HeaderLine.Parent then
-            break
+        local function corner(obj, radius)
+            local c = Instance.new("UICorner")
+            c.CornerRadius = UDim.new(0, radius)
+            c.Parent = obj
+            return c
         end
 
-        Tween(
-            HeaderLine,
-            1.2,
-            {
-                Size = UDim2.new(0, 42, 0, 2)
-            }
-        )
+        local function stroke(obj, color, thickness, transparency)
+            local st = Instance.new("UIStroke")
+            st.Color = color
+            st.Thickness = thickness or 1
+            st.Transparency = transparency or 0
+            st.Parent = obj
+            return st
+        end
 
-        task.wait(1.2)
+        local function tween(obj, info, props)
+            local t = TweenService:Create(obj, info, props)
+            t:Play()
+            return t
+        end
 
+        -- ==========================================
+        -- 5 GIÂY INTRO: LOGO DELTA X MỜ -> RÕ
+        -- ==========================================
+        local Intro = Instance.new("Frame")
+        Intro.Parent = ScreenGui
+        Intro.BackgroundColor3 = Color3.fromRGB(7, 5, 12)
+        Intro.Size = UDim2.fromScale(1, 1)
+        Intro.ZIndex = 100
+
+        local IntroGlow = Instance.new("Frame")
+        IntroGlow.Parent = Intro
+        IntroGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+        IntroGlow.Position = UDim2.fromScale(0.5, 0.47)
+        IntroGlow.Size = UDim2.fromOffset(280, 280)
+        IntroGlow.BackgroundColor3 = Purple
+        IntroGlow.BackgroundTransparency = 0.94
+        IntroGlow.ZIndex = 101
+        corner(IntroGlow, 999)
+
+        local IntroLogo = Instance.new("ImageLabel")
+        IntroLogo.Parent = Intro
+        IntroLogo.AnchorPoint = Vector2.new(0.5, 0.5)
+        IntroLogo.Position = UDim2.fromScale(0.5, 0.45)
+        IntroLogo.Size = UDim2.fromOffset(175, 175)
+        IntroLogo.BackgroundTransparency = 1
+        IntroLogo.Image = DELTA_X_LOGO
+        IntroLogo.ImageTransparency = 1
+        IntroLogo.ZIndex = 102
+
+        local IntroTitle = Instance.new("TextLabel")
+        IntroTitle.Parent = Intro
+        IntroTitle.AnchorPoint = Vector2.new(0.5, 0)
+        IntroTitle.Position = UDim2.fromScale(0.5, 0.61)
+        IntroTitle.Size = UDim2.fromOffset(300, 45)
+        IntroTitle.BackgroundTransparency = 1
+        IntroTitle.Text = "DELTA X"
+        IntroTitle.Font = Enum.Font.GothamBlack
+        IntroTitle.TextSize = 30
+        IntroTitle.TextColor3 = White
+        IntroTitle.TextTransparency = 1
+        IntroTitle.ZIndex = 102
+
+        local IntroSub = Instance.new("TextLabel")
+        IntroSub.Parent = Intro
+        IntroSub.AnchorPoint = Vector2.new(0.5, 0)
+        IntroSub.Position = UDim2.fromScale(0.5, 0.68)
+        IntroSub.Size = UDim2.fromOffset(350, 25)
+        IntroSub.BackgroundTransparency = 1
+        IntroSub.Text = "KEY SYSTEM  •  INITIALIZING"
+        IntroSub.Font = Enum.Font.GothamMedium
+        IntroSub.TextSize = 11
+        IntroSub.TextColor3 = Muted
+        IntroSub.TextTransparency = 1
+        IntroSub.ZIndex = 102
+
+        tween(IntroLogo, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            ImageTransparency = 0
+        })
+        tween(IntroTitle, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TextTransparency = 0
+        })
+        tween(IntroSub, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TextTransparency = 0
+        })
+        tween(IntroGlow, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.80,
+            Size = UDim2.fromOffset(360, 360)
+        })
+
+        task.wait(5)
+
+        tween(Intro, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1
+        })
+        tween(IntroLogo, TweenInfo.new(0.35), {ImageTransparency = 1})
+        tween(IntroTitle, TweenInfo.new(0.35), {TextTransparency = 1})
+        tween(IntroSub, TweenInfo.new(0.35), {TextTransparency = 1})
+        task.wait(0.5)
+        Intro:Destroy()
+
+        -- ==========================================
+        -- MAIN DELTA X KEY MENU
+        -- ==========================================
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Parent = ScreenGui
+        MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+        MainFrame.Position = UDim2.fromScale(0.5, 0.5)
+        MainFrame.Size = UDim2.fromOffset(420, 300)
+        MainFrame.BackgroundColor3 = Panel
+        MainFrame.BorderSizePixel = 0
+        MainFrame.Active = false
+        MainFrame.Draggable = false
+        corner(MainFrame, 16)
+        stroke(MainFrame, Purple, 1.2, 0.30)
+
+        local Gradient = Instance.new("UIGradient")
+        Gradient.Parent = MainFrame
+        Gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 22, 43)),
+            ColorSequenceKeypoint.new(0.5, Panel),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(11, 10, 18))
+        })
+        Gradient.Rotation = 120
+
+        local Header = Instance.new("Frame")
+        Header.Parent = MainFrame
+        Header.BackgroundTransparency = 1
+        Header.Position = UDim2.fromOffset(18, 14)
+        Header.Size = UDim2.new(1, -36, 0, 38)
+
+        local HeaderLogo = Instance.new("ImageLabel")
+        HeaderLogo.Parent = Header
+        HeaderLogo.BackgroundTransparency = 1
+        HeaderLogo.Size = UDim2.fromOffset(36, 36)
+        HeaderLogo.Image = DELTA_X_LOGO
+
+        local HeaderTitle = Instance.new("TextLabel")
+        HeaderTitle.Parent = Header
+        HeaderTitle.BackgroundTransparency = 1
+        HeaderTitle.Position = UDim2.fromOffset(47, 0)
+        HeaderTitle.Size = UDim2.new(1, -100, 0, 23)
+        HeaderTitle.Text = "DELTA X"
+        HeaderTitle.Font = Enum.Font.GothamBold
+        HeaderTitle.TextSize = 17
+        HeaderTitle.TextColor3 = White
+        HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+        local HeaderSub = Instance.new("TextLabel")
+        HeaderSub.Parent = Header
+        HeaderSub.BackgroundTransparency = 1
+        HeaderSub.Position = UDim2.fromOffset(48, 20)
+        HeaderSub.Size = UDim2.new(1, -100, 0, 16)
+        HeaderSub.Text = "KEY SYSTEM"
+        HeaderSub.Font = Enum.Font.GothamMedium
+        HeaderSub.TextSize = 9
+        HeaderSub.TextColor3 = Muted
+        HeaderSub.TextXAlignment = Enum.TextXAlignment.Left
+
+        local Divider = Instance.new("Frame")
+        Divider.Parent = MainFrame
+        Divider.Position = UDim2.new(0, 18, 0, 62)
+        Divider.Size = UDim2.new(1, -36, 0, 1)
+        Divider.BackgroundColor3 = Purple
+        Divider.BackgroundTransparency = 0.65
+        Divider.BorderSizePixel = 0
+
+        local CenterLogo = Instance.new("ImageLabel")
+        CenterLogo.Parent = MainFrame
+        CenterLogo.AnchorPoint = Vector2.new(0.5, 0)
+        CenterLogo.Position = UDim2.new(0.5, 0, 0, 72)
+        CenterLogo.Size = UDim2.fromOffset(74, 74)
+        CenterLogo.BackgroundTransparency = 1
+        CenterLogo.Image = DELTA_X_LOGO
+        CenterLogo.ZIndex = 2
+
+        local LogoGlow = Instance.new("ImageLabel")
+        LogoGlow.Parent = MainFrame
+        LogoGlow.AnchorPoint = Vector2.new(0.5, 0)
+        LogoGlow.Position = UDim2.new(0.5, 0, 0, 72)
+        LogoGlow.Size = UDim2.fromOffset(92, 92)
+        LogoGlow.BackgroundTransparency = 1
+        LogoGlow.Image = DELTA_X_LOGO
+        LogoGlow.ImageTransparency = 0.90
+        LogoGlow.ZIndex = 0
+
+        local InputFrame = Instance.new("Frame")
+        InputFrame.Parent = MainFrame
+        InputFrame.Position = UDim2.fromOffset(28, 154)
+        InputFrame.Size = UDim2.new(1, -56, 0, 42)
+        InputFrame.BackgroundColor3 = Panel2
+        InputFrame.BorderSizePixel = 0
+        corner(InputFrame, 11)
+        local InputStroke = stroke(InputFrame, Color3.fromRGB(70, 55, 95), 1, 0.25)
+
+        local TextBox = Instance.new("TextBox")
+        TextBox.Parent = InputFrame
+        TextBox.BackgroundTransparency = 1
+        TextBox.Position = UDim2.fromOffset(14, 0)
+        TextBox.Size = UDim2.new(1, -28, 1, 0)
+        TextBox.Font = Enum.Font.GothamMedium
+        TextBox.Text = ""
+        TextBox.TextColor3 = White
+        TextBox.TextSize = 12
+        TextBox.PlaceholderText = "Enter your Delta X key..."
+        TextBox.PlaceholderColor3 = Color3.fromRGB(105, 98, 120)
+        TextBox.ClearTextOnFocus = false
+
+        TextBox.Focused:Connect(function()
+            tween(InputStroke, TweenInfo.new(0.15), {Color = Purple, Transparency = 0})
+        end)
+        TextBox.FocusLost:Connect(function()
+            tween(InputStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(70,55,95), Transparency = 0.25})
+        end)
+
+        local StatusLine
+
+        local SaveKeyBtn = Instance.new("TextButton")
+        SaveKeyBtn.Parent = MainFrame
+        SaveKeyBtn.Position = UDim2.fromOffset(28, 198)
+        SaveKeyBtn.Size = UDim2.fromOffset(92, 24)
+        SaveKeyBtn.BackgroundColor3 = Panel2
+        SaveKeyBtn.BorderSizePixel = 0
+        SaveKeyBtn.Text = "SAVE KEY"
+        SaveKeyBtn.Font = Enum.Font.GothamBold
+        SaveKeyBtn.TextSize = 8
+        SaveKeyBtn.TextColor3 = White
+        SaveKeyBtn.AutoButtonColor = false
+        corner(SaveKeyBtn, 8)
+        stroke(SaveKeyBtn, Color3.fromRGB(72,58,100), 1, 0.2)
+
+        local AutoBtn = Instance.new("TextButton")
+        AutoBtn.Parent = MainFrame
+        AutoBtn.Position = UDim2.fromOffset(128, 198)
+        AutoBtn.Size = UDim2.fromOffset(142, 24)
+        AutoBtn.BackgroundColor3 = Panel2
+        AutoBtn.BorderSizePixel = 0
+        AutoBtn.Font = Enum.Font.GothamBold
+        AutoBtn.TextSize = 8
+        AutoBtn.TextColor3 = White
+        AutoBtn.AutoButtonColor = false
+        corner(AutoBtn, 8)
+
+        local function refreshAutoButton()
+            AutoBtn.Text = AutoActivate and "AUTO ACTIVATE  ✓" or "AUTO ACTIVATE  ×"
+            AutoBtn.BackgroundColor3 = AutoActivate and Color3.fromRGB(42, 29, 62) or Panel2
+        end
+        refreshAutoButton()
+
+        SaveKeyBtn.MouseButton1Down:Connect(function()
+            local key = TextBox.Text
+            if key == "" then
+                StatusLine.Text = "●  ENTER A KEY FIRST"
+                StatusLine.TextColor3 = Red
+                return
+            end
+            if saveKey(key) then
+                StatusLine.Text = "●  KEY SAVED SUCCESSFULLY"
+                StatusLine.TextColor3 = Purple
+            else
+                StatusLine.Text = "●  SAVE KEY NOT SUPPORTED"
+                StatusLine.TextColor3 = Red
+            end
+        end)
+
+        AutoBtn.MouseButton1Down:Connect(function()
+            AutoActivate = not AutoActivate
+            saveAutoActivate(AutoActivate)
+            refreshAutoButton()
+            StatusLine.Text = AutoActivate and "●  AUTO ACTIVATE ENABLED" or "●  AUTO ACTIVATE DISABLED"
+            StatusLine.TextColor3 = AutoActivate and Purple or Muted
+        end)
+
+        StatusLine = Instance.new("TextLabel")
+        StatusLine.Parent = MainFrame
+        StatusLine.BackgroundTransparency = 1
+        StatusLine.Position = UDim2.fromOffset(28, 226)
+        StatusLine.Size = UDim2.new(1, -56, 0, 18)
+        StatusLine.Text = "●  SYSTEM READY  •  AWAITING KEY"
+        StatusLine.Font = Enum.Font.GothamMedium
+        StatusLine.TextSize = 9
+        StatusLine.TextColor3 = Muted
+        StatusLine.TextXAlignment = Enum.TextXAlignment.Left
+
+        local function createBtn(name, text, posX)
+            local btn = Instance.new("TextButton")
+            btn.Parent = MainFrame
+            btn.Name = name
+            btn.Position = UDim2.new(posX, 0, 0, 252)
+            btn.Size = UDim2.new(0.5, -32, 0, 40)
+            btn.BackgroundColor3 = Panel2
+            btn.BorderSizePixel = 0
+            btn.Text = text
+            btn.Font = Enum.Font.GothamBold
+            btn.TextSize = 10
+            btn.TextColor3 = White
+            btn.AutoButtonColor = false
+            corner(btn, 11)
+            local bs = stroke(btn, Color3.fromRGB(72, 58, 100), 1, 0.2)
+
+            btn.MouseEnter:Connect(function()
+                tween(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(48, 33, 70)})
+                tween(bs, TweenInfo.new(0.15), {Color = Purple, Transparency = 0})
+            end)
+            btn.MouseLeave:Connect(function()
+                tween(btn, TweenInfo.new(0.15), {BackgroundColor3 = Panel2})
+                tween(bs, TweenInfo.new(0.15), {Color = Color3.fromRGB(72,58,100), Transparency = 0.2})
+            end)
+            return btn
+        end
+
+        local GetKeyBtn = createBtn("GetKeyBtn", "GET KEY  ↗", 0)
+        local CheckKeyBtn = createBtn("CheckKeyBtn", "CHECK KEY  ✓", 0.5)
+
+        -- ==========================================
+        -- LOGIC KIỂM TRA KEY
+        -- ==========================================
+        CheckKeyBtn.MouseButton1Down:Connect(function()
+            local inputKey = TextBox.Text
+            local currentHWID = tostring(fGetHwid())
+
+            if inputKey ~= "" then
+                if inputKey == adminKey then
+                    if currentHWID == adminHWID then
+                        saveKey(inputKey)
+                        StatusLine.Text = "●  ADMIN APPROVED  •  LAUNCHING..."
+                        StatusLine.TextColor3 = Purple
+                        task.wait(0.8)
+                        ScreenGui:Destroy()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Giao%20di%E1%BB%87n"))()
+                        return
+                    else
+                        StatusLine.Text = "●  UNAUTHORIZED DEVICE"
+                        StatusLine.TextColor3 = Red
+                        return
+                    end
+                end
+
+                StatusLine.Text = "●  VERIFYING KEY..."
+                StatusLine.TextColor3 = Color3.fromRGB(255, 190, 80)
+                local Verify = verifyKey(inputKey)
+
+                if Verify then
+                    saveKey(inputKey)
+                    if not AutoActivate then
+                        saveAutoActivate(false)
+                    end
+                    StatusLine.Text = "●  KEY VERIFIED  •  LAUNCHING..."
+                    StatusLine.TextColor3 = Purple
+                    task.wait(0.8)
+                    ScreenGui:Destroy()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Giao%20di%E1%BB%87n"))()
+                else
+                    StatusLine.Text = "●  INVALID KEY  •  ACCESS DENIED"
+                    StatusLine.TextColor3 = Red
+                end
+            else
+                StatusLine.Text = "●  PLEASE ENTER A KEY"
+                StatusLine.TextColor3 = Red
+            end
+        end)
+
+        GetKeyBtn.MouseButton1Down:Connect(function()
+            StatusLine.Text = "●  GENERATING SECURE LINK..."
+            StatusLine.TextColor3 = Color3.fromRGB(255, 190, 80)
+
+            local success, link = cacheLink()
+            if success and link ~= "" then
+                fSetClipboard(link)
+                StatusLine.Text = "●  LINK COPIED TO CLIPBOARD"
+                StatusLine.TextColor3 = Purple
+            else
+                local backupLink = "https://gateway.platoboost.net/a/" .. fToString(service) .. "?id=" .. lDigest(fGetHwid())
+                fSetClipboard(backupLink)
+                StatusLine.Text = "●  BACKUP LINK COPIED"
+                StatusLine.TextColor3 = Purple
+            end
+        end)
+
+        -- ==========================================
+        -- AUTO ACTIVATE KEY ĐÃ LƯU
+        -- ==========================================
+        if AutoActivate then
+            local savedKey = loadSavedKey()
+            if savedKey ~= "" then
+                TextBox.Text = savedKey
+                task.spawn(function()
+                    task.wait(0.45)
+                    StatusLine.Text = "●  AUTO VERIFYING SAVED KEY..."
+                    StatusLine.TextColor3 = Color3.fromRGB(255, 190, 80)
+                    local verified = false
+                    if savedKey == adminKey then
+                        verified = (tostring(fGetHwid()) == adminHWID)
+                    else
+                        verified = verifyKey(savedKey)
+                    end
+                    if verified then
+                        StatusLine.Text = "●  SAVED KEY VERIFIED  •  LAUNCHING..."
+                        StatusLine.TextColor3 = Purple
+                        task.wait(0.8)
+                        if ScreenGui.Parent then ScreenGui:Destroy() end
+                        pcall(function()
+                            loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Giao%20di%E1%BB%87n"))()
+                        end)
+                    else
+                        StatusLine.Text = "●  SAVED KEY INVALID  •  ENTER A NEW KEY"
+                        StatusLine.TextColor3 = Red
+                    end
+                end)
+            end
+        end
+
+        MainFrame.BackgroundTransparency = 1
+        MainFrame.Size = UDim2.fromOffset(390, 280)
+        tween(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.fromOffset(420, 300),
+            BackgroundTransparency = 0
+        })
+    end)
+
+    if not mainSuccess then
+        warn("[DELTA X UI ERROR]: " .. tostring(mainError))
     end
-
 end)
-
---//======================================================
---// INITIAL TAB
---//======================================================
-
-SetTab("HOME")
-
---//======================================================
---// RESPAWN SAFETY
---//======================================================
-
-Player.CharacterAdded:Connect(function()
-
-    task.wait(1)
-
-    if not ScreenGui.Parent then
-
-        ScreenGui.Parent =
-            Player:WaitForChild("PlayerGui")
-
-    end
-
-end)
-
---//======================================================
---// DONE
---//======================================================
-
-print("========================================")
-print("[LEMON HUB V4] Loaded")
-print("[LEMON HUB V4] Logo ID:", LOGO_ID)
-print("[LEMON HUB V4] Logo:", LOGO)
-print("[LEMON HUB V4] DisplayOrder:", ScreenGui.DisplayOrder)
-print("========================================")
