@@ -1,5 +1,5 @@
 -- NhatHub | Auto Hop 1 Player (Mobile: Delta X / Fluxus)
-local SCRIPT_URL = "https://raw.githubusercontent.com/USERNAME/REPO/main/NhatHub_AutoHop.lua" -- << ĐỔI LINK Ở ĐÂY
+local SCRIPT_URL = "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/Hop%20sever" -- << ĐỔI LINK Ở ĐÂY
 
 local STATE_FILE   = "NhatHub_HopState.txt"
 local VISITED_FILE = "NhatHub_Visited.json"
