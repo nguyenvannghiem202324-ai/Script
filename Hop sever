@@ -1,0 +1,366 @@
+--==================================================
+-- AUTO HOP SERVER 1 PLAYER (PERSISTENT VERSION)
+-- Delta Executor • Android • Compact draggable UI
+--==================================================
+
+local SCRIPT_URL = "https://pastefy.app/DMEJUAv1/raw" -- 👈 Dán Link RAW Pastefy của bạn vào đây
+
+-- 1. GIỮ SCRIPT VĨNH VIỄN BẰNG AUTOEXEC DỰ PHÒNG
+pcall(function()
+    if writefile then
+        local loader = "task.wait(2); pcall(function() loadstring(game:HttpGet('" .. SCRIPT_URL .. "'))() end)"
+        pcall(function() writefile("NhatHub_AutoHop.lua", loader) end)
+        pcall(function() writefile("autoexec/NhatHub_AutoHop.lua", loader) end)
+        pcall(function() writefile("autoexecute/NhatHub_AutoHop.lua", loader) end)
+    end
+end)
+
+-- 2. TỰ ĐỘNG NẠP LẠI KHI CHUYỂN SERVER (QUEUE ON TELEPORT)
+local queue = queue_on_teleport or (getgenv and getgenv().queue_on_teleport) or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+if queue then
+    pcall(function()
+        queue([[
+            if not game:IsLoaded() then game.Loaded:Wait() end
+            task.wait(2)
+            for i = 1, 3 do
+                local success = pcall(function()
+                    loadstring(game:HttpGet("]] .. SCRIPT_URL .. [["))()
+                end)
+                if success then break end
+                task.wait(2)
+            end
+        ]])
+    end)
+end
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local CurrentJobId = game.JobId
+
+-- DỌN GUI CŨ
+local GUI_NAME = "AutoHopOnePlayerUI"
+
+local function getParent()
+    if type(gethui) == "function" then
+        local ok, result = pcall(gethui)
+        if ok and result then
+            return result
+        end
+    end
+    return game:GetService("CoreGui")
+end
+
+local Parent = getParent()
+
+pcall(function()
+    local old = Parent:FindFirstChild(GUI_NAME)
+    if old then
+        old:Destroy()
+    end
+end)
+
+-- TRẠNG THÁI & KHÔI PHỤC TRẠNG THÁI TỰ ĐỘNG BẬT
+local Enabled = false
+local Scanning = false
+local Teleporting = false
+local Destroyed = false
+
+-- Đọc trạng thái đã lưu trước khi chuyển server
+pcall(function()
+    if isfile and readfile and isfile("NhatHub_HopState.txt") then
+        if readfile("NhatHub_HopState.txt") == "true" then
+            Enabled = true
+        end
+    end
+end)
+
+local function saveState(state)
+    pcall(function()
+        if writefile then
+            writefile("NhatHub_HopState.txt", tostring(state))
+        end
+    end)
+end
+
+local function statusText()
+    if Teleporting then
+        return "ĐANG CHUYỂN..."
+    elseif Scanning then
+        return "ĐANG QUÉT..."
+    elseif Enabled then
+        return "AUTO HOP: ON"
+    else
+        return "AUTO HOP: OFF"
+    end
+end
+
+-- GIAO DIỆN NHỎ GỌN
+local GUI = Instance.new("ScreenGui")
+GUI.Name = GUI_NAME
+GUI.ResetOnSpawn = false
+GUI.DisplayOrder = 999
+GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+GUI.Parent = Parent
+
+local Button = Instance.new("TextButton")
+Button.Name = "AutoHopToggle"
+Button.Size = UDim2.fromOffset(126, 38)
+Button.Position = UDim2.new(0.08, 0, 0.35, 0)
+Button.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+Button.BorderSizePixel = 0
+Button.Text = "AUTO HOP: OFF"
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.TextSize = 12
+Button.Font = Enum.Font.GothamBold
+Button.AutoButtonColor = true
+Button.Active = true
+Button.Parent = GUI
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 9)
+Corner.Parent = Button
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(170, 90, 255)
+Stroke.Thickness = 1.3
+Stroke.Parent = Button
+
+local function updateButton()
+    if not Button.Parent then
+        return
+    end
+
+    Button.Text = statusText()
+
+    if Teleporting then
+        Button.BackgroundColor3 = Color3.fromRGB(90, 65, 20)
+    elseif Enabled then
+        Button.BackgroundColor3 = Color3.fromRGB(45, 105, 65)
+    else
+        Button.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+    end
+end
+
+-- KÉO NÚT TRÊN MÀN HÌNH CẢM ỨNG
+local dragging = false
+local dragInput
+local dragStart
+local startPosition
+local moved = false
+
+Button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        moved = false
+        dragStart = input.Position
+        startPosition = Button.Position
+
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if not dragging then
+        return
+    end
+
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        if dragInput and input ~= dragInput
+            and input.UserInputType == Enum.UserInputType.Touch then
+            return
+        end
+
+        local delta = input.Position - dragStart
+
+        if math.abs(delta.X) > 6 or math.abs(delta.Y) > 6 then
+            moved = true
+        end
+
+        Button.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input == dragInput then
+        dragging = false
+        dragInput = nil
+    end
+end)
+
+-- LẤY DANH SÁCH SERVER CÔNG KHAI
+local function getServers()
+    local servers = {}
+    local cursor = nil
+
+    for page = 1, 15 do
+        if not Enabled then
+            break
+        end
+
+        local url = "https://games.roblox.com/v1/games/"
+            .. tostring(PlaceId)
+            .. "/servers/Public?sortOrder=Asc&limit=100"
+
+        if cursor and cursor ~= "" then
+            url = url .. "&cursor="
+                .. HttpService:UrlEncode(cursor)
+        end
+
+        local success, result = pcall(function()
+            local response = game:HttpGet(url)
+            return HttpService:JSONDecode(response)
+        end)
+
+        if not success or type(result) ~= "table"
+            or type(result.data) ~= "table" then
+            warn("[AutoHop] Không đọc được danh sách server.")
+            break
+        end
+
+        for _, server in ipairs(result.data) do
+            if server.id
+                and server.id ~= CurrentJobId
+                and tonumber(server.playing) == 1
+                and tonumber(server.maxPlayers)
+                and tonumber(server.maxPlayers) > 1 then
+
+                table.insert(servers, server.id)
+            end
+        end
+
+        cursor = result.nextPageCursor
+
+        if #servers > 0 or not cursor or cursor == "" then
+            break
+        end
+
+        task.wait(0.1)
+    end
+
+    return servers
+end
+
+-- VÒNG LẶP AUTO HOP
+local function startAutoHop()
+    if Scanning then
+        return
+    end
+
+    Scanning = true
+    updateButton()
+
+    task.spawn(function()
+        while Enabled and not Destroyed do
+            if Teleporting then
+                task.wait(1)
+                continue
+            end
+
+            local servers = getServers()
+
+            if not Enabled then
+                break
+            end
+
+            if #servers > 0 then
+                local chosen = servers[math.random(1, #servers)]
+
+                Teleporting = true
+                updateButton()
+
+                local ok, err = pcall(function()
+                    TeleportService:TeleportToPlaceInstance(
+                        PlaceId,
+                        chosen,
+                        LocalPlayer
+                    )
+                end)
+
+                if not ok then
+                    warn("[AutoHop] Teleport thất bại:", err)
+                    Teleporting = false
+                end
+
+                if Teleporting then
+                    task.wait(8)
+
+                    if game.JobId == CurrentJobId then
+                        Teleporting = false
+                    end
+                end
+            else
+                warn("[AutoHop] Chưa tìm thấy server 1 người. Đang thử lại...")
+                task.wait(2)
+            end
+
+            updateButton()
+            task.wait(0.5)
+        end
+
+        Scanning = false
+        updateButton()
+    end)
+end
+
+-- BẬT / TẮT
+Button.Activated:Connect(function()
+    if moved then
+        moved = false
+        return
+    end
+
+    Enabled = not Enabled
+    saveState(Enabled)
+
+    if Enabled then
+        startAutoHop()
+    end
+
+    updateButton()
+end)
+
+-- KHI TELEPORT BỊ TỪ CHỐI
+TeleportService.TeleportInitFailed:Connect(function(
+    player, teleportResult, errorMessage
+)
+    if player ~= LocalPlayer then
+        return
+    end
+
+    warn("[AutoHop] TeleportInitFailed:",
+        tostring(teleportResult), tostring(errorMessage))
+
+    Teleporting = false
+    updateButton()
+end)
+
+updateButton()
+
+-- Nếu trạng thái trước khi hop là Enabled = true -> Tự động chạy Hop tiếp
+if Enabled then
+    task.wait(1)
+    startAutoHop()
+end
+
+print("[AutoHop] Đã khởi chạy. Trạng thái hiện tại: " .. tostring(Enabled))
