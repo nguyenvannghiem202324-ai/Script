@@ -1,5 +1,5 @@
 --==================================================
--- NHẬT HUB - SMART AUTO HOP (PLAYER LIMIT TRACKER)
+-- NHẬT HUB - SMART AUTO HOP + MANUAL 1 PLAYER HOP
 -- Delta Executor • Android • UI Dashboard
 -- Link Source: GitHub Raw
 --==================================================
@@ -74,11 +74,11 @@ local function saveState()
     end)
 end
 
--- DỌN GIAO DIỆN CŨ
+-- DỌN GIAO DIỆN CỦ
 local Parent = (type(gethui) == "function" and gethui()) or game:GetService("CoreGui")
 pcall(function() if Parent:FindFirstChild(GUI_NAME) then Parent[GUI_NAME]:Destroy() end end)
 
--- TẠO GIAO DIỆN MỚI (DASHBOARD)
+-- TẠO GIAO DIỆN MỚI (DASHBOARD CÓ ĐỦ 3 NÚT)
 local GUI = Instance.new("ScreenGui")
 GUI.Name = GUI_NAME
 GUI.ResetOnSpawn = false
@@ -86,7 +86,7 @@ GUI.DisplayOrder = 999
 GUI.Parent = Parent
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.fromOffset(200, 150)
+Frame.Size = UDim2.fromOffset(210, 195)
 Frame.Position = UDim2.new(0.05, 0, 0.3, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 Frame.BorderSizePixel = 0
@@ -105,7 +105,7 @@ Padding.PaddingRight = UDim.new(0, 12)
 
 local Layout = Instance.new("UIListLayout", Frame)
 Layout.SortOrder = Enum.SortOrder.LayoutOrder
-Layout.Padding = UDim.new(0, 8)
+Layout.Padding = UDim.new(0, 6)
 Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 -- Tiêu đề
@@ -128,26 +128,37 @@ PlayerCountLabel.Font = Enum.Font.GothamSemibold
 PlayerCountLabel.TextSize = 12
 PlayerCountLabel.LayoutOrder = 2
 
--- Nút Bật/Tắt Auto Hop
+-- NÚT 1: CLICK HOP SERVER 1 PLAYER NGAY LẬP TỨC
+local Hop1Btn = Instance.new("TextButton", Frame)
+Hop1Btn.Size = UDim2.new(1, 0, 0, 32)
+Hop1Btn.BackgroundColor3 = Color3.fromRGB(120, 45, 180)
+Hop1Btn.Text = "⚡ HOP SERVER 1 PLAYER"
+Hop1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Hop1Btn.Font = Enum.Font.GothamBold
+Hop1Btn.TextSize = 11
+Hop1Btn.LayoutOrder = 3
+Instance.new("UICorner", Hop1Btn).CornerRadius = UDim.new(0, 6)
+
+-- NÚT 2: BẬT/TẮT AUTO HOP KHI QUÁ GIỚI HẠN
 local MainBtn = Instance.new("TextButton", Frame)
-MainBtn.Size = UDim2.new(1, 0, 0, 36)
+MainBtn.Size = UDim2.new(1, 0, 0, 32)
 MainBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 MainBtn.Text = "AUTO HOP: OFF"
 MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MainBtn.Font = Enum.Font.GothamBold
-MainBtn.TextSize = 12
-MainBtn.LayoutOrder = 3
+MainBtn.TextSize = 11
+MainBtn.LayoutOrder = 4
 Instance.new("UICorner", MainBtn).CornerRadius = UDim.new(0, 6)
 
--- Nút Chỉnh Chế độ
+-- NÚT 3: ĐỔI GIỚI HẠN SERVER (>4 NGƯỜI / 3 NGƯỜI)
 local ModeBtn = Instance.new("TextButton", Frame)
-ModeBtn.Size = UDim2.new(1, 0, 0, 36)
+ModeBtn.Size = UDim2.new(1, 0, 0, 32)
 ModeBtn.BackgroundColor3 = Color3.fromRGB(45, 75, 105)
-ModeBtn.Text = "RỜI KHI > 4 NGƯỜI"
+ModeBtn.Text = "CẤU HÌNH: RỜI KHI > 4 NGƯỜI"
 ModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ModeBtn.Font = Enum.Font.GothamBold
-ModeBtn.TextSize = 11
-ModeBtn.LayoutOrder = 4
+ModeBtn.TextSize = 10
+ModeBtn.LayoutOrder = 5
 Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 6)
 
 -- KÉO DI CHUYỂN BẢNG ĐIỀU KHIỂN
@@ -177,7 +188,7 @@ local function updateUI()
         MainBtn.Text = "ĐANG CHUYỂN SERVER..."
         MainBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 20)
     elseif Enabled then
-        MainBtn.Text = "AUTO HOP: ĐANG THEO DÕI"
+        MainBtn.Text = "AUTO HOP: ĐANG BẬT"
         MainBtn.BackgroundColor3 = Color3.fromRGB(45, 120, 65)
     else
         MainBtn.Text = "AUTO HOP: TẮT"
@@ -185,58 +196,96 @@ local function updateUI()
     end
 
     if HopLimit == 4 then
-        ModeBtn.Text = "CHẾ ĐỘ: HOP KHI > 4 NGƯỜI"
+        ModeBtn.Text = "CẤU HÌNH: RỜI KHI > 4 NGƯỜI"
     else
-        ModeBtn.Text = "CHẾ ĐỘ: HOP KHI CÓ 3 NGƯỜI"
+        ModeBtn.Text = "CẤU HÌNH: RỜI KHI CÓ 3 NGƯỜI"
     end
 end
 
--- LOGIC TÌM SERVER (Tìm server <= 2 người để nhảy vào)
-local function getServers()
-    local servers = {}
-    local cursor = nil
-    for page = 1, 10 do
-        if not Teleporting then break end
+-- LOGIC HOP SERVER 1 PLAYER THỦ CÔNG (CLICK NÚT 1)
+local function manualHop1Player()
+    if Teleporting then return end
+    Teleporting = true
+    updateUI()
+    Hop1Btn.Text = "⏳ ĐANG QUÉT 1 PLAYER..."
 
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor and cursor ~= "" then url = url .. "&cursor=" .. HttpService:UrlEncode(cursor) end
+    task.spawn(function()
+        local cursor = ""
+        local candidates = {}
 
-        local ok, result = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
-        if not ok or not result or not result.data then break end
+        for page = 1, 12 do
+            local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            if cursor ~= "" then url = url .. "&cursor=" .. HttpService:UrlEncode(cursor) end
 
-        for _, s in ipairs(result.data) do
-            if s.id and s.id ~= CurrentJobId and tonumber(s.playing) and tonumber(s.playing) <= 2 and tonumber(s.maxPlayers) > 1 then
-                if not table.find(getgenv().VisitedServers, s.id) then
-                    table.insert(servers, s.id)
+            local ok, result = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
+            if ok and result and result.data then
+                for _, s in ipairs(result.data) do
+                    if s.id and s.id ~= CurrentJobId and tonumber(s.playing) == 1 and tonumber(s.maxPlayers) > 1 then
+                        if not table.find(getgenv().VisitedServers, s.id) then
+                            table.insert(candidates, s.id)
+                        end
+                    end
                 end
             end
+
+            cursor = result and result.nextPageCursor or ""
+            if #candidates > 0 or cursor == "" then break end
+            task.wait(0.1)
         end
 
-        cursor = result.nextPageCursor
-        if #servers > 0 or not cursor or cursor == "" then break end
-        task.wait(0.1)
-    end
-    return servers
+        if #candidates > 0 then
+            local chosen = candidates[math.random(1, #candidates)]
+            table.insert(getgenv().VisitedServers, chosen)
+            pcall(function() TeleportService:TeleportToPlaceInstance(PlaceId, chosen, LocalPlayer) end)
+            task.wait(8)
+            if game.JobId == CurrentJobId then Teleporting = false end
+        else
+            warn("[AutoHop] Không thấy server 1 người. Đang làm sạch bộ nhớ...")
+            getgenv().VisitedServers = {CurrentJobId}
+            Teleporting = false
+        end
+
+        Hop1Btn.Text = "⚡ HOP SERVER 1 PLAYER"
+        updateUI()
+    end)
 end
 
--- LOGIC THỰC THI HOP
-local function doHop()
+-- LOGIC CỦA AUTO HOP KHI QUÁ GIỚI HẠN
+local function doAutoHop()
     if Teleporting then return end
     Teleporting = true
     updateUI()
 
     task.spawn(function()
-        local servers = getServers()
+        local cursor = ""
+        local servers = {}
+        for page = 1, 10 do
+            local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            if cursor ~= "" then url = url .. "&cursor=" .. HttpService:UrlEncode(cursor) end
+
+            local ok, result = pcall(function() return HttpService:JSONDecode(game:HttpGet(url)) end)
+            if ok and result and result.data then
+                for _, s in ipairs(result.data) do
+                    if s.id and s.id ~= CurrentJobId and tonumber(s.playing) and tonumber(s.playing) <= 2 and tonumber(s.maxPlayers) > 1 then
+                        if not table.find(getgenv().VisitedServers, s.id) then
+                            table.insert(servers, s.id)
+                        end
+                    end
+                end
+            end
+
+            cursor = result and result.nextPageCursor or ""
+            if #servers > 0 or cursor == "" then break end
+            task.wait(0.1)
+        end
+
         if #servers > 0 then
             local chosen = servers[math.random(1, #servers)]
             table.insert(getgenv().VisitedServers, chosen)
-            
             pcall(function() TeleportService:TeleportToPlaceInstance(PlaceId, chosen, LocalPlayer) end)
-            
-            task.wait(10)
-            if game.JobId == CurrentJobId then Teleporting = false end -- Teleport fail
+            task.wait(8)
+            if game.JobId == CurrentJobId then Teleporting = false end
         else
-            warn("[AutoHop] Không thấy server vắng. Đang Reset bộ nhớ...")
             getgenv().VisitedServers = {CurrentJobId}
             Teleporting = false
         end
@@ -249,23 +298,25 @@ task.spawn(function()
     while task.wait(1) do
         if not GUI.Parent then break end
 
-        -- Cập nhật label số người chơi
         local pCount = #Players:GetPlayers()
         PlayerCountLabel.Text = "👤 Đang có: " .. pCount .. " người"
+        
         if pCount > HopLimit then
-            PlayerCountLabel.TextColor3 = Color3.fromRGB(255, 80, 80) -- Đỏ báo động
+            PlayerCountLabel.TextColor3 = Color3.fromRGB(255, 80, 80) -- Màu đỏ báo động
         else
-            PlayerCountLabel.TextColor3 = Color3.fromRGB(150, 255, 150) -- Xanh an toàn
+            PlayerCountLabel.TextColor3 = Color3.fromRGB(150, 255, 150) -- Màu xanh an toàn
         end
 
-        -- Kích hoạt Hop nếu Đang Bật + Đạt điều kiện + Chưa Teleport
+        -- Tự nhảy nếu Bật Auto Hop và số người quá giới hạn
         if Enabled and not Teleporting and pCount > HopLimit then
-            doHop()
+            doAutoHop()
         end
     end
 end)
 
 -- SỰ KIỆN CLICK NÚT
+Hop1Btn.Activated:Connect(manualHop1Player)
+
 MainBtn.Activated:Connect(function()
     Enabled = not Enabled
     saveState()
@@ -274,7 +325,7 @@ end)
 
 ModeBtn.Activated:Connect(function()
     if HopLimit == 4 then
-        HopLimit = 2 -- Hop khi có 3 người (nghĩa là > 2)
+        HopLimit = 2 -- Hop khi có 3 người (> 2)
     else
         HopLimit = 4 -- Hop khi > 4 người
     end
@@ -285,6 +336,7 @@ end)
 TeleportService.TeleportInitFailed:Connect(function(player)
     if player == LocalPlayer then
         Teleporting = false
+        Hop1Btn.Text = "⚡ HOP SERVER 1 PLAYER"
         updateUI()
     end
 end)
