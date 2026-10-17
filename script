@@ -1,6 +1,209 @@
+-- NHAT INTRO LOGO | LocalScript / Delta Executor
+-- Logo: 91844014610757
+-- N -> H (1.2s) -> Ậ (1.3s) -> T (1.4s), sau đó 1.3s nhấn nhá cả chữ NHẬT.
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local ContentProvider = game:GetService("ContentProvider")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+if not player then return end
+
+pcall(function()
+    local old = CoreGui:FindFirstChild("NHAT_Logo_Intro")
+    if old then old:Destroy() end
+end)
+
+local playerGui
+pcall(function()
+    playerGui = player:FindFirstChildOfClass("PlayerGui")
+    if playerGui then
+        local old = playerGui:FindFirstChild("NHAT_Logo_Intro")
+        if old then old:Destroy() end
+    end
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NHAT_Logo_Intro"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 999999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local parented = false
+pcall(function()
+    gui.Parent = CoreGui
+    parented = gui.Parent == CoreGui
+end)
+if not parented then
+    gui.Parent = playerGui or player:WaitForChild("PlayerGui")
+end
+
+local background = Instance.new("Frame")
+background.Name = "Background"
+background.Size = UDim2.fromScale(1, 1)
+background.BackgroundColor3 = Color3.fromRGB(7, 7, 10)
+background.BackgroundTransparency = 0.12
+background.BorderSizePixel = 0
+background.Parent = gui
+
+local logo = Instance.new("ImageLabel")
+logo.Name = "Logo"
+logo.AnchorPoint = Vector2.new(0.5, 0.5)
+logo.Position = UDim2.fromScale(0.5, 0.405)
+logo.Size = UDim2.fromOffset(150, 150)
+logo.BackgroundTransparency = 1
+logo.Image = "rbxassetid://91844014610757"
+logo.ScaleType = Enum.ScaleType.Fit
+logo.ImageTransparency = 1
+logo.Parent = background
+
+-- Âm thanh intro: phát sau khi logo xuất hiện được 3 giây
+local introSound = Instance.new("Sound")
+introSound.Name = "NHAT_Intro_Sound"
+introSound.SoundId = "rbxassetid://121453025586047"
+introSound.Volume = 1
+introSound.Looped = false
+introSound.Parent = SoundService
+
+-- Cố gắng tải trước audio; nếu ID bị khóa/không hợp lệ, Roblox vẫn có thể không tải được.
+task.spawn(function()
+    pcall(function()
+        ContentProvider:PreloadAsync({introSound})
+    end)
+end)
+
+
+local logoScale = Instance.new("UIScale")
+logoScale.Scale = 0.72
+logoScale.Parent = logo
+
+local chars = {"N", "H", "Ậ", "T"}
+local xOffsets = {-105, -35, 35, 105}
+local labels = {}
+
+for i, char in ipairs(chars) do
+    local label = Instance.new("TextLabel")
+    label.Name = "Letter_" .. i
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.Position = UDim2.new(0.5, xOffsets[i], 1, 100)
+    label.Size = UDim2.fromOffset(64, 72)
+    label.BackgroundTransparency = 1
+    label.Text = char
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextTransparency = 1
+    label.TextSize = 46
+    label.Font = Enum.Font.Creepster
+    label.TextStrokeColor3 = Color3.fromRGB(255, 126, 45)
+    label.TextStrokeTransparency = 1
+    label.ZIndex = 5
+    label.Parent = background
+
+    local scale = Instance.new("UIScale")
+    scale.Scale = 0.55
+    scale.Parent = label
+    labels[i] = label
+end
+
+local function tween(object, duration, properties, style, direction)
+    local animation = TweenService:Create(
+        object,
+        TweenInfo.new(duration, style or Enum.EasingStyle.Quint,
+            direction or Enum.EasingDirection.Out),
+        properties
+    )
+    animation:Play()
+    return animation
+end
+
+-- Logo fades in and gently scales up in the center.
+tween(logo, 0.7, {ImageTransparency = 0}, Enum.EasingStyle.Quad)
+tween(logoScale, 0.8, {Scale = 1}, Enum.EasingStyle.Back)
+
+-- Đợi logo xuất hiện 3 giây rồi thử phát audio.
+-- Chờ tải tối đa 5 giây để tránh treo intro nếu ID không tải được.
+task.delay(3, function()
+    if not gui.Parent or not introSound.Parent then return end
+
+    local deadline = os.clock() + 5
+    while not introSound.IsLoaded and os.clock() < deadline and gui.Parent do
+        task.wait(0.1)
+    end
+
+    if gui.Parent and introSound.IsLoaded then
+        pcall(function()
+            SoundService:PlayLocalSound(introSound)
+        end)
+    else
+        warn("[NHAT Intro] Audio chưa tải được. Kiểm tra ID, quyền truy cập và âm lượng Roblox.")
+    end
+end)
+
+-- Each letter rises from below the screen to a row under the logo.
+-- Start times relative to the 3-second point: N=0s, H=1.2s, Ậ=2.5s, T=3.9s.
+local letterStartTime = 3
+local delays = {
+    letterStartTime,
+    letterStartTime + 1.2,
+    letterStartTime + 1.2 + 1.3,
+    letterStartTime + 1.2 + 1.3 + 1.4
+}
+for i, label in ipairs(labels) do
+    task.delay(delays[i], function()
+        if not gui.Parent or not label.Parent then return end
+
+        tween(label, 0.62, {
+            Position = UDim2.new(0.5, xOffsets[i], 0.565, 0),
+            TextTransparency = 0,
+            TextStrokeTransparency = 0.35
+        }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+        local scale = label:FindFirstChildOfClass("UIScale")
+        if scale then
+            tween(scale, 0.62, {Scale = 1}, Enum.EasingStyle.Back)
+        end
+    end)
+end
+
+-- 1.3 seconds after T's start, briefly highlight the complete word.
+task.delay(letterStartTime + 1.2 + 1.3 + 1.4 + 1.3, function()
+    if not gui.Parent then return end
+
+    for _, label in ipairs(labels) do
+        if label.Parent then
+            tween(label, 0.22, {
+                TextColor3 = Color3.fromRGB(255, 157, 72),
+                TextStrokeTransparency = 0.05
+            }, Enum.EasingStyle.Quad)
+        end
+    end
+
+    task.wait(0.65)
+    if not gui.Parent then return end
+
+    tween(background, 0.55, {BackgroundTransparency = 1}, Enum.EasingStyle.Quad)
+    tween(logo, 0.55, {ImageTransparency = 1}, Enum.EasingStyle.Quad)
+    for _, label in ipairs(labels) do
+        if label.Parent then
+            tween(label, 0.45, {
+                TextTransparency = 1,
+                TextStrokeTransparency = 1
+            }, Enum.EasingStyle.Quad)
+        end
+    end
+
+    task.wait(0.6)
+    if gui.Parent then gui:Destroy() end
+end)
+
+
+-- Đợi intro NHẬT hoàn tất trước khi tạo menu chính.
+task.wait(9.7)
 
 --[[
-    WALL REMOVER + ANTI BOSS FLING
+    WALL REMOVER + ANTI BOSS FLING (Esports Dragon Theme)
     Delta Executor Android
     Client-side only
 ]]
@@ -14,7 +217,17 @@ local Player = Players.LocalPlayer
 local EnabledFling = true
 local EnabledWalls = false
 local Connections = {}
+local UIConnections = {}
 local DeletedWalls = 0
+
+-- Bypass Speed + Reset
+local MIN_SPEED = 1
+local MAX_SPEED = 200
+local BYPASS_SPEED = 100
+local BypassEnabled = false
+local ANIMATION_ID = "rbxassetid://15423851508"
+local currentAnimationTrack = nil
+local speedEnforcementConnection = nil
 
 -- Xóa kết nối cũ
 local function clearConnections()
@@ -40,13 +253,24 @@ local function setupCharacter(character)
     table.insert(Connections, RunService.PreSimulation:Connect(function()
         if not EnabledFling
             or not character.Parent
+            or not humanoid.Parent
             or humanoid.Health <= 0 then
             return
         end
 
-        local velocity = root.AssemblyLinearVelocity
+        local state = humanoid:GetState()
+        if state == Enum.HumanoidStateType.Ragdoll
+            or state == Enum.HumanoidStateType.Physics
+            or state == Enum.HumanoidStateType.FallingDown then
+            return
+        end
 
-        if velocity.Magnitude > 35 then
+        local velocity = root.AssemblyLinearVelocity
+        local flingThreshold = BypassEnabled
+            and math.max(80, BYPASS_SPEED * 2)
+            or 35
+
+        if velocity.Magnitude > flingThreshold then
             pcall(function()
                 root.AssemblyLinearVelocity = Vector3.zero
                 root.AssemblyAngularVelocity = Vector3.zero
@@ -59,11 +283,33 @@ if Player.Character then
     task.spawn(setupCharacter, Player.Character)
 end
 
-Player.CharacterAdded:Connect(setupCharacter)
+Player.CharacterAdded:Connect(function(character)
+    if currentAnimationTrack then
+        pcall(function()
+            currentAnimationTrack:Stop()
+            currentAnimationTrack:Destroy()
+        end)
+        currentAnimationTrack = nil
+    end
+    task.spawn(setupCharacter, character)
+    task.spawn(function()
+        local humanoid = character:WaitForChild("Humanoid", 10)
+        if humanoid then
+            if BypassEnabled then
+                humanoid.WalkSpeed = BYPASS_SPEED
+            end
+            local camera = Workspace.CurrentCamera
+            if camera then
+                camera.CameraType = Enum.CameraType.Custom
+                camera.CameraSubject = humanoid
+            end
+        end
+    end)
+end)
 
--- Menu
+-- ==================== GIAO DIỆN ESPORTS DRAGON THEME ====================
 local gui = Instance.new("ScreenGui")
-gui.Name = "AntiFlingWallMenu"
+gui.Name = "NHAT_DRAGON_COMPLETE"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 
@@ -76,53 +322,98 @@ if not gui.Parent then
 end
 
 local main = Instance.new("Frame")
-main.Size = UDim2.fromOffset(270, 245)
-main.Position = UDim2.new(0.5, -135, 0.35, 0)
-main.BackgroundColor3 = Color3.fromRGB(22, 22, 25)
+main.Size = UDim2.fromOffset(580, 310)
+main.Position = UDim2.new(0.5, -290, 0.32, 0)
+main.BackgroundColor3 = Color3.fromRGB(18, 18, 24) -- Nền dự phòng
+main.BackgroundTransparency = 1 -- Cho phép nhìn thấy ImageLabel bên dưới
 main.BorderSizePixel = 0
 main.Active = true
 main.Parent = gui
 
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
 
+-- Ảnh nền menu theo ID người dùng cung cấp
+local menuBackground = Instance.new("ImageLabel")
+menuBackground.Name = "MenuBackground"
+menuBackground.Size = UDim2.fromScale(1, 1)
+menuBackground.Position = UDim2.fromScale(0, 0)
+menuBackground.BackgroundTransparency = 1
+menuBackground.Image = "rbxassetid://74574722109267"
+menuBackground.ImageTransparency = 0.12
+menuBackground.ScaleType = Enum.ScaleType.Crop
+menuBackground.ZIndex = 1
+menuBackground.Parent = main
+Instance.new("UICorner", menuBackground).CornerRadius = UDim.new(0, 14)
+
+-- Lớp phủ tối nhẹ giúp chữ dễ đọc
+local imageTint = Instance.new("Frame")
+imageTint.Name = "BackgroundTint"
+imageTint.Size = UDim2.fromScale(1, 1)
+imageTint.BackgroundColor3 = Color3.fromRGB(5, 8, 12)
+imageTint.BackgroundTransparency = 0.48
+imageTint.BorderSizePixel = 0
+imageTint.ZIndex = 2
+imageTint.Parent = main
+Instance.new("UICorner", imageTint).CornerRadius = UDim.new(0, 14)
+
+-- Viền phát sáng vàng/cam phong cách rồng lửa (Esports Stroke)
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(65, 65, 75)
-stroke.Thickness = 1
+stroke.Color = Color3.fromRGB(235, 120, 30)
+stroke.Thickness = 2
 stroke.Parent = main
 
+-- Thanh tiêu đề
+local titleContainer = Instance.new("Frame")
+titleContainer.Size = UDim2.new(1, 0, 0, 46)
+titleContainer.BackgroundColor3 = Color3.fromRGB(12, 14, 22)
+titleContainer.BackgroundTransparency = 0.22
+titleContainer.BorderSizePixel = 0
+titleContainer.Parent = main
+ titleContainer.ZIndex = 4
+Instance.new("UICorner", titleContainer).CornerRadius = UDim.new(0, 14)
+
+-- Sửa góc dưới thanh tiêu đề cho phẳng
+local coverFix = Instance.new("Frame")
+coverFix.Size = UDim2.new(1, 0, 0, 10)
+coverFix.Position = UDim2.new(0, 0, 1, -10)
+coverFix.BackgroundColor3 = Color3.fromRGB(12, 14, 22)
+coverFix.BackgroundTransparency = 0.22
+coverFix.BorderSizePixel = 0
+coverFix.Parent = titleContainer
+coverFix.ZIndex = 4
+
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -45, 0, 42)
-title.Position = UDim2.fromOffset(12, 0)
+title.Size = UDim2.new(1, -50, 1, 0)
+title.Position = UDim2.fromOffset(14, 0)
 title.BackgroundTransparency = 1
-title.Text = "WALL + ANTI FLING"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-title.Parent = main
+title.Text = "NGUYỄN VĂN NHẬT | GAMING"
+title.TextColor3 = Color3.fromRGB(255, 200, 80) -- Màu vàng kim chủ đạo
+title.Font = Enum.Font.Creepster
+title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = titleContainer
+title.ZIndex = 5
 
-local minimize = Instance.new("TextButton")
-minimize.Size = UDim2.fromOffset(32, 30)
-minimize.Position = UDim2.new(1, -38, 0, 6)
-minimize.BackgroundColor3 = Color3.fromRGB(48, 48, 55)
-minimize.Text = "—"
-minimize.TextColor3 = Color3.new(1, 1, 1)
-minimize.TextSize = 20
-minimize.Parent = main
-Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 8)
-
+-- Hàm tạo nút Toggle phong cách Gaming Panel
 local function createToggle(text, y, initial, callback)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -24, 0, 44)
-    button.Position = UDim2.fromOffset(12, y)
+    button.Size = UDim2.fromOffset(250, 42)
+    button.Position = UDim2.fromOffset(14, y)
+    button.ZIndex = 4
     button.BackgroundColor3 = initial
-        and Color3.fromRGB(54, 190, 105)
-        or Color3.fromRGB(65, 65, 72)
+        and Color3.fromRGB(220, 70, 35) -- Đỏ lửa khi ON
+        or Color3.fromRGB(35, 32, 42)   -- Tối khi OFF
     button.TextColor3 = Color3.new(1, 1, 1)
     button.Font = Enum.Font.GothamBold
-    button.TextSize = 14
+    button.TextSize = 13
     button.Text = text .. (initial and "  [ON]" or "  [OFF]")
     button.Parent = main
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 9)
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = initial and Color3.fromRGB(255, 180, 50) or Color3.fromRGB(60, 55, 70)
+    btnStroke.Thickness = 1
+    btnStroke.Parent = button
 
     local state = initial
 
@@ -130,8 +421,9 @@ local function createToggle(text, y, initial, callback)
         state = not state
         button.Text = text .. (state and "  [ON]" or "  [OFF]")
         button.BackgroundColor3 = state
-            and Color3.fromRGB(54, 190, 105)
-            or Color3.fromRGB(65, 65, 72)
+            and Color3.fromRGB(220, 70, 35)
+            or Color3.fromRGB(35, 32, 42)
+        btnStroke.Color = state and Color3.fromRGB(255, 180, 50) or Color3.fromRGB(60, 55, 70)
 
         callback(state)
     end)
@@ -139,11 +431,11 @@ local function createToggle(text, y, initial, callback)
     return button
 end
 
-createToggle("Anti Boss Fling", 55, true, function(state)
+createToggle("Anti Boss Fling", 60, true, function(state)
     EnabledFling = state
 end)
 
-createToggle("Xóa tường Zone1–9", 108, false, function(state)
+createToggle("Xóa tường Zone1–9", 112, false, function(state)
     EnabledWalls = state
 
     if not state then
@@ -192,28 +484,287 @@ createToggle("Xóa tường Zone1–9", 108, false, function(state)
     print("Đã xóa " .. count .. " Part giống tường ở client.")
 end)
 
+-- Speed slider (1–200)
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.fromOffset(260, 20)
+speedLabel.Position = UDim2.fromOffset(294, 60)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "BYPASS SPEED: " .. BYPASS_SPEED
+speedLabel.TextColor3 = Color3.fromRGB(255, 180, 50)
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 12
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = main
+speedLabel.ZIndex = 4
+
+local sliderBar = Instance.new("TextButton")
+sliderBar.Size = UDim2.fromOffset(250, 14)
+sliderBar.Position = UDim2.fromOffset(300, 84)
+sliderBar.BackgroundColor3 = Color3.fromRGB(35, 32, 42)
+sliderBar.Text = ""
+sliderBar.AutoButtonColor = false
+sliderBar.Parent = main
+sliderBar.ZIndex = 4
+Instance.new("UICorner", sliderBar).CornerRadius = UDim.new(1, 0)
+
+local function speedFraction()
+    return (BYPASS_SPEED - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)
+end
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(speedFraction(), 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(235, 120, 30)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBar
+sliderFill.ZIndex = 5
+Instance.new("UICorner", sliderFill).CornerRadius = UDim.new(1, 0)
+
+local sliderKnob = Instance.new("Frame")
+sliderKnob.Size = UDim2.fromOffset(20, 20)
+sliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+sliderKnob.Position = UDim2.new(speedFraction(), 0, 0.5, 0)
+sliderKnob.BackgroundColor3 = Color3.fromRGB(255, 230, 150)
+sliderKnob.BorderSizePixel = 0
+sliderKnob.Parent = sliderBar
+sliderKnob.ZIndex = 6
+Instance.new("UICorner", sliderKnob).CornerRadius = UDim.new(1, 0)
+
+local function applySpeedToCurrentHumanoid()
+    local character = Player.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = BYPASS_SPEED
+    end
+end
+
+speedEnforcementConnection = RunService.PreSimulation:Connect(function()
+    if not BypassEnabled then return end
+    local character = Player.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.Health > 0 then
+        local state = humanoid:GetState()
+        if state ~= Enum.HumanoidStateType.Ragdoll
+            and state ~= Enum.HumanoidStateType.Physics
+            and state ~= Enum.HumanoidStateType.FallingDown
+            and humanoid.WalkSpeed ~= BYPASS_SPEED then
+            humanoid.WalkSpeed = BYPASS_SPEED
+        end
+    end
+end)
+
+local function setSpeedFromFraction(fraction)
+    fraction = math.clamp(fraction, 0, 1)
+    BYPASS_SPEED = math.clamp(
+        math.floor(MIN_SPEED + fraction * (MAX_SPEED - MIN_SPEED) + 0.5),
+        MIN_SPEED,
+        MAX_SPEED
+    )
+    local fill = speedFraction()
+    sliderFill.Size = UDim2.new(fill, 0, 1, 0)
+    sliderKnob.Position = UDim2.new(fill, 0, 0.5, 0)
+    speedLabel.Text = "BYPASS SPEED: " .. BYPASS_SPEED
+    applySpeedToCurrentHumanoid()
+end
+
+local function updateSlider(input)
+    local width = sliderBar.AbsoluteSize.X
+    if width <= 0 then return end
+    local fraction = (input.Position.X - sliderBar.AbsolutePosition.X) / width
+    setSpeedFromFraction(fraction)
+end
+
+local sliderDragging = false
+sliderBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        sliderDragging = true
+        updateSlider(input)
+    end
+end)
+
+table.insert(UIConnections, UserInputService.InputChanged:Connect(function(input)
+    if sliderDragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        updateSlider(input)
+    end
+end))
+
+table.insert(UIConnections, UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        sliderDragging = false
+    end
+end))
+
+-- Bypass Speed button
+local bypassButton = Instance.new("TextButton")
+bypassButton.Size = UDim2.fromOffset(250, 36)
+bypassButton.Position = UDim2.fromOffset(294, 112)
+bypassButton.BackgroundColor3 = Color3.fromRGB(45, 35, 30)
+bypassButton.Text = "BYPASS SPEED"
+bypassButton.TextColor3 = Color3.fromRGB(255, 180, 50)
+bypassButton.Font = Enum.Font.GothamBold
+bypassButton.TextSize = 13
+bypassButton.Parent = main
+bypassButton.ZIndex = 4
+Instance.new("UICorner", bypassButton).CornerRadius = UDim.new(0, 8)
+
+local bypassStroke = Instance.new("UIStroke")
+bypassStroke.Color = Color3.fromRGB(235, 120, 30)
+bypassStroke.Thickness = 1
+bypassStroke.Parent = bypassButton
+
+local function stopSpeedAnimation()
+    if currentAnimationTrack then
+        pcall(function()
+            currentAnimationTrack:Stop()
+            currentAnimationTrack:Destroy()
+        end)
+        currentAnimationTrack = nil
+    end
+end
+
+local function bypassSpeed()
+    local character = Player.Character
+    if not character then return end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return end
+
+    BypassEnabled = not BypassEnabled
+    if BypassEnabled then
+        humanoid.WalkSpeed = BYPASS_SPEED
+        bypassButton.Text = "BYPASS SPEED [ON]"
+        bypassButton.BackgroundColor3 = Color3.fromRGB(220, 70, 35)
+        bypassButton.TextColor3 = Color3.new(1, 1, 1)
+
+        stopSpeedAnimation()
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if not animator then
+            animator = Instance.new("Animator")
+            animator.Parent = humanoid
+        end
+
+        local animation = Instance.new("Animation")
+        animation.AnimationId = ANIMATION_ID
+        local ok, track = pcall(function()
+            return animator:LoadAnimation(animation)
+        end)
+        if ok and track then
+            currentAnimationTrack = track
+            track.Priority = Enum.AnimationPriority.Action
+            track.Looped = true
+            if humanoid:GetState() ~= Enum.HumanoidStateType.Ragdoll
+                and humanoid:GetState() ~= Enum.HumanoidStateType.Physics
+                and humanoid:GetState() ~= Enum.HumanoidStateType.FallingDown then
+                track:Play()
+            end
+        end
+
+        table.insert(Connections, humanoid.StateChanged:Connect(function(_, newState)
+            if newState == Enum.HumanoidStateType.Ragdoll
+                or newState == Enum.HumanoidStateType.Physics
+                or newState == Enum.HumanoidStateType.FallingDown then
+                stopSpeedAnimation()
+            elseif BypassEnabled and currentAnimationTrack == nil then
+                local currentAnimator = humanoid:FindFirstChildOfClass("Animator")
+                if currentAnimator then
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = ANIMATION_ID
+                    local success, newTrack = pcall(function()
+                        return currentAnimator:LoadAnimation(anim)
+                    end)
+                    if success and newTrack then
+                        currentAnimationTrack = newTrack
+                        newTrack.Priority = Enum.AnimationPriority.Action
+                        newTrack.Looped = true
+                        newTrack:Play()
+                    end
+                end
+            end
+        end))
+
+        pcall(function()
+            humanoid:ChangeState(Enum.HumanoidStateType.Ragdoll)
+        end)
+        task.delay(0.65, function()
+            if BypassEnabled and Player.Character == character
+                and humanoid.Parent and humanoid.Health > 0 then
+                pcall(function()
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                end)
+                task.delay(0.15, function()
+                    if BypassEnabled and Player.Character == character
+                        and humanoid.Parent and humanoid.Health > 0 then
+                        pcall(function()
+                            humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                        end)
+                        humanoid.WalkSpeed = BYPASS_SPEED
+                    end
+                end)
+            end
+        end)
+    else
+        stopSpeedAnimation()
+        bypassButton.Text = "BYPASS SPEED [OFF]"
+        bypassButton.BackgroundColor3 = Color3.fromRGB(45, 35, 30)
+        bypassButton.TextColor3 = Color3.fromRGB(255, 180, 50)
+        humanoid.WalkSpeed = 16
+    end
+end
+
+bypassButton.Activated:Connect(bypassSpeed)
+
+-- Reset button
+local resetButton = Instance.new("TextButton")
+resetButton.Size = UDim2.fromOffset(250, 36)
+resetButton.Position = UDim2.fromOffset(294, 156)
+resetButton.BackgroundColor3 = Color3.fromRGB(160, 45, 45)
+resetButton.Text = "RESET  |  Y = -30"
+resetButton.TextColor3 = Color3.new(1, 1, 1)
+resetButton.Font = Enum.Font.GothamBold
+resetButton.TextSize = 13
+resetButton.Parent = main
+resetButton.ZIndex = 4
+Instance.new("UICorner", resetButton).CornerRadius = UDim.new(0, 8)
+
+resetButton.Activated:Connect(function()
+    local character = Player.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local position = root.Position
+    root.CFrame = CFrame.new(position.X, -30, position.Z)
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+end)
+
 local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, -24, 0, 30)
-status.Position = UDim2.fromOffset(12, 163)
+status.Size = UDim2.fromOffset(260, 22)
+status.Position = UDim2.fromOffset(14, 222)
 status.BackgroundTransparency = 1
-status.Text = "CLIENT MODE  |  READY"
-status.TextColor3 = Color3.fromRGB(150, 150, 160)
+status.Text = "IMAGE THEME | READY"
+status.TextColor3 = Color3.fromRGB(140, 140, 155)
 status.Font = Enum.Font.Gotham
-status.TextSize = 11
+status.TextSize = 10
 status.Parent = main
+status.ZIndex = 4
 
 local close = Instance.new("TextButton")
-close.Size = UDim2.new(1, -24, 0, 34)
-close.Position = UDim2.fromOffset(12, 198)
-close.BackgroundColor3 = Color3.fromRGB(145, 48, 55)
+close.Size = UDim2.fromOffset(250, 34)
+close.Position = UDim2.fromOffset(294, 204)
+close.BackgroundColor3 = Color3.fromRGB(140, 40, 40)
 close.Text = "ĐÓNG MENU"
 close.TextColor3 = Color3.new(1, 1, 1)
 close.Font = Enum.Font.GothamBold
-close.TextSize = 13
+close.TextSize = 12
 close.Parent = main
+close.ZIndex = 4
 Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
 
--- Kéo menu bằng chuột hoặc cảm ứng
+-- Kéo menu
 local dragging = false
 local dragStart
 local startPosition
@@ -249,34 +800,169 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Thu gọn và mở lại
-local mini = Instance.new("TextButton")
-mini.Size = UDim2.fromOffset(110, 36)
-mini.Position = UDim2.new(0, 12, 0.5, 0)
-mini.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-mini.Text = "OPEN MENU"
-mini.TextColor3 = Color3.new(1, 1, 1)
-mini.Font = Enum.Font.GothamBold
-mini.TextSize = 12
-mini.Visible = false
-mini.Parent = gui
-Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 9)
+-- Nút capsule ngang nổi: thay thế nút OPEN MENU cũ
+local TweenService = game:GetService("TweenService")
+local launcherGlow = Instance.new("Frame")
+launcherGlow.Name = "LauncherGlow"
+launcherGlow.Size = UDim2.fromOffset(164, 48)
+launcherGlow.Position = UDim2.new(0, 22, 0.58, -3)
+launcherGlow.BackgroundColor3 = Color3.fromRGB(255, 104, 30)
+launcherGlow.BackgroundTransparency = 0.72
+launcherGlow.BorderSizePixel = 0
+launcherGlow.ZIndex = 8
+launcherGlow.Parent = gui
+Instance.new("UICorner", launcherGlow).CornerRadius = UDim.new(1, 0)
 
-minimize.Activated:Connect(function()
-    main.Visible = false
-    mini.Visible = true
+local launcher = Instance.new("TextButton")
+launcher.Name = "DragonLauncher"
+launcher.Size = UDim2.fromOffset(158, 42)
+launcher.Position = UDim2.new(0, 25, 0.58, 0)
+launcher.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
+launcher.BorderSizePixel = 0
+launcher.AutoButtonColor = false
+launcher.Text = ""
+launcher.ZIndex = 9
+launcher.Parent = gui
+Instance.new("UICorner", launcher).CornerRadius = UDim.new(1, 0)
+local launcherStroke = Instance.new("UIStroke")
+launcherStroke.Color = Color3.fromRGB(255, 145, 52)
+launcherStroke.Thickness = 1.6
+launcherStroke.Parent = launcher
+local launcherGradient = Instance.new("UIGradient")
+launcherGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(39, 24, 22)),
+    ColorSequenceKeypoint.new(0.52, Color3.fromRGB(17, 20, 28)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(34, 18, 34))
+})
+launcherGradient.Parent = launcher
+
+local iconBox = Instance.new("Frame")
+iconBox.Size = UDim2.fromOffset(28, 28)
+iconBox.Position = UDim2.fromOffset(7, 7)
+iconBox.BackgroundColor3 = Color3.fromRGB(255, 132, 42)
+iconBox.BorderSizePixel = 0
+iconBox.ZIndex = 10
+iconBox.Parent = launcher
+Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 10)
+local iconImage = Instance.new("ImageLabel")
+iconImage.Size = UDim2.fromScale(1, 1)
+iconImage.BackgroundTransparency = 1
+iconImage.Image = "rbxassetid://91844014610757"
+iconImage.ScaleType = Enum.ScaleType.Fit
+iconImage.ZIndex = 11
+iconImage.Parent = iconBox
+
+local launcherName = Instance.new("TextLabel")
+launcherName.BackgroundTransparency = 1
+launcherName.Position = UDim2.fromOffset(42, 5)
+launcherName.Size = UDim2.fromOffset(77, 18)
+launcherName.Font = Enum.Font.Creepster
+launcherName.Text = "NHAT"
+launcherName.TextColor3 = Color3.fromRGB(255, 225, 192)
+launcherName.TextSize = 12
+launcherName.TextXAlignment = Enum.TextXAlignment.Left
+launcherName.ZIndex = 10
+launcherName.Parent = launcher
+local launcherSub = Instance.new("TextLabel")
+launcherSub.BackgroundTransparency = 1
+launcherSub.Position = UDim2.fromOffset(42, 22)
+launcherSub.Size = UDim2.fromOffset(82, 13)
+launcherSub.Font = Enum.Font.GothamBold
+launcherSub.Text = "MENU • OPEN"
+launcherSub.TextColor3 = Color3.fromRGB(255, 153, 76)
+launcherSub.TextSize = 8
+launcherSub.TextXAlignment = Enum.TextXAlignment.Left
+launcherSub.ZIndex = 10
+launcherSub.Parent = launcher
+local launcherArrow = Instance.new("TextLabel")
+launcherArrow.BackgroundTransparency = 1
+launcherArrow.Position = UDim2.new(1, -25, 0, 0)
+launcherArrow.Size = UDim2.fromOffset(19, 42)
+launcherArrow.Font = Enum.Font.GothamBlack
+launcherArrow.Text = "‹"
+launcherArrow.TextColor3 = Color3.fromRGB(255, 194, 133)
+launcherArrow.TextSize = 25
+launcherArrow.ZIndex = 10
+launcherArrow.Parent = launcher
+
+local menuOpen = true
+local launcherBusy = false
+local launcherDragging = false
+local launcherMoved = false
+local launcherDragStart, launcherStartPos
+
+launcher.Activated:Connect(function()
+    if launcherMoved then launcherMoved = false return end
+    if launcherBusy then return end
+    launcherBusy = true
+    menuOpen = not menuOpen
+    if menuOpen then
+        main.Visible = true
+        main.BackgroundTransparency = 1
+        TweenService:Create(main, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0.5, -290, 0.32, 0)
+        }):Play()
+        launcherSub.Text = "MENU • OPEN"
+        launcherArrow.Text = "‹"
+    else
+        main.Visible = false
+        launcherSub.Text = "MENU • CLOSED"
+        launcherArrow.Text = "›"
+    end
+    TweenService:Create(launcher, TweenInfo.new(0.12), {Size = UDim2.fromOffset(151, 39)}):Play()
+    task.delay(0.14, function()
+        if launcher.Parent then
+            TweenService:Create(launcher, TweenInfo.new(0.16), {Size = UDim2.fromOffset(158, 42)}):Play()
+        end
+    end)
+    task.delay(0.25, function() launcherBusy = false end)
 end)
 
-mini.Activated:Connect(function()
-    main.Visible = true
-    mini.Visible = false
+launcher.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        launcherDragging = true
+        launcherMoved = false
+        launcherDragStart = input.Position
+        launcherStartPos = launcher.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if launcherDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - launcherDragStart
+        if math.abs(delta.X) + math.abs(delta.Y) > 8 then launcherMoved = true end
+        if launcherMoved then
+            local p = UDim2.new(launcherStartPos.X.Scale, launcherStartPos.X.Offset + delta.X,
+                launcherStartPos.Y.Scale, launcherStartPos.Y.Offset + delta.Y)
+            launcher.Position = p
+            launcherGlow.Position = UDim2.new(p.X.Scale, p.X.Offset - 3, p.Y.Scale, p.Y.Offset - 3)
+        end
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        launcherDragging = false
+    end
 end)
 
 close.Activated:Connect(function()
     EnabledFling = false
     EnabledWalls = false
+    BypassEnabled = false
+    sliderDragging = false
+    stopSpeedAnimation()
     clearConnections()
+    if speedEnforcementConnection then
+        speedEnforcementConnection:Disconnect()
+        speedEnforcementConnection = nil
+    end
+    for _, connection in ipairs(UIConnections) do
+        pcall(function()
+            connection:Disconnect()
+        end)
+    end
+    table.clear(UIConnections)
     gui:Destroy()
 end)
 
-print("[Wall + Anti Fling] Menu loaded")
+print("[Esports Dragon Menu] Loaded successfully!")
