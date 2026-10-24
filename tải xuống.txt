@@ -1,375 +1,179 @@
-
---============================================================
--- NHAT HUB | BAN SYSTEM TEST V4
--- Delta Executor Android
--- Duration: 8 hours
--- Expiry marker: Workspace.Roblox_Band
--- Vxeze Hub page displays script text only; does not execute it.
---============================================================
+--==================================================
+-- NHAT HUB | ACCOUNT WARNING UI
+-- Roblox Luau | LocalScript
+--==================================================
 
 local Players = game:GetService("Players")
-local Lighting = game:GetService("Lighting")
-local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
---==================== CONFIG ====================
+-- Xóa giao diện cũ nếu đã tồn tại
+local oldGui = playerGui:FindFirstChild("AccountWarningUI")
+if oldGui then
+    oldGui:Destroy()
+end
 
-local GUI_NAME = "NHAT_HUB_BAN_TEST_V4"
-local BLUR_NAME = "NHAT_HUB_BAN_BLUR_V4"
-local DURATION = 8 * 60 * 60 -- 8 tiếng = 28.800 giây
-
-local SCRIPT_URL =
-    "https://gist.githubusercontent.com/angeryy-tvy/6a9ce750ddf5860230196ac468868fdb/raw/Steal-An-Egg-Vxeze"
-
-local IMAGE_ID = "rbxassetid://139345508333759"
-
---==================== CLEANUP ====================
-
-pcall(function()
-    local old = PlayerGui:FindFirstChild(GUI_NAME)
-    if old then old:Destroy() end
-end)
-
-pcall(function()
-    local old = Lighting:FindFirstChild(BLUR_NAME)
-    if old then old:Destroy() end
-end)
-
---==================== BLUR ====================
-
-local blur = Instance.new("BlurEffect")
-blur.Name = BLUR_NAME
-blur.Size = 0
-blur.Parent = Lighting
-
-TweenService:Create(
-    blur,
-    TweenInfo.new(0.4),
-    {Size = 24}
-):Play()
-
---==================== SCREEN GUI ====================
-
+-- ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = GUI_NAME
-gui.IgnoreGuiInset = true
+gui.Name = "AccountWarningUI"
 gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
 gui.DisplayOrder = 999999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-gui.Parent = PlayerGui
+gui.Parent = playerGui
 
--- Nền phủ toàn màn hình
-local overlay = Instance.new("TextButton")
-overlay.Name = "FullScreenBlocker"
+-- Nền tối
+local overlay = Instance.new("Frame")
+overlay.Name = "Overlay"
 overlay.Size = UDim2.fromScale(1, 1)
-overlay.Position = UDim2.fromScale(0, 0)
-overlay.BackgroundColor3 = Color3.fromRGB(4, 4, 9)
-overlay.BackgroundTransparency = 0.16
-overlay.Text = ""
-overlay.AutoButtonColor = false
-overlay.Active = true
-overlay.Modal = true
-overlay.ZIndex = 1
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BackgroundTransparency = 0.35
+overlay.BorderSizePixel = 0
 overlay.Parent = gui
 
---==================== UI HELPERS ====================
+-- Bảng cảnh cáo
+local panel = Instance.new("Frame")
+panel.Name = "WarningPanel"
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.Position = UDim2.fromScale(0.5, 0.5)
+panel.Size = UDim2.new(0.88, 0, 0, 290)
+panel.BackgroundColor3 = Color3.fromRGB(18, 18, 23)
+panel.BorderSizePixel = 0
+panel.Parent = overlay
 
-local function addCorner(object, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = object
-end
+local sizeLimit = Instance.new("UISizeConstraint")
+sizeLimit.MaxSize = Vector2.new(420, 290)
+sizeLimit.MinSize = Vector2.new(260, 290)
+sizeLimit.Parent = panel
 
-local function addStroke(object, color, thickness)
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = color
-    stroke.Thickness = thickness
-    stroke.Parent = object
-end
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 16)
+corner.Parent = panel
 
-local function makeLabel(parent, name, text, size, position, textSize, color)
-    local label = Instance.new("TextLabel")
-    label.Name = name
-    label.Size = size
-    label.Position = position
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = color or Color3.fromRGB(240, 240, 248)
-    label.TextSize = textSize
-    label.Font = Enum.Font.GothamMedium
-    label.TextWrapped = true
-    label.ZIndex = 5
-    label.Parent = parent
-    return label
-end
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 55, 65)
+stroke.Thickness = 1.5
+stroke.Transparency = 0.1
+stroke.Parent = panel
 
-local function makeButton(parent, name, text, size, position, color)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Size = size
-    button.Position = position
-    button.BackgroundColor3 = color
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 13
-    button.Font = Enum.Font.GothamBold
-    button.AutoButtonColor = true
-    button.Active = true
-    button.ZIndex = 7
-    button.Parent = parent
-    addCorner(button, 9)
-    return button
-end
+-- Thanh đỏ phía trên
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 5)
+topBar.BackgroundColor3 = Color3.fromRGB(255, 45, 55)
+topBar.BorderSizePixel = 0
+topBar.Parent = panel
 
-local function makePanel(name, height, strokeColor)
-    local panel = Instance.new("Frame")
-    panel.Name = name
-    panel.AnchorPoint = Vector2.new(0.5, 0.5)
-    panel.Position = UDim2.fromScale(0.5, 0.5)
-    panel.Size = UDim2.new(0.88, 0, 0, height)
-    panel.BackgroundColor3 = Color3.fromRGB(15, 15, 23)
-    panel.BorderSizePixel = 0
-    panel.Active = true
-    panel.Visible = false
-    panel.ZIndex = 3
-    panel.Parent = overlay
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0, 8)
+barCorner.Parent = topBar
 
-    addCorner(panel, 16)
-    addStroke(panel, strokeColor, 1.5)
+-- Biểu tượng cảnh báo
+local icon = Instance.new("TextLabel")
+icon.Size = UDim2.new(1, 0, 0, 55)
+icon.Position = UDim2.new(0, 0, 0, 17)
+icon.BackgroundTransparency = 1
+icon.Text = "⚠"
+icon.TextColor3 = Color3.fromRGB(255, 65, 75)
+icon.TextSize = 42
+icon.Font = Enum.Font.GothamBold
+icon.Parent = panel
 
-    local constraint = Instance.new("UISizeConstraint")
-    constraint.MinSize = Vector2.new(260, height)
-    constraint.MaxSize = Vector2.new(440, height)
-    constraint.Parent = panel
-
-    return panel
-end
-
---==================== MAIN BAN MENU ====================
-
-local panel = makePanel(
-    "MainMenu",
-    310,
-    Color3.fromRGB(225, 55, 75)
-)
-panel.Visible = true
-
-makeLabel(
-    panel, "Brand", "ROBLOX",
-    UDim2.new(1, -30, 0, 24),
-    UDim2.new(0, 15, 0, 15),
-    13, Color3.fromRGB(255, 85, 100)
-)
-
-local title = makeLabel(
-    panel, "BanTitle", "ACCOUNT RESTRICTION",
-    UDim2.new(1, -24, 0, 32),
-    UDim2.new(0, 12, 0, 45),
-    19, Color3.fromRGB(255, 255, 255)
-)
+-- Tiêu đề
+local title = Instance.new("TextLabel")
+title.Position = UDim2.new(0, 15, 0, 75)
+title.Size = UDim2.new(1, -30, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "CẢNH CÁO TÀI KHOẢN"
+title.TextColor3 = Color3.fromRGB(255, 65, 75)
+title.TextSize = 20
 title.Font = Enum.Font.GothamBold
+title.Parent = panel
 
-makeLabel(
-    panel, "BanDescription",
-    "Tài khoản của bạn đang trong thời gian kiểm thử",
-    UDim2.new(1, -30, 0, 38),
-    UDim2.new(0, 15, 0, 82),
-    13, Color3.fromRGB(205, 205, 218)
-)
+-- Nội dung
+local message = Instance.new("TextLabel")
+message.Position = UDim2.new(0, 22, 0, 120)
+message.Size = UDim2.new(1, -44, 0, 75)
+message.BackgroundTransparency = 1
+message.Text = "Lần này là cảnh cáo!\nNếu tiếp tục tái phạm,\ntài khoản sẽ bị BAN vĩnh viễn."
+message.TextColor3 = Color3.fromRGB(235, 235, 240)
+message.TextSize = 15
+message.Font = Enum.Font.Gotham
+message.TextWrapped = true
+message.TextXAlignment = Enum.TextXAlignment.Center
+message.TextYAlignment = Enum.TextYAlignment.Center
+message.Parent = panel
 
-makeLabel(
-    panel, "DurationLabel", "Thời hạn: 8 giờ",
-    UDim2.new(1, -30, 0, 22),
-    UDim2.new(0, 15, 0, 125),
-    13, Color3.fromRGB(255, 105, 115)
-)
+-- Nút mở khóa tài khoản
+local button = Instance.new("TextButton")
+button.Name = "UnlockAccountButton"
+button.Position = UDim2.new(0, 22, 1, -62)
+button.Size = UDim2.new(1, -44, 0, 42)
+button.BackgroundColor3 = Color3.fromRGB(220, 40, 50)
+button.BorderSizePixel = 0
+button.Text = "MỞ KHÓA TÀI KHOẢN"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.TextSize = 14
+button.Font = Enum.Font.GothamBold
+button.AutoButtonColor = true
+button.Parent = panel
 
-local countdown = makeLabel(
-    panel, "Countdown", "08:00:00",
-    UDim2.new(1, -30, 0, 40),
-    UDim2.new(0, 15, 0, 151),
-    27, Color3.fromRGB(255, 255, 255)
-)
-countdown.Font = Enum.Font.GothamBold
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 9)
+buttonCorner.Parent = button
 
-local reasonButton = makeButton(
-    panel, "ReasonButton", "LÝ DO BAN  →",
-    UDim2.new(1, -40, 0, 42),
-    UDim2.new(0, 20, 0, 205),
-    Color3.fromRGB(160, 42, 62)
-)
+-- Hiệu ứng xuất hiện
+panel.Size = UDim2.new(0.82, 0, 0, 270)
 
-makeLabel(
-    panel, "Footer", "NHAT HUB • BAN SYSTEM TEST",
-    UDim2.new(1, -20, 0, 18),
-    UDim2.new(0, 10, 0, 265),
-    10, Color3.fromRGB(125, 125, 145)
-)
+TweenService:Create(
+    panel,
+    TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {Size = UDim2.new(0.88, 0, 0, 290)}
+):Play()
 
---==================== VXEZE HUB MENU ====================
+-- Nhấn nút để đóng bảng
+local clicked = false
 
-local reasonPanel = makePanel(
-    "ReasonMenu",
-    390,
-    Color3.fromRGB(160, 90, 255)
-)
-
-makeLabel(
-    reasonPanel, "ThirdPartyNotice",
-    "Sử dụng script bên phía thứ 3",
-    UDim2.new(1, -20, 0, 25),
-    UDim2.new(0, 10, 0, 12),
-    12, Color3.fromRGB(190, 155, 255)
-)
-
-local vxezeTitle = makeLabel(
-    reasonPanel, "VxezeTitle", "Vxeze Hub",
-    UDim2.new(1, -20, 0, 38),
-    UDim2.new(0, 10, 0, 40),
-    26, Color3.fromRGB(255, 255, 255)
-)
-vxezeTitle.Font = Enum.Font.GothamBold
-
-local imageFrame = Instance.new("Frame")
-imageFrame.Name = "VxezeImageFrame"
-imageFrame.AnchorPoint = Vector2.new(0.5, 0)
-imageFrame.Position = UDim2.new(0.5, 0, 0, 82)
-imageFrame.Size = UDim2.new(0, 90, 0, 72)
-imageFrame.BackgroundColor3 = Color3.fromRGB(27, 23, 39)
-imageFrame.BorderSizePixel = 0
-imageFrame.ZIndex = 5
-imageFrame.Parent = reasonPanel
-addCorner(imageFrame, 10)
-addStroke(imageFrame, Color3.fromRGB(160, 90, 255), 1)
-
-local image = Instance.new("ImageLabel")
-image.Name = "VxezeImage"
-image.BackgroundTransparency = 1
-image.Position = UDim2.new(0, 4, 0, 4)
-image.Size = UDim2.new(1, -8, 1, -8)
-image.Image = IMAGE_ID
-image.ScaleType = Enum.ScaleType.Fit
-image.ZIndex = 6
-image.Parent = imageFrame
-addCorner(image, 8)
-
-makeLabel(
-    reasonPanel, "ScriptLabel", "NỘI DUNG SCRIPT",
-    UDim2.new(1, -30, 0, 20),
-    UDim2.new(0, 15, 0, 163),
-    11, Color3.fromRGB(190, 155, 255)
-)
-
--- Chỉ hiển thị câu lệnh, không chạy script
-local scriptBox = Instance.new("TextBox")
-scriptBox.Name = "ScriptContent"
-scriptBox.Position = UDim2.new(0, 15, 0, 188)
-scriptBox.Size = UDim2.new(1, -30, 0, 105)
-scriptBox.BackgroundColor3 = Color3.fromRGB(8, 8, 14)
-scriptBox.TextColor3 = Color3.fromRGB(210, 215, 230)
-scriptBox.TextSize = 10
-scriptBox.Font = Enum.Font.Code
-scriptBox.Text =
-    'loadstring(game:HttpGet("' .. SCRIPT_URL .. '"))()'
-scriptBox.TextWrapped = true
-scriptBox.TextEditable = false
-scriptBox.ClearTextOnFocus = false
-scriptBox.MultiLine = true
-scriptBox.TextXAlignment = Enum.TextXAlignment.Left
-scriptBox.TextYAlignment = Enum.TextYAlignment.Top
-scriptBox.ZIndex = 7
-scriptBox.Parent = reasonPanel
-addCorner(scriptBox, 8)
-
-local backButton = makeButton(
-    reasonPanel, "BackButton", "← QUAY LẠI",
-    UDim2.new(1, -30, 0, 38),
-    UDim2.new(0, 15, 0, 320),
-    Color3.fromRGB(42, 42, 57)
-)
-
---==================== MENU NAVIGATION ====================
-
-reasonButton.Activated:Connect(function()
-    panel.Visible = false
-    reasonPanel.Visible = true
-end)
-
-backButton.Activated:Connect(function()
-    reasonPanel.Visible = false
-    panel.Visible = true
-end)
-
---==================== EXPIRY / WORKSPACE MARKER ====================
-
-local startTime = os.time()
-local expiresAt = startTime + DURATION
-
-local function createExpiryMarker()
-    -- Xóa marker cũ nếu có
-    local oldMarker = Workspace:FindFirstChild("Roblox_Band")
-    if oldMarker then
-        oldMarker:Destroy()
-    end
-
-    -- Đối tượng trong Workspace, không phải tệp trên ổ đĩa
-    local marker = Instance.new("Folder")
-    marker.Name = "Roblox_Band"
-
-    local status = Instance.new("StringValue")
-    status.Name = "Status"
-    status.Value = "Ban test duration completed"
-    status.Parent = marker
-
-    local completedAt = Instance.new("NumberValue")
-    completedAt.Name = "CompletedAtUnix"
-    completedAt.Value = os.time()
-    completedAt.Parent = marker
-
-    local playerName = Instance.new("StringValue")
-    playerName.Name = "PlayerName"
-    playerName.Value = Player.Name
-    playerName.Parent = marker
-
-    marker.Parent = Workspace
-end
-
-task.spawn(function()
-    while gui.Parent do
-        local remaining = math.max(0, expiresAt - os.time())
-
-        local hours = math.floor(remaining / 3600)
-        local minutes = math.floor((remaining % 3600) / 60)
-        local seconds = remaining % 60
-
-        countdown.Text = string.format(
-            "%02d:%02d:%02d",
-            hours, minutes, seconds
-        )
-
-        if remaining <= 0 then
-            break
-        end
-
-        task.wait(1)
-    end
-
-    if not gui.Parent then
+button.Activated:Connect(function()
+    if clicked then
         return
     end
 
-    -- Chỉ tạo marker sau khi đủ 8 giờ
-    createExpiryMarker()
+    clicked = true
+    button.Text = "ĐANG ĐÓNG..."
 
-    gui:Destroy()
+    local fadeInfo = TweenInfo.new(
+        0.25,
+        Enum.EasingStyle.Quad,
+        Enum.EasingDirection.Out
+    )
 
-    if blur and blur.Parent then
-        blur:Destroy()
+    TweenService:Create(panel, fadeInfo, {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromScale(0.5, 0.53)
+    }):Play()
+
+    TweenService:Create(overlay, fadeInfo, {
+        BackgroundTransparency = 1
+    }):Play()
+
+    for _, object in ipairs(panel:GetDescendants()) do
+        if object:IsA("TextLabel") or object:IsA("TextButton") then
+            TweenService:Create(object, fadeInfo, {
+                TextTransparency = 1,
+                BackgroundTransparency = 1
+            }):Play()
+        elseif object:IsA("UIStroke") then
+            TweenService:Create(object, fadeInfo, {
+                Transparency = 1
+            }):Play()
+        elseif object:IsA("Frame") then
+            TweenService:Create(object, fadeInfo, {
+                BackgroundTransparency = 1
+            }):Play()
+        end
     end
-end)
 
-print("[NHAT HUB] Ban test started. Duration: 8 hours.")
-print("[NHAT HUB] Expiry marker will be Workspace.Roblox_Band.")
+    task.wait(0.3)
+    gui:Destroy()
+end)
