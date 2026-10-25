@@ -1,281 +1,102 @@
---========================================================
--- NHAT HUB | ACCOUNT WARNING
--- Version: 1.0
--- Platform: Roblox Luau
--- Type: LocalScript
--- Chỉ kích hoạt một lần trong mỗi phiên chơi
---========================================================
+--==================================================
+-- NHAT HUB | SPEED ANTI-DROP
+-- CLIENT ONLY | NO GUI
+-- Giảm WalkSpeed >= 1: yêu cầu reset
+-- Tăng WalkSpeed: không reset
+--==================================================
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local Player = Players.LocalPlayer
+local DROP_THRESHOLD = 1
 
---========================================================
--- ONE-TIME ACTIVATION GUARD
---========================================================
+local SpeedConnection
+local CharacterConnection
+local CurrentHumanoid
+local PreviousSpeed
+local Resetting = false
 
-local ATTRIBUTE_NAME = "NHAT_WARNING_ALREADY_ACTIVATED"
-
--- Không kích hoạt lại nếu đã chạy trong phiên này
-if player:GetAttribute(ATTRIBUTE_NAME) == true then
-    return
+-- Dọn kết nối theo dõi cũ nếu chạy lại script
+if _G.NHATSpeedAntiDropCleanup then
+    pcall(_G.NHATSpeedAntiDropCleanup)
 end
 
--- Đánh dấu ngay để ngăn script chạy trùng
-player:SetAttribute(ATTRIBUTE_NAME, true)
-
---========================================================
--- CLEANUP
---========================================================
-
-local oldGui = playerGui:FindFirstChild("NHAT_AccountWarning")
-
-if oldGui then
-    oldGui:Destroy()
+local function StopWatching()
+    if SpeedConnection then
+        SpeedConnection:Disconnect()
+        SpeedConnection = nil
+    end
 end
 
---========================================================
--- SCREEN GUI
---========================================================
+local function WatchCharacter(Character)
+    StopWatching()
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "NHAT_AccountWarning"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.DisplayOrder = 999999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = playerGui
+    Resetting = false
+    PreviousSpeed = nil
 
--- Nền tối
-local overlay = Instance.new("Frame")
-overlay.Name = "Overlay"
-overlay.Size = UDim2.fromScale(1, 1)
-overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-overlay.BackgroundTransparency = 0.35
-overlay.BorderSizePixel = 0
-overlay.Parent = gui
-
---========================================================
--- MAIN PANEL
---========================================================
-
-local panel = Instance.new("Frame")
-panel.Name = "WarningPanel"
-panel.AnchorPoint = Vector2.new(0.5, 0.5)
-panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.new(0.88, 0, 0, 290)
-panel.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
-panel.BorderSizePixel = 0
-panel.ClipsDescendants = true
-panel.Parent = overlay
-
-local sizeConstraint = Instance.new("UISizeConstraint")
-sizeConstraint.MinSize = Vector2.new(260, 290)
-sizeConstraint.MaxSize = Vector2.new(420, 290)
-sizeConstraint.Parent = panel
-
-local panelCorner = Instance.new("UICorner")
-panelCorner.CornerRadius = UDim.new(0, 16)
-panelCorner.Parent = panel
-
-local panelStroke = Instance.new("UIStroke")
-panelStroke.Color = Color3.fromRGB(255, 55, 70)
-panelStroke.Thickness = 1.5
-panelStroke.Transparency = 0.05
-panelStroke.Parent = panel
-
---========================================================
--- TOP ACCENT
---========================================================
-
-local topBar = Instance.new("Frame")
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 5)
-topBar.BackgroundColor3 = Color3.fromRGB(255, 45, 60)
-topBar.BorderSizePixel = 0
-topBar.Parent = panel
-
---========================================================
--- WARNING ICON
---========================================================
-
-local icon = Instance.new("TextLabel")
-icon.Name = "WarningIcon"
-icon.Position = UDim2.new(0, 0, 0, 17)
-icon.Size = UDim2.new(1, 0, 0, 52)
-icon.BackgroundTransparency = 1
-icon.Text = "⚠"
-icon.TextColor3 = Color3.fromRGB(255, 65, 75)
-icon.TextSize = 42
-icon.Font = Enum.Font.GothamBold
-icon.Parent = panel
-
---========================================================
--- TITLE
---========================================================
-
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Position = UDim2.new(0, 15, 0, 75)
-title.Size = UDim2.new(1, -30, 0, 35)
-title.BackgroundTransparency = 1
-title.Text = "CẢNH CÁO TÀI KHOẢN"
-title.TextColor3 = Color3.fromRGB(255, 65, 75)
-title.TextSize = 19
-title.Font = Enum.Font.GothamBold
-title.TextWrapped = true
-title.Parent = panel
-
---========================================================
--- MESSAGE
---========================================================
-
-local message = Instance.new("TextLabel")
-message.Name = "WarningMessage"
-message.Position = UDim2.new(0, 22, 0, 118)
-message.Size = UDim2.new(1, -44, 0, 78)
-message.BackgroundTransparency = 1
-
-message.Text =
-    "Lần này là cảnh cáo!\n" ..
-    "Nếu tiếp tục tái phạm,\n" ..
-    "tài khoản sẽ bị BAN vĩnh viễn."
-
-message.TextColor3 = Color3.fromRGB(235, 235, 242)
-message.TextSize = 15
-message.Font = Enum.Font.Gotham
-message.TextWrapped = true
-message.TextXAlignment = Enum.TextXAlignment.Center
-message.TextYAlignment = Enum.TextYAlignment.Center
-message.Parent = panel
-
---========================================================
--- UNLOCK BUTTON
---========================================================
-
-local button = Instance.new("TextButton")
-button.Name = "UnlockAccountButton"
-button.Position = UDim2.new(0, 22, 1, -62)
-button.Size = UDim2.new(1, -44, 0, 42)
-button.BackgroundColor3 = Color3.fromRGB(220, 40, 52)
-button.BorderSizePixel = 0
-button.Text = "MỞ KHÓA TÀI KHOẢN"
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.TextSize = 14
-button.Font = Enum.Font.GothamBold
-button.AutoButtonColor = true
-button.Parent = panel
-
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 9)
-buttonCorner.Parent = button
-
---========================================================
--- INTRO ANIMATION
---========================================================
-
-panel.Size = UDim2.new(0.78, 0, 0, 260)
-panel.BackgroundTransparency = 0.15
-
-TweenService:Create(
-    panel,
-    TweenInfo.new(
-        0.4,
-        Enum.EasingStyle.Back,
-        Enum.EasingDirection.Out
-    ),
-    {
-        Size = UDim2.new(0.88, 0, 0, 290),
-        BackgroundTransparency = 0
-    }
-):Play()
-
---========================================================
--- CLOSE ANIMATION
---========================================================
-
-local closing = false
-
-button.Activated:Connect(function()
-    if closing then
+    local Humanoid = Character:WaitForChild("Humanoid", 10)
+    if not Humanoid or Player.Character ~= Character then
         return
     end
 
-    closing = true
-    button.Text = "ĐANG ĐÓNG..."
+    CurrentHumanoid = Humanoid
+    PreviousSpeed = Humanoid.WalkSpeed
 
-    local fadeInfo = TweenInfo.new(
-        0.25,
-        Enum.EasingStyle.Quad,
-        Enum.EasingDirection.Out
-    )
+    print("[NHAT HUB] Đang theo dõi WalkSpeed:", PreviousSpeed)
 
-    local tweens = {}
-
-    table.insert(tweens, TweenService:Create(
-        panel,
-        fadeInfo,
-        {
-            BackgroundTransparency = 1,
-            Position = UDim2.fromScale(0.5, 0.53)
-        }
-    ))
-
-    table.insert(tweens, TweenService:Create(
-        overlay,
-        fadeInfo,
-        {
-            BackgroundTransparency = 1
-        }
-    ))
-
-    for _, object in ipairs(panel:GetDescendants()) do
-        if object:IsA("TextLabel") or object:IsA("TextButton") then
-            table.insert(tweens, TweenService:Create(
-                object,
-                fadeInfo,
-                {
-                    TextTransparency = 1,
-                    BackgroundTransparency = 1
-                }
-            ))
-
-        elseif object:IsA("UIStroke") then
-            table.insert(tweens, TweenService:Create(
-                object,
-                fadeInfo,
-                {
-                    Transparency = 1
-                }
-            ))
-
-        elseif object:IsA("Frame") then
-            table.insert(tweens, TweenService:Create(
-                object,
-                fadeInfo,
-                {
-                    BackgroundTransparency = 1
-                }
-            ))
+    SpeedConnection = Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if Resetting or Player.Character ~= Character then
+            return
         end
+
+        local OldSpeed = PreviousSpeed
+        local NewSpeed = Humanoid.WalkSpeed
+
+        -- Cập nhật mốc so sánh mỗi khi tốc độ thay đổi
+        PreviousSpeed = NewSpeed
+
+        -- Chỉ xử lý khi tốc độ giảm từ 1 đơn vị trở lên
+        if OldSpeed and (OldSpeed - NewSpeed) >= DROP_THRESHOLD then
+            Resetting = true
+
+            warn(string.format(
+                "[NHAT HUB] Phát hiện giảm WalkSpeed: %.3f -> %.3f",
+                OldSpeed,
+                NewSpeed
+            ))
+
+            -- Client yêu cầu nhân vật chết để kích hoạt
+            -- cơ chế hồi sinh của game nếu máy chủ cho phép.
+            pcall(function()
+                if Player.Character == Character and Humanoid.Health > 0 then
+                    Humanoid.Health = 0
+                end
+            end)
+        end
+    end)
+end
+
+local function Cleanup()
+    StopWatching()
+
+    if CharacterConnection then
+        CharacterConnection:Disconnect()
+        CharacterConnection = nil
     end
+end
 
-    for _, tween in ipairs(tweens) do
-        tween:Play()
-    end
+-- Lưu hàm dọn dẹp để tránh kết nối trùng khi chạy lại
+_G.NHATSpeedAntiDropCleanup = Cleanup
 
-    task.wait(0.3)
+-- Theo dõi nhân vật hiện tại
+if Player.Character then
+    task.spawn(WatchCharacter, Player.Character)
+end
 
-    if gui and gui.Parent then
-        gui:Destroy()
-    end
-
-    -- Không xóa ATTRIBUTE_NAME:
-    -- script không được kích hoạt lại trong phiên này.
+-- Theo dõi lại sau khi hồi sinh
+CharacterConnection = Player.CharacterAdded:Connect(function(Character)
+    task.wait(0.2)
+    WatchCharacter(Character)
 end)
 
---========================================================
--- END NHAT HUB | ACCOUNT WARNING
---========================================================
+print("[NHAT HUB] Speed Anti-Drop đã khởi động.")
