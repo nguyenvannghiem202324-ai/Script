@@ -1,73 +1,96 @@
-
 --==================================================
 -- NHAT HUB | BAN SCREEN
--- Roblox Client | Delta Android
+-- Client | Delta Android
 --==================================================
 
 local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
-if not player then return end
+if not player then
+    return
+end
 
+--==================================================
 -- CONFIG
+--==================================================
+
 local BAN_DURATION = 24 * 60 * 60
-local BAN_REASON = "Tài khoản của bạn đã bị cấm vì sử dụng script hỗ trợ."
+
+local BAN_REASON =
+    "Tài khoản của bạn đã bị cấm vì sử dụng script hỗ trợ."
+
 local FILE_NAME = "NHAT_HUB_BAN_TIME.txt"
 
 --==================================================
--- TIME STORAGE
+-- GUI CLEANUP
 --==================================================
 
-local startTime
-
-local function canRead()
-    return type(readfile) == "function"
-        and type(isfile) == "function"
-        and isfile(FILE_NAME)
-end
-
-if canRead() then
-    local success, result = pcall(function()
-        return tonumber(readfile(FILE_NAME))
-    end)
-
-    if success then
-        startTime = result
-    end
-end
-
-if not startTime then
-    startTime = os.time()
-
-    if type(writefile) == "function" then
-        pcall(writefile, FILE_NAME, tostring(startTime))
-    end
-end
-
---==================================================
--- GUI
---==================================================
-
-local oldGui = game:GetService("CoreGui"):FindFirstChild("NHAT_HUB_BAN_SCREEN")
+local oldGui = CoreGui:FindFirstChild("NHAT_HUB_BAN_SCREEN")
 
 if oldGui then
     oldGui:Destroy()
 end
+
+--==================================================
+-- SESSION TIME STORAGE
+--==================================================
+
+local elapsedBefore = 0
+local sessionStart = os.clock()
+
+if type(readfile) == "function"
+    and type(isfile) == "function"
+    and isfile(FILE_NAME) then
+
+    local success, result = pcall(function()
+        return tonumber(readfile(FILE_NAME))
+    end)
+
+    if success and result and result >= 0 then
+        elapsedBefore = math.min(result, BAN_DURATION)
+    end
+end
+
+local function getElapsed()
+    return elapsedBefore + (os.clock() - sessionStart)
+end
+
+local function saveElapsed()
+    if type(writefile) == "function" then
+        pcall(function()
+            writefile(
+                FILE_NAME,
+                tostring(math.floor(getElapsed()))
+            )
+        end)
+    end
+end
+
+--==================================================
+-- SCREEN GUI
+--==================================================
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "NHAT_HUB_BAN_SCREEN"
 gui.IgnoreGuiInset = true
 gui.DisplayOrder = 999999
 gui.ResetOnSpawn = false
-gui.Parent = game:GetService("CoreGui")
+gui.Parent = CoreGui
 
 local bg = Instance.new("Frame")
+bg.Name = "Background"
 bg.Size = UDim2.fromScale(1, 1)
 bg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 bg.BorderSizePixel = 0
 bg.Parent = gui
 
+--==================================================
+-- MAIN PANEL
+--==================================================
+
 local panel = Instance.new("Frame")
+panel.Name = "BanPanel"
 panel.Size = UDim2.new(0, 340, 0, 230)
 panel.Position = UDim2.new(0.5, -170, 0.5, -115)
 panel.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
@@ -87,24 +110,40 @@ stroke.Parent = panel
 -- LABEL FUNCTION
 --==================================================
 
-local function createLabel(text, position, size, color, textSize, bold)
+local function createLabel(
+    parent,
+    name,
+    text,
+    position,
+    size,
+    color,
+    textSize,
+    bold
+)
     local label = Instance.new("TextLabel")
-
+    label.Name = name
     label.Size = size
     label.Position = position
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = color
     label.TextSize = textSize
-    label.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+    label.Font = bold
+        and Enum.Font.GothamBold
+        or Enum.Font.Gotham
     label.TextWrapped = true
-    label.Parent = panel
+    label.Parent = parent
 
     return label
 end
 
+--==================================================
 -- TITLE
+--==================================================
+
 createLabel(
+    panel,
+    "Title",
     "Disconnected",
     UDim2.new(0, 15, 0, 15),
     UDim2.new(1, -30, 0, 32),
@@ -113,8 +152,13 @@ createLabel(
     true
 )
 
+--==================================================
 -- REASON
+--==================================================
+
 createLabel(
+    panel,
+    "Reason",
     BAN_REASON,
     UDim2.new(0, 20, 0, 60),
     UDim2.new(1, -40, 0, 48),
@@ -124,7 +168,9 @@ createLabel(
 )
 
 createLabel(
-    "Thời gian cấm còn lại:",
+    panel,
+    "RemainingTitle",
+    "Thời gian còn lại:",
     UDim2.new(0, 20, 0, 119),
     UDim2.new(1, -40, 0, 22),
     Color3.fromRGB(180, 180, 180),
@@ -132,8 +178,13 @@ createLabel(
     false
 )
 
+--==================================================
 -- TIMER
+--==================================================
+
 local timer = createLabel(
+    panel,
+    "Timer",
     "24:00:00",
     UDim2.new(0, 20, 0, 143),
     UDim2.new(1, -40, 0, 35),
@@ -147,6 +198,7 @@ local timer = createLabel(
 --==================================================
 
 local exitButton = Instance.new("TextButton")
+exitButton.Name = "ExitButton"
 exitButton.Size = UDim2.new(0, 150, 0, 36)
 exitButton.Position = UDim2.new(0.5, -75, 1, -47)
 exitButton.BackgroundColor3 = Color3.fromRGB(180, 45, 55)
@@ -154,7 +206,6 @@ exitButton.Text = "THOÁT GAME"
 exitButton.TextColor3 = Color3.new(1, 1, 1)
 exitButton.TextSize = 14
 exitButton.Font = Enum.Font.GothamBold
-exitButton.AutoButtonColor = true
 exitButton.Parent = panel
 
 local buttonCorner = Instance.new("UICorner")
@@ -162,29 +213,63 @@ buttonCorner.CornerRadius = UDim.new(0, 6)
 buttonCorner.Parent = exitButton
 
 --==================================================
--- COUNTDOWN
+-- CORNER NOTE
+--==================================================
+
+local note = Instance.new("TextLabel")
+note.Name = "TimeNote"
+note.Size = UDim2.new(1, -20, 0, 20)
+note.Position = UDim2.new(0, 10, 1, -26)
+note.BackgroundTransparency = 1
+note.Text = "Note: Thời gian chỉ trôi qua khi ở trong game"
+note.TextColor3 = Color3.fromRGB(155, 155, 155)
+note.TextSize = 10
+note.Font = Enum.Font.Gotham
+note.TextXAlignment = Enum.TextXAlignment.Right
+note.TextYAlignment = Enum.TextYAlignment.Center
+note.Parent = bg
+
+--==================================================
+-- FORMAT TIME
 --==================================================
 
 local function formatTime(seconds)
-    local h = math.floor(seconds / 3600)
-    local m = math.floor((seconds % 3600) / 60)
-    local s = seconds % 60
+    seconds = math.max(0, math.floor(seconds))
 
-    return string.format("%02d:%02d:%02d", h, m, s)
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local secs = seconds % 60
+
+    return string.format(
+        "%02d:%02d:%02d",
+        hours,
+        minutes,
+        secs
+    )
 end
+
+--==================================================
+-- COUNTDOWN
+--==================================================
 
 task.spawn(function()
     while gui.Parent do
-        local elapsed = os.time() - startTime
-        local remaining = math.max(0, BAN_DURATION - elapsed)
+        local elapsed = getElapsed()
+        local remaining = math.max(
+            0,
+            BAN_DURATION - elapsed
+        )
 
         timer.Text = formatTime(remaining)
 
         if remaining <= 0 then
-            timer.TextColor3 = Color3.fromRGB(100, 220, 130)
+            timer.TextColor3 =
+                Color3.fromRGB(100, 220, 130)
+            saveElapsed()
             break
         end
 
+        saveElapsed()
         task.wait(1)
     end
 end)
@@ -194,6 +279,7 @@ end)
 --==================================================
 
 exitButton.Activated:Connect(function()
+    saveElapsed()
     exitButton.Active = false
     exitButton.Text = "ĐANG NGẮT KẾT NỐI..."
 
