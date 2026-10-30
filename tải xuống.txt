@@ -1,7 +1,203 @@
+
+--==================================================
+-- NHAT HUB | BAN SCREEN
+-- Roblox Client | Delta Android
+--==================================================
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-if player then
-    player:Kick("tài khoản của bạn đã bị 
-cấm vì sử dụng script hỗ trợ:thời gian=1ngày")
+if not player then return end
+
+-- CONFIG
+local BAN_DURATION = 24 * 60 * 60
+local BAN_REASON = "Tài khoản của bạn đã bị cấm vì sử dụng script hỗ trợ."
+local FILE_NAME = "NHAT_HUB_BAN_TIME.txt"
+
+--==================================================
+-- TIME STORAGE
+--==================================================
+
+local startTime
+
+local function canRead()
+    return type(readfile) == "function"
+        and type(isfile) == "function"
+        and isfile(FILE_NAME)
 end
+
+if canRead() then
+    local success, result = pcall(function()
+        return tonumber(readfile(FILE_NAME))
+    end)
+
+    if success then
+        startTime = result
+    end
+end
+
+if not startTime then
+    startTime = os.time()
+
+    if type(writefile) == "function" then
+        pcall(writefile, FILE_NAME, tostring(startTime))
+    end
+end
+
+--==================================================
+-- GUI
+--==================================================
+
+local oldGui = game:GetService("CoreGui"):FindFirstChild("NHAT_HUB_BAN_SCREEN")
+
+if oldGui then
+    oldGui:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NHAT_HUB_BAN_SCREEN"
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 999999
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.fromScale(1, 1)
+bg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+bg.BorderSizePixel = 0
+bg.Parent = gui
+
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 340, 0, 230)
+panel.Position = UDim2.new(0.5, -170, 0.5, -115)
+panel.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+panel.BorderSizePixel = 0
+panel.Parent = bg
+
+local panelCorner = Instance.new("UICorner")
+panelCorner.CornerRadius = UDim.new(0, 9)
+panelCorner.Parent = panel
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(75, 75, 75)
+stroke.Thickness = 1
+stroke.Parent = panel
+
+--==================================================
+-- LABEL FUNCTION
+--==================================================
+
+local function createLabel(text, position, size, color, textSize, bold)
+    local label = Instance.new("TextLabel")
+
+    label.Size = size
+    label.Position = position
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = color
+    label.TextSize = textSize
+    label.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+    label.TextWrapped = true
+    label.Parent = panel
+
+    return label
+end
+
+-- TITLE
+createLabel(
+    "Disconnected",
+    UDim2.new(0, 15, 0, 15),
+    UDim2.new(1, -30, 0, 32),
+    Color3.new(1, 1, 1),
+    21,
+    true
+)
+
+-- REASON
+createLabel(
+    BAN_REASON,
+    UDim2.new(0, 20, 0, 60),
+    UDim2.new(1, -40, 0, 48),
+    Color3.fromRGB(220, 220, 220),
+    14,
+    false
+)
+
+createLabel(
+    "Thời gian cấm còn lại:",
+    UDim2.new(0, 20, 0, 119),
+    UDim2.new(1, -40, 0, 22),
+    Color3.fromRGB(180, 180, 180),
+    13,
+    false
+)
+
+-- TIMER
+local timer = createLabel(
+    "24:00:00",
+    UDim2.new(0, 20, 0, 143),
+    UDim2.new(1, -40, 0, 35),
+    Color3.fromRGB(255, 100, 100),
+    26,
+    true
+)
+
+--==================================================
+-- EXIT BUTTON
+--==================================================
+
+local exitButton = Instance.new("TextButton")
+exitButton.Size = UDim2.new(0, 150, 0, 36)
+exitButton.Position = UDim2.new(0.5, -75, 1, -47)
+exitButton.BackgroundColor3 = Color3.fromRGB(180, 45, 55)
+exitButton.Text = "THOÁT GAME"
+exitButton.TextColor3 = Color3.new(1, 1, 1)
+exitButton.TextSize = 14
+exitButton.Font = Enum.Font.GothamBold
+exitButton.AutoButtonColor = true
+exitButton.Parent = panel
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 6)
+buttonCorner.Parent = exitButton
+
+--==================================================
+-- COUNTDOWN
+--==================================================
+
+local function formatTime(seconds)
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = seconds % 60
+
+    return string.format("%02d:%02d:%02d", h, m, s)
+end
+
+task.spawn(function()
+    while gui.Parent do
+        local elapsed = os.time() - startTime
+        local remaining = math.max(0, BAN_DURATION - elapsed)
+
+        timer.Text = formatTime(remaining)
+
+        if remaining <= 0 then
+            timer.TextColor3 = Color3.fromRGB(100, 220, 130)
+            break
+        end
+
+        task.wait(1)
+    end
+end)
+
+--==================================================
+-- EXIT ACTION
+--==================================================
+
+exitButton.Activated:Connect(function()
+    exitButton.Active = false
+    exitButton.Text = "ĐANG NGẮT KẾT NỐI..."
+
+    player:Kick(BAN_REASON)
+end)
+
+print("[NHAT HUB] BAN SCREEN LOADED")
