@@ -1,1 +1,7 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
+if player then
+    player:Kick("tài khoản của bạn đã bị 
+cấm vì sử dụng script hỗ trợ:thời gian=1ngày")
+end
